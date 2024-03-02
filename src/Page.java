@@ -8,6 +8,22 @@ import java.util.Vector;
 public class Page implements java.io.Serializable
 {
 	Vector<Hashtable> enteries;
+	public int getMaxNoEnteries() {
+		return maxNoEnteries;
+	}
+
+	public void setMaxNoEnteries(int maxNoEnteries) {
+		this.maxNoEnteries = maxNoEnteries;
+	}
+
+	public int getNoOfEnteries() {
+		return noOfEnteries;
+	}
+
+	public void setNoOfEnteries(int noOfEnteries) {
+		this.noOfEnteries = noOfEnteries;
+	}
+
 	private int maxNoEnteries;//get maxNoEnteries from file
 	private int noOfEnteries;
 	

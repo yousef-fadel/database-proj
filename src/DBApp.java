@@ -94,18 +94,18 @@ public class DBApp {
 		for(int i = 0;i<colDataTypes.size();i++)
 		{
 			String tmp=(colDataTypes.get(i).get(2)).split(".")[2];
-			if(tmp.equals("String")) {
-				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof String)) {
+			if(tmp.equals("String")) 
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof String)) 
 					throw new DBAppException("data type is not string"); 
-			}
-			if(tmp.equals("Integer")) {
-				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer)) {
+			
+			if(tmp.equals("Integer")) 
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer)) 
 					throw new DBAppException("data type is not integer"); 
-				}
-			if(tmp.equals("Double")) {
-				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double)) {
+				
+			if(tmp.equals("Double")) 
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double)) 
 					throw new DBAppException("data type is not double"); 
-				}
+				
 			
 				
 		}
