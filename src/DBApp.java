@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 
 public class DBApp {
@@ -54,10 +56,60 @@ public class DBApp {
 
 
 	// following method inserts one row only. 
-	// htblColNameValue must include a vab      lue for the primary key
+	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName, 
-								Hashtable<String,Object>  htblColNameValue) throws DBAppException{
-	
+								Hashtable<String,Object>  htblColNameValue) throws DBAppException, IOException{
+		// TODO insert into index
+		Table omar=null;
+		//find table name & get its object
+		for(int i=0;i<tables.size();i++) {
+			Table table=tables.get(i);
+			if(table.getName().equals(strTableName)) {
+				omar=table;
+				break;
+			}
+				
+		}
+		if(omar.equals(null)) 
+			throw new DBAppException("table doesnot exist");
+
+		//check if primary key is null
+		String primaryKeyColName = "";
+		List<List<String>> colDataTypes = helper.getMetaData(omar.getName());
+		for(int i = 0;i<colDataTypes.size();i++)
+		{
+			if(colDataTypes.get(i).get(3).equals("True"))
+			{
+				primaryKeyColName = colDataTypes.get(i).get(1);
+			}
+		}
+		
+		if(htblColNameValue.get(primaryKeyColName) == null || !htblColNameValue.contains(primaryKeyColName))
+			throw new DBAppException("Primary key is null");
+		
+		
+		//check if all datatypes are correct
+		Set<String> setOfColNames = htblColNameValue.keySet();
+		
+		for(int i = 0;i<colDataTypes.size();i++)
+		{
+			String tmp=(colDataTypes.get(i).get(2)).split(".")[2];
+			if(tmp.equals("String")) {
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof String)) {
+					throw new DBAppException("data type is not string"); 
+			}
+			if(tmp.equals("Integer")) {
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer)) {
+					throw new DBAppException("data type is not integer"); 
+				}
+			if(tmp.equals("Double")) {
+				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double)) {
+					throw new DBAppException("data type is not double"); 
+				}
+			
+				
+		}
+		
 		throw new DBAppException("not implemented yet");
 	}
 

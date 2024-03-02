@@ -8,8 +8,8 @@ import java.util.Vector;
 public class Page implements java.io.Serializable
 {
 	Vector<Hashtable> enteries;
-	int maxNoEnteries;//get maxNoEnteries from file
-	int noOfEnteries;
+	private int maxNoEnteries;//get maxNoEnteries from file
+	private int noOfEnteries;
 	
 	public Page()
 	{

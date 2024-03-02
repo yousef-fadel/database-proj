@@ -1,9 +1,14 @@
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Set;
 
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 public class HelperMethods {
@@ -35,4 +40,17 @@ public class HelperMethods {
 	        e.printStackTrace(); 
 	    }	
 	}
+	
+	public static List<List<String>> getMetaData(String tableName) throws IOException
+	{
+		List<List<String>> records = new ArrayList<List<String>>();
+		try (CSVReader csvReader = new CSVReader(new FileReader("metadata.csv"));) {
+		    String[] values = null;
+		    while ((values = csvReader.readNext()) != null && values[0].equals(tableName)) {
+		        records.add(Arrays.asList(values));
+		    }
+		}
+		return records;
+	}
+	
 }
