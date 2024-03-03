@@ -12,11 +12,14 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 public class HelperMethods {
+	
+	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
+	// all info about this table
 	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException
 	{
 		File file = new File("metadata.csv"); 
 	    try { 
-	        FileWriter outputfile = new FileWriter("metadata.csv"); 
+	        FileWriter outputfile = new FileWriter("metadata.csv",true); 
 	        CSVWriter writer = new CSVWriter(outputfile);
 	        Set<String> setOfKeys = htblColNameType.keySet();
 	        for(String keys : setOfKeys)
@@ -41,6 +44,7 @@ public class HelperMethods {
 	    }	
 	}
 	
+	//given a table name, returns a 2D list containing all information about its columns
 	public static List<List<String>> getMetaData(String tableName) throws IOException
 	{
 		List<List<String>> records = new ArrayList<List<String>>();
