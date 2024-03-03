@@ -102,7 +102,7 @@ public class DBApp {
 				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer)) 
 					throw new DBAppException("data type is not integer"); 
 				
-			if(tmp.equals("Double")) 
+			if(tmp.equals("double")) 
 				if(! (htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double)) 
 					throw new DBAppException("data type is not double"); 
 				
@@ -188,6 +188,26 @@ public class DBApp {
 //			dbApp.insertIntoTable( strTableName , htblColNameValue );
 //
 //
+
+
+			// this will delete 1 row, the one with id 78452
+//			htblColNameValue.clear( );
+//			htblColNameValue.put("id", new Integer( 78452 ));
+//			dbApp.deleteFromTable( "Student", htblColNameValue );
+
+			// this will delete all rows with gpa 0.75
+//			htblColNameValue.clear( );
+//			htblColNameValue.put("gpa", new Double( 0.75 ) );
+//			dbApp.deleteFromTable( "Student", htblColNameValue );
+
+			// this will delete all rows with gpa 0.75 and name Ahmed Noor
+			// htblColNameValue enteries are ANDED together in delete
+//			htblColNameValue.clear( );
+//			htblColNameValue.put("name", new String("Ahmed Noor" ) );  
+//			htblColNameValue.put("gpa", new Double( 0.75 ) );
+//			dbApp.deleteFromTable( "Student", htblColNameValue );
+
+
 //			SQLTerm[] arrSQLTerms;
 //			arrSQLTerms = new SQLTerm[2];
 //			arrSQLTerms[0]._strTableName =  "Student";
@@ -204,6 +224,7 @@ public class DBApp {
 //			strarrOperators[0] = "OR";
 //			// select * from Student where name = "John Noor" or gpa = 1.5;
 //			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+			
 		}
 		catch(Exception exp){
 			exp.printStackTrace( );
