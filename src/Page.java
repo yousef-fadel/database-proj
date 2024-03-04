@@ -7,29 +7,13 @@ import java.util.Vector;
 
 public class Page implements java.io.Serializable
 {
+	String name;
 	Vector<Hashtable> enteries;
-	public int getMaxNoEnteries() {
-		return maxNoEnteries;
-	}
-
-	public void setMaxNoEnteries(int maxNoEnteries) {
-		this.maxNoEnteries = maxNoEnteries;
-	}
-
-	public int getNoOfEnteries() {
-		return noOfEnteries;
-	}
-
-	public void setNoOfEnteries(int noOfEnteries) {
-		this.noOfEnteries = noOfEnteries;
-	}
-
-	private int maxNoEnteries;//get maxNoEnteries from file
-	private int noOfEnteries;
+	public int maxNoEnteries;//get maxNoEnteries from file
 	
-	public Page()
+	
+	public Page() throws DBAppException
 	{
-		noOfEnteries = 0;
         try {
             String configFilePath = "resources/DBApp.config";
             FileInputStream propsInput = new FileInputStream(configFilePath);
@@ -38,7 +22,7 @@ public class Page implements java.io.Serializable
             maxNoEnteries = Integer.parseInt(prop.getProperty("maxNoEnteriesimumRowsCountinPage"));
             
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            throw new DBAppException("DBApp.config file was not found.");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,8 +30,8 @@ public class Page implements java.io.Serializable
 	
 	public static void main(String[]args)
 	{
-		Page page = new Page();
-		System.out.println(page.maxNoEnteries);
+//		Page page = new Page();
+//		System.out.println(page.maxNoEnteries);
 	}
 	
 }

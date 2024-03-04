@@ -1,29 +1,17 @@
+import java.io.Serializable;
 import java.util.Vector;
 
-public class Table {
-	Vector<Page> pages;
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public int getNoOfPages() {
-		return noOfPages;
-	}
-
-	public void setNoOfPages(int noOfPages) {
-		this.noOfPages = noOfPages;
-	}
-
-	private String name;
-	private int noOfPages;
+public class Table implements Serializable{
+	public Vector<String> pageNames; //
+	public String filepath; //location all pages
+	public String name; //table name
 	
-	public Table(String name)
+
+	
+	public Table(String name, String filepath)
 	{
 		this.name = name;
-		noOfPages = 0;
+		this.filepath = filepath;
+		this.pageNames = new Vector<String>();
 	}
 }
