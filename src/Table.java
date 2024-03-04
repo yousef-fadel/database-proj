@@ -1,7 +1,7 @@
 import java.io.Serializable;
 import java.util.Vector;
 
-public class Table implements Serializable{
+public class Table implements java.io.Serializable{
 	public Vector<String> pageNames; //
 	public String filepath; //location all pages
 	public String name; //table name
