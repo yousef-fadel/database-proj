@@ -8,7 +8,7 @@ import java.util.Vector;
 public class Page implements java.io.Serializable
 {
 	String name;
-	Vector<Tuple> enteries;
+	Vector<Tuple> tuples;
 	public int maxNoEnteries;//get maxNoEnteries from file
 	
 	

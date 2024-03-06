@@ -44,7 +44,7 @@ public class DBApp {
 	{
 		//check if this table already exists
 
-		tables =(Vector<Table>)deserializedata("./tables");
+		tables =(Vector<Table>)deserializeData("./Tables/tables");
 		for(int i=0;i<tables.size();i++) 
 		{
 			if(tables.get(i).name.equals(strTableName)) 
@@ -52,12 +52,13 @@ public class DBApp {
 
 		}
 
-
-		File filepath = new File("./"+strTableName); 
+		//create a directory to store pages of this table for later + save our current list of tables
+		File filepath = new File("./Tables/"+strTableName); 
 		filepath.mkdirs();
 		Table currTable = new Table(strTableName,filepath.getPath());
 		tables.add(currTable);
-		serializedata(tables,"./tables.ser");
+		serializedata(tables,"./Tables/tables.ser");
+		
 		// write onto the metadata file the following info: 
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
 		helper.writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
@@ -125,10 +126,9 @@ public class DBApp {
 						throw new DBAppException("data type is not double"); 				
 			}
 			
-			
-			//TODO change tuples primary key	
-			
-			throw new DBAppException("not implemented yet");
+			Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName),htblColNameValue);
+			omar.insert(tuple);
+//			System.out.println("Inserted " + tuple +"succesfully!");
 		}
 
 
@@ -179,7 +179,7 @@ public class DBApp {
 		}
 
 	}
-	public Object deserializedata(String filename) throws ClassNotFoundException 
+	public Object deserializeData(String filename) throws ClassNotFoundException 
 	{
 		try {
 

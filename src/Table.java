@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.Hashtable;
 import java.util.Vector;
 
 public class Table implements java.io.Serializable{
@@ -13,5 +14,10 @@ public class Table implements java.io.Serializable{
 		this.name = name;
 		this.filepath = filepath;
 		this.pageNames = new Vector<String>();
+	}
+	
+	public void insert(Tuple tuple)
+	{
+		
 	}
 }

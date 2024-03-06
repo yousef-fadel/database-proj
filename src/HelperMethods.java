@@ -45,7 +45,7 @@ public class HelperMethods {
 	}
 	
 	//given a table name, returns a 2D list containing all information about its columns
-	public static List<List<String>> getColumnData(String tableName) throws IOException
+	public List<List<String>> getColumnData(String tableName) throws IOException
 	{
 		List<List<String>> records = new ArrayList<List<String>>();
 		try (CSVReader csvReader = new CSVReader(new FileReader("metadata.csv"));) {
