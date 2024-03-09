@@ -38,7 +38,7 @@ public class CreateTableTests {
 	// also creates a hashtable for calling the create table method
 	// running tests will delete the tables.ser file tho everytime
 	@BeforeEach
-	void init() throws IOException
+	void init() throws IOException, ClassNotFoundException
 	{
 		Path dir = Paths.get("./tables"); 
         Files
@@ -55,8 +55,8 @@ public class CreateTableTests {
 		htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
 		
-		table1 = new Table("table1","./Tables/table1");
-		table2 = new Table("table2","./Tables/table2");
+		table1 = new Table("table1","./tables/table1");
+		table2 = new Table("table2","./tables/table2");
 		tables = new Vector<Table>();
 		
 		tables.add(table1);

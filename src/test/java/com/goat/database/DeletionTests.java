@@ -42,8 +42,6 @@ public class DeletionTests {
         
 		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
-		new File("./resources/tables.ser").delete();
-		new File("./resources/metadata.csv").delete();
 
 		database = new DBApp();
 

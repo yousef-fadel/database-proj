@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,9 +16,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.Properties;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 @SuppressWarnings("removal")
 public class InsertionTests {
 	// all tests here work on the assumption that createTable is working
@@ -42,6 +48,13 @@ public class InsertionTests {
         
 		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
+		
+//		File configFile = new File("resources/DBApp.config");
+//		Properties props = new Properties();
+//	    props.setProperty("MaximumRowsCountinPage", "4");
+//	    FileWriter writer = new FileWriter(configFile);
+//	    props.store(writer, "");
+//	    writer.close();
 
 		database = new DBApp();
 
@@ -75,17 +88,17 @@ public class InsertionTests {
 	}
 	
 	
-	// fills the page; count is used as the starting point, and fillCompletely
+	// fills the page; count is used as the starting point, and fillCompletely fills the page completely if it is true
 	// is used to fill the page completely if needed 
 	void fillPage(int count,boolean fillCompletely, Page page) throws DBAppException
 	{
-		for(int i = count;i<count+100;i++)
+		for(int i = count;i<count+(page.maxNoEnteries/2);i++)
 		{
 			Hashtable<String,Object> tmp = new Hashtable<String, Object>();
 			tmp.put("id", new Integer(i));
 			page.tuples.add(new Tuple(i,tmp));
 		}
-		for(int i = 1000 + count;i<1000 + count + page.maxNoEnteries - 100 
+		for(int i = 1000 + count;i<1000 + count + (page.maxNoEnteries/2 + page.maxNoEnteries%2) 
 				&& fillCompletely;i++)
 		{
 			Hashtable<String,Object> tmp = new Hashtable<String, Object>();
@@ -96,6 +109,7 @@ public class InsertionTests {
 		
 	}
 	
+	//TODO generalize this method
 	// 7ot el rakam w shift el page
 	void shiftPage(Hashtable<String,Object> htbl)
 	{
@@ -105,6 +119,7 @@ public class InsertionTests {
 			page1.tuples.set(i, page1.tuples.get(i-1));
 		}
 		page1.tuples.set(100, new Tuple(150,htbl));
+		
 		Tuple tmp2 = page2.tuples.get(page2.tuples.size()-1);
 		for(int i = page2.tuples.size()-1;i > 0;i--)
 		{
@@ -117,6 +132,7 @@ public class InsertionTests {
 	
 	//-----------------------------------------------------TESTS-------------------------------------------------------------------------------------------------
 	
+	@DisplayName("Inserting into an empty table")
 	@Test
 	void First_Insert_Is_Succesful() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -135,7 +151,9 @@ public class InsertionTests {
 	 * pushed down; this test checks if all tuples are succesfully stored
 	 * with no loss of information
 	 */ 	
+	@DisplayName("Inserting into a full page shifts all tuples down")
 	@Test
+	@Timeout(value = 200)
 	void Insertion_Shifts_All_Tuples() throws DBAppException, IOException, ClassNotFoundException
 	{
 		fillPage(1,true,page1);
@@ -152,7 +170,7 @@ public class InsertionTests {
 		
 		colData.put("id", new Integer(150));
 		database.insertIntoTable("table", colData);
-
+		
 		shiftPage(colData);
 		
 		Page deserializedPage1 = (Page)deserializeData(table.filepath+page1.name);
@@ -164,6 +182,7 @@ public class InsertionTests {
 	
 	// This test checks that if all pages are full, then we create a new page
 	// to insert  
+	@DisplayName("Inserting into full pages leads to a new page being created")
 	@Test
 	void Full_Page_Insertion_Leads_To_New_Page_Created() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -190,15 +209,25 @@ public class InsertionTests {
 	
 	//TODO This test checks that if we insert onto a table with an indexed column,
 	// it inserts into that index too
-//	 @Test
+	
+	@Test
+	@Disabled("not implemented")
 	void Insertion_With_Index()
 	{
 		
 	}
 	
+	//TODO same as insertino for full pages, but for even more pages
+	@Test
+	@Disabled
+	void Insertion_For_Multiple_Full_Pages()
+	{
+		
+	}
 	// Checks that if I attempt to insert onto a column that does not exist,
 	// an exception is thrown
 	@Test
+	@DisplayName("Exception is thrown for having a wrong column name")
 	void Exception_Thrown_For_Wrong_Column_Name()
 	{
 		colData.put("iDoNotExist", new Integer(58));
@@ -209,6 +238,7 @@ public class InsertionTests {
 	// Checks that if I attempt to insert with a wrong datatype for a certain column,
 	// an exception is thrown
 	@Test
+	@DisplayName("Exception is thrown for having wrong datatype")
 	void Exception_Thrown_For_Wrong_DataType()
 	{
 		colData.put("id", new String("wow"));
@@ -222,6 +252,7 @@ public class InsertionTests {
 	
 	// Check that inserting without a primary key throws an exception
 	@Test
+	@DisplayName("Exception is thrown for a missing primary key")
 	void Exception_Thrown_For_No_Primary_Key() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("age", "java.lang.Integer");
@@ -232,6 +263,7 @@ public class InsertionTests {
 	}
 	
 	@Test
+	@DisplayName("Exception is thrown for having a missing column")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("age", "java.lang.Integer");
@@ -240,6 +272,16 @@ public class InsertionTests {
 		assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table2", colData);});	
 	}
-
+	
+	@AfterAll
+	static void cleanup() throws IOException
+	{
+		File configFile = new File("resources/DBApp.config");
+		Properties props = new Properties();
+	    props.setProperty("MaximumRowsCountinPage", "200");
+	    FileWriter writer = new FileWriter(configFile);
+	    props.store(writer,"");
+	    writer.close();
+	}
 	
 }
