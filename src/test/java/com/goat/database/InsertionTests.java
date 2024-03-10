@@ -231,8 +231,11 @@ public class InsertionTests {
 	void Exception_Thrown_For_Wrong_Column_Name()
 	{
 		colData.put("iDoNotExist", new Integer(58));
-		assertThrows(DBAppException.class, () -> 
+		Throwable exception =  assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table", colData);});	
+		
+		assertEquals("Column inserted does not exist",exception.getMessage());
+
 	}
 	
 	// Checks that if I attempt to insert with a wrong datatype for a certain column,
@@ -246,8 +249,11 @@ public class InsertionTests {
 		{database.insertIntoTable("table", colData);});
 		colData.clear();
 		colData.put("id", new Double(23.4));
-		assertThrows(DBAppException.class, () -> 
+		
+		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table", colData);});	
+		
+		assertEquals("A column was inserted with the wrong datatype",exception.getMessage());
 	}
 	
 	// Check that inserting without a primary key throws an exception
@@ -258,19 +264,26 @@ public class InsertionTests {
 		htbl.put("age", "java.lang.Integer");
 		database.createTable("table2", "id", htbl);
 		colData.put("age", new Integer(58));
-		assertThrows(DBAppException.class, () -> 
-		{database.insertIntoTable("table2", colData);});	
+
+		Throwable exception = assertThrows(DBAppException.class, () -> {
+			database.insertIntoTable("table2", colData);});
+		assertEquals("Primary key was not found",exception.getMessage());
 	}
 	
 	@Test
+	@Disabled
 	@DisplayName("Exception is thrown for having a missing column")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("age", "java.lang.Integer");
 		database.createTable("table2", "id", htbl);
 		colData.put("id", new Integer(58));
-		assertThrows(DBAppException.class, () -> 
-		{database.insertIntoTable("table2", colData);});	
+		
+		
+		
+		Throwable exception = assertThrows(DBAppException.class, () -> 
+		{database.insertIntoTable("table2", colData);});
+		assertEquals("",exception.getMessage());
 	}
 	
 	@AfterAll

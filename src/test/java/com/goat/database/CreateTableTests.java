@@ -88,12 +88,14 @@ public class CreateTableTests {
 	public void Throw_Exception_For_Two_Tables_With_Same_Name()
 	{
 		
-		assertThrows(DBAppException.class, () -> 
+		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.createTable("table1", "id", htbl);});
+		
+		assertEquals("A table of this name already exists",exception.getMessage());
 	}
 	
 	// After creating a table, there should be an empty directory 
-	// in the folder "Tables" to store its pages
+	// in the folder "tables" to store its pages
 	@Test
 	public void Should_Find_Directory_For_Table() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -160,6 +162,7 @@ public class CreateTableTests {
 	
 	// Creating a table with a datatype other than int, double, and string should
 	// throw an exception
+	//TODO check exception message
 	@Test
 	public void Only_Certain_Datatypes_Allowed()
 	{
@@ -170,6 +173,7 @@ public class CreateTableTests {
 	
 	// Having the clustering key be a column that does not exist in the hashtable
 	// should throw an exception
+	// TODO check exception message
 	@Test
 	public void Primary_Key_Should_Exist_In_HashTable()
 	{
