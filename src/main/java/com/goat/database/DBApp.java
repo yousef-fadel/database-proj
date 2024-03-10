@@ -7,7 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Enumeration;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +61,7 @@ public class DBApp {
 
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName))
-				throw new DBAppException("A table of this name already exists.");
+				throw new DBAppException("A table of this name already exists");
 
 		// create a directory to store pages of this table for later + save our current
 		// list of tables
@@ -84,6 +87,8 @@ public class DBApp {
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, IOException {
 		// TODO insert into index
+		// TODO check if inserted column type is valid
+		// TODO check if there are any missing columns
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
@@ -98,13 +103,13 @@ public class DBApp {
 
 		// if primary key is not part of the insertion
 		if (htblColNameValue.get(primaryKeyColName) == null)
-			throw new DBAppException("Primary key is null");
+			throw new DBAppException("Primary key was not found");
 
 		// check if the columns inserted exist
 		Set<String> setOfColNames = htblColNameValue.keySet();
-		Iterator iter = setOfColNames.iterator();
+		Iterator <String> iter = setOfColNames.iterator();
 		while (iter.hasNext()) {
-			String tmp = (String) iter.next();
+			String tmp = iter.next();
 			for (int j = 0; j < colDataTypes.size(); j++) {
 				if (colDataTypes.get(j).get(1).equals(tmp))
 					break;
@@ -119,15 +124,15 @@ public class DBApp {
 			String tmp = (colDataTypes.get(i).get(2));
 			if (tmp.equals("java.lang.String"))
 				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof String))
-					throw new DBAppException("data type is not string");
+					throw new DBAppException("A column was inserted with the wrong datatype");
 
 			if (tmp.equals("java.lang.Integer"))
 				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer))
-					throw new DBAppException("data type is not integer");
+					throw new DBAppException("A column was inserted with the wrong datatype");
 
 			if (tmp.equals("java.lang.double"))
 				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double))
-					throw new DBAppException("data type is not double");
+					throw new DBAppException("A column was inserted with the wrong datatype");
 		}
 
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
@@ -287,10 +292,17 @@ public class DBApp {
 	}
 
 	// completely delete everything: meta file, tables, all pages
-	private void format() {
+	private void format() throws IOException {
+		Path dir = Paths.get("./tables"); 
+        Files
+            .walk(dir)
+            .sorted(Comparator.reverseOrder())
+            .forEach(path -> {
+                 try {Files.delete(path);} 
+                 catch (IOException e) {e.printStackTrace();}});
 		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
-		new File("./Tables").delete();
+		
 	}
 
 }

@@ -14,6 +14,7 @@ import com.opencsv.CSVWriter;
 
 public class HelperMethods {
 	
+	// TODO move to main class
 	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
 	// all info about this table
 	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException
@@ -40,7 +41,6 @@ public class HelperMethods {
 	 	    writer.close(); 
 	    } 
 	    catch (IOException e) { 
-	        // TODO Auto-generated catch block 
 	        e.printStackTrace(); 
 	    }	
 	}

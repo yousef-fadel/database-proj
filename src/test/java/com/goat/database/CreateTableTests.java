@@ -33,7 +33,6 @@ public class CreateTableTests {
 	Table table2;
 	Hashtable<String,String> htbl;
 	
-	// TODO delete tables directory before every test
 	// setup creates 2 tables and saves them onto the ser file
 	// also creates a hashtable for calling the create table method
 	// running tests will delete the tables.ser file tho everytime

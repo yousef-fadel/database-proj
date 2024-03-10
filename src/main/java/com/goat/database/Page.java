@@ -12,7 +12,7 @@ public class Page implements java.io.Serializable
 	Vector<Tuple> tuples = new Vector<Tuple>();
 	public int maxNoEnteries;//get maxNoEnteries from file
 	
-	
+	// TODO add name here
 	public Page() throws DBAppException
 	{
         try {

@@ -6,9 +6,9 @@ import java.util.ArrayList;
 public class Tuple implements java.io.Serializable {
 	Object Primary_key;
 	Hashtable<String, Object> entry;
-	public Tuple() {
+	
+	// TODO implement comparable
 
-	}
 	public Tuple(Object Primary_key,Hashtable<String, Object> entry) {
 		this.entry=entry;
 		this.Primary_key=Primary_key;
