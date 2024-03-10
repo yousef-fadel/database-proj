@@ -143,7 +143,7 @@ public class InsertionTests {
 		Page page = (Page) deserializeData("./tables/table/table1.ser");
 		
 		tupleForComparing = new Tuple(1,colData);
-		assertTrue(page.tuples.get(0).equals(tupleForComparing),"The tuple was not inserted correctly");
+		assertTrue(page.tuples.get(0).compareTo(tupleForComparing)==0,"The tuple was not inserted correctly");
 		
 	}
 	
@@ -204,7 +204,7 @@ public class InsertionTests {
 		tupleForComparing = page2.tuples.get(page2.tuples.size()-1);
 		
 		assertTrue(table.pageNames.size()==3, "A new page was not created or the name was not added to the table itself");
-		assertTrue(deserializedPage3.tuples.get(0).equals(tupleForComparing),"The last element of the last page was expected, but it was not found in the last page");
+		assertTrue(deserializedPage3.tuples.get(0).compareTo(tupleForComparing)==0,"The last element of the last page was expected, but it was not found in the last page");
 	}
 	
 	//TODO This test checks that if we insert onto a table with an indexed column,

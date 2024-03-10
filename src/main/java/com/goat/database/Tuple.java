@@ -1,9 +1,7 @@
 package com.goat.database;
+import java.io.Serializable;
 import java.util.Hashtable;
-import java.util.Set;
-import java.util.Vector;
-import java.util.ArrayList;
-public class Tuple implements java.io.Serializable {
+public class Tuple implements Serializable, Comparable {
 	Object Primary_key;
 	Hashtable<String, Object> entry;
 	
@@ -37,6 +35,30 @@ public class Tuple implements java.io.Serializable {
 
 		Tuple tuple = new Tuple( 2343432, htblColNameType);
 		System.out.println(tuple);
+	}
+	@Override
+	public int compareTo(Object o) {
+		Tuple compare = (Tuple) o;
+		if(compare.Primary_key instanceof String)
+		{
+			String s1 = (String) this.Primary_key;
+			String s2 = (String) compare.Primary_key;
+			return s1.compareTo(s2);
+		}
+		if(compare.Primary_key instanceof Integer)
+		{
+			Integer s1 = (Integer) this.Primary_key;
+			Integer s2 = (Integer) compare.Primary_key;
+			return s1.compareTo(s2);
+		}
+		if(compare.Primary_key instanceof Double)
+		{
+			Double s1 = (Double) this.Primary_key;
+			Double s2 = (Double) compare.Primary_key;
+			return s1.compareTo(s2);
+		}
+		return 0;
+		
 	}
 }
 

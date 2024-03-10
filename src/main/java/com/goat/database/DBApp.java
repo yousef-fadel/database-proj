@@ -85,7 +85,7 @@ public class DBApp {
 	// following method inserts one row only.
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
-			throws DBAppException, IOException {
+			throws DBAppException, IOException, ClassNotFoundException {
 		// TODO insert into index
 		// TODO check if inserted column type is valid
 		// TODO check if there are any missing columns
@@ -191,7 +191,6 @@ public class DBApp {
 
 			return null;
 		}
-
 	}
 
 	public Table getTable(String tableName) {
@@ -207,49 +206,14 @@ public class DBApp {
 
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
+		DBApp dbApp =new DBApp();
+//		dbApp.format();
+		dbApp.test1();
+//		dbApp.test2();
 
 
-		String strTableName = "Student";
-		DBApp	dbApp = new DBApp( );
-//
-//		Hashtable htblColNameType = new Hashtable( );
-//		htblColNameType.put("id", "java.lang.Integer");
-//		htblColNameType.put("name", "java.lang.String");
-//		htblColNameType.put("gpa", "java.lang.double");
-//		dbApp.createTable( strTableName, "id", htblColNameType );
-//		dbApp.createIndex( strTableName, "gpa", "gpaIndex" );
 
-		Hashtable htblColNameValue = new Hashtable( );
-		htblColNameValue.put("id", new Integer( 2343432 ));
-		htblColNameValue.put("name", new String("Ahmed Noor" ) );
-//		htblColNameValue.put("gpa", new Double( 0.95 ) );
-		
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 453455 ));
-//		htblColNameValue.put("name", new String("Ahmed Noor" ) );
-//		htblColNameValue.put("gpa", new Double( 0.95 ) );
-//		dbApp.insertIntoTable( strTableName , htblColNameValue );
-//
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 5674567 ));
-//		htblColNameValue.put("name", new String("Dalia Noor" ) );
-//		htblColNameValue.put("gpa", new Double( 1.25 ) );
-//		dbApp.insertIntoTable( strTableName , htblColNameValue );
-//
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 23498 ));
-//		htblColNameValue.put("name", new String("John Noor" ) );
-//		htblColNameValue.put("gpa", new Double( 1.5 ) );
-//		dbApp.insertIntoTable( strTableName , htblColNameValue );
-//
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 78452 ));
-//		htblColNameValue.put("name", new String("Zaky Noor" ) );
-//		htblColNameValue.put("gpa", new Double( 0.88 ) );
-//		dbApp.insertIntoTable( strTableName , htblColNameValue );
-//
+////
 //
 //
 //
@@ -305,4 +269,51 @@ public class DBApp {
 		
 	}
 
+	private void test1() throws ClassNotFoundException, DBAppException, IOException
+	{
+
+		String strTableName = "Student";
+		DBApp	dbApp = new DBApp( );
+	
+		
+		Hashtable htblColNameType = new Hashtable( );
+		htblColNameType.put("id", "java.lang.Integer");
+		dbApp.createTable( strTableName, "id", htblColNameType );
+
+		Hashtable htblColNameValue = new Hashtable( );
+		htblColNameValue.put("id", new Integer( 21 ));
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
+
+		
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 5 ));
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
+
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 3 ));
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
+
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 8 ));
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
+		Page page = (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
+		System.out.println(page.tuples);
+
+
+		
+	}
+	
+	private void test2() throws ClassNotFoundException, DBAppException, IOException
+	{
+		String strTableName = "Student";
+		DBApp dbApp = new DBApp();
+		Hashtable htblColNameValue = new Hashtable( );
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 25 ));
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
+		Page page = (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
+		System.out.println(page.tuples);
+		page =  (Page) dbApp.deserializeData("./tables/Student/Student2.ser");
+		System.out.println(page.tuples);
+	}
 }
