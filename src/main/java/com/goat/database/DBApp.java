@@ -10,12 +10,15 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+
+import org.apache.commons.io.FileUtils;
 
 public class DBApp {
 
@@ -25,7 +28,7 @@ public class DBApp {
 	public DBApp() throws ClassNotFoundException {
 		init();
 		if(tables==null)
-			tables = new Vector<Table>();
+			System.out.println("ok");
 	}
 
 	// this does whatever initialization you would like
@@ -42,8 +45,19 @@ public class DBApp {
 			e.printStackTrace();
 		}
 		new File("./tables").mkdirs();
+		tables = new Vector<Table>();
+		File file = new File("./tables");
+		String[] names = file.list();
 
-		tables = (Vector<Table>) deserializeData("./resources/tables.ser");
+		for(String name : names)
+		{
+		    if (new File("./tables/" + name).isDirectory())
+		    {
+		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
+				System.out.println(tables);
+		    }
+		}
+//		tables = (Vector<Table>) deserializeData("./resources/tables.ser");
 
 		//TODO check for config file
 	}
@@ -92,6 +106,7 @@ public class DBApp {
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
+
 
 		// check if primary key is null
 		String primaryKeyColName = "";
@@ -207,12 +222,33 @@ public class DBApp {
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
+
 //		dbApp.format();
-		dbApp.test1();
-//		dbApp.test2();
+//		dbApp.test1();
+		dbApp.test2();
+//
+//		Hashtable htblColNameValue = new Hashtable( );
+//		htblColNameValue.put("id", new Integer( 1 ));
+//		dbApp.insertIntoTable( "Student" , htblColNameValue );
 
 
+		
+//		htblColNameValue.clear( );
+//		htblColNameValue.put("id", new Integer( 7 ));
+//		dbApp.insertIntoTable( "Student" , htblColNameValue );
+//		htblColNameValue = new Hashtable( );
+//		htblColNameValue.put("id", new Integer( 27 ));
+//		dbApp.insertIntoTable( "Student" , htblColNameValue );
 
+		
+//		htblColNameValue.clear( );
+//		htblColNameValue.put("id", new Integer( 29203 ));
+//		dbApp.insertIntoTable( "Student" , htblColNameValue );
+
+		Page page = (Page) dbApp.deserializeData("./tables/Student/Student0.ser");
+		System.out.println(page.tuples);
+//		page =  (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
+//		System.out.println(page.tuples);
 ////
 //
 //
@@ -296,8 +332,7 @@ public class DBApp {
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 8 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
-		Page page = (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
-		System.out.println(page.tuples);
+		Page page = (Page) dbApp.deserializeData("./tables/Student/Student0.ser");
 
 
 		
@@ -311,9 +346,6 @@ public class DBApp {
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 25 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
-		Page page = (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
-		System.out.println(page.tuples);
-		page =  (Page) dbApp.deserializeData("./tables/Student/Student2.ser");
-		System.out.println(page.tuples);
+
 	}
 }

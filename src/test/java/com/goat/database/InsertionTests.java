@@ -159,8 +159,8 @@ public class InsertionTests {
 		fillPage(1,true,page1);
 		fillPage(1200,false,page2);
 		
-		page1.name = "table1.ser";
-		page2.name = "table2.ser";
+		page1.name = "table0.ser";
+		page2.name = "table1.ser";
 		
 		table.pageNames.add(page1.name);
 		table.pageNames.add(page2.name);

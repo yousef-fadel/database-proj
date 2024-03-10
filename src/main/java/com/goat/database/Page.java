@@ -9,7 +9,7 @@ import java.util.Vector;
 public class Page implements java.io.Serializable
 {
 	String name;
-	int num;//number starts from 1
+	int num;//number starts from 0
 	Vector<Tuple> tuples = new Vector<Tuple>();
 	public int maxNoEnteries;//get maxNoEnteries from file
 	
@@ -29,7 +29,7 @@ public class Page implements java.io.Serializable
         }
         
 	}
-	public Page(String name) throws DBAppException
+	public Page(String name, int num) throws DBAppException
 	{
         try {
             String configFilePath = "resources/DBApp.config";
@@ -44,6 +44,7 @@ public class Page implements java.io.Serializable
             e.printStackTrace();
         }
         this.name = name;
+        this.num = num;
 	}
 	
 	public static void main(String[]args)
