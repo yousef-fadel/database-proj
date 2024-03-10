@@ -83,7 +83,7 @@ public class DBApp {
 		filepath.mkdirs();
 		Table currTable = new Table(strTableName, filepath.getPath() + "/");
 		tables.add(currTable);
-		serializedata(tables, "./resources/tables.ser");
+		serializedata(currTable, "./tables/" + currTable.name + "/info.ser");
 
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
