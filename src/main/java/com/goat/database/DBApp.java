@@ -152,7 +152,8 @@ public class DBApp {
 
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insert(tuple);
-//			System.out.println("Inserted " + tuple +"succesfully!");
+		omar = null;
+		System.out.println("Inserted " + tuple +" succesfully!");
 	}
 
 	// following method updates one row only
@@ -179,9 +180,13 @@ public class DBApp {
 		return null;
 	}
 
-	public void serializedata(Object o, String filename) {
+	public static void serializedata(Object o, String filename) {
 		try {
-			FileOutputStream file = new FileOutputStream(filename);
+			FileOutputStream file;
+			if(filename.contains(".ser"))
+				file = new FileOutputStream(filename);
+			else
+				file = new FileOutputStream(filename + ".ser");
 			ObjectOutputStream out = new ObjectOutputStream(file);
 			out.writeObject(o);
 			out.close();
@@ -192,10 +197,13 @@ public class DBApp {
 
 	}
 
-	public Object deserializeData(String filename) throws ClassNotFoundException {
+	public static Object deserializeData(String filename) throws ClassNotFoundException {
 		try {
-
-			FileInputStream fileIn = new FileInputStream(filename);
+			FileInputStream fileIn;
+			if(filename.contains(".ser"))
+				fileIn = new FileInputStream(filename);
+			else
+				fileIn = new FileInputStream(filename + ".ser"); 
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			Object output = in.readObject();
 			in.close();
@@ -203,7 +211,7 @@ public class DBApp {
 			return output;
 
 		} catch (IOException i) {
-
+			System.out.println("Could not deserialize " + filename + " ,returning null");
 			return null;
 		}
 	}
@@ -223,32 +231,18 @@ public class DBApp {
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 
-//		dbApp.format();
-//		dbApp.test1();
+		dbApp.format();
+		dbApp.test1();
 		dbApp.test2();
-//
-//		Hashtable htblColNameValue = new Hashtable( );
-//		htblColNameValue.put("id", new Integer( 1 ));
-//		dbApp.insertIntoTable( "Student" , htblColNameValue );
-
-
+	
 		
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 7 ));
-//		dbApp.insertIntoTable( "Student" , htblColNameValue );
-//		htblColNameValue = new Hashtable( );
-//		htblColNameValue.put("id", new Integer( 27 ));
-//		dbApp.insertIntoTable( "Student" , htblColNameValue );
-
 		
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 29203 ));
-//		dbApp.insertIntoTable( "Student" , htblColNameValue );
 
-		Page page = (Page) dbApp.deserializeData("./tables/Student/Student0.ser");
+		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
 		System.out.println(page.tuples);
-//		page =  (Page) dbApp.deserializeData("./tables/Student/Student1.ser");
-//		System.out.println(page.tuples);
+		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
+		System.out.println(page.tuples);
+
 ////
 //
 //

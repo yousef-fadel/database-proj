@@ -1,7 +1,10 @@
 package com.goat.database;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
@@ -10,10 +13,11 @@ public class Page implements java.io.Serializable
 {
 	String name;
 	int num;//number starts from 0
+	String pageFilepath; //taken from table
 	Vector<Tuple> tuples = new Vector<Tuple>();
 	public int maxNoEnteries;//get maxNoEnteries from file
 	
-	public Page(String name, int num) throws DBAppException
+	public Page(String name, int num, String tableFilePath) throws DBAppException
 	{
         try {
             String configFilePath = "resources/DBApp.config";
@@ -29,12 +33,28 @@ public class Page implements java.io.Serializable
         }
         this.name = name;
         this.num = num;
+        this.pageFilepath = tableFilePath + name + ".ser/";
 	}
 	
-	public static void main(String[]args)
+	// give ONLY the table.filepath, the method will add the rest
+	public void serializePage()
 	{
-//		Page page = new Page();
-//		System.out.println(page.maxNoEnteries);
+		try {
+			FileOutputStream file = new FileOutputStream(pageFilepath);
+			ObjectOutputStream out = new ObjectOutputStream(file);
+			out.writeObject(this);
+			out.close();
+			file.close();
+		} catch (IOException e) {
+			System.out.println("Failed to serialize page!");
+			e.printStackTrace();
+		}
+	}
+	
+	public Page serializeAndDeletePage()
+	{
+		serializePage();
+		return null;
 	}
 	
 	

@@ -10,6 +10,7 @@ public class Table implements java.io.Serializable{
 	public Vector<String> pageNames; //
 	public String filepath; //location all pages
 	public String name; //table name
+	int numberForPage; // this is needed as pageNames.size() will break once we delete a page
 
 
 
@@ -18,6 +19,7 @@ public class Table implements java.io.Serializable{
 		this.name = name;
 		this.filepath = filepath;
 		this.pageNames = new Vector<String>();
+		numberForPage = 0;
 	}
 
 	
@@ -26,24 +28,64 @@ public class Table implements java.io.Serializable{
 		// check if this is the first tuple to be inserted in the table; if it is create a page and insert it
 		if(pageNames.isEmpty())
 		{
-			Page firstPage = new Page(this.name + "0", 0);
+			Page firstPage = new Page(this.name + this.numberForPage , this.numberForPage++,this.filepath);
 			pageNames.add(firstPage.name);
 			firstPage.tuples.add(tuple);
 			
-			serializedata(firstPage, this.filepath + firstPage.name);
-			serializedata(this, this.filepath + "info");
+			firstPage = firstPage.serializeAndDeletePage();
+			this.serializeAndDeleteTable();
 			
 		}
 		else
 		{
 			Page pageToInsertInto = findPageToInsert(tuple);
 			insertIntoPage(tuple, pageToInsertInto);
-			serializedata(this, this.filepath + "info");
-			
+			this.serializeTable();
 		}
 
 	}
-
+	private Page findPageToInsert(Tuple tuple) throws ClassNotFoundException, DBAppException
+	{
+		int leftPage = 0;
+		int rightPage = this.pageNames.size()-1;
+		int middlePage;
+		//binary search for the page; stop once 2 pages are left
+		while(leftPage-rightPage>2)
+		{
+			middlePage = leftPage + (leftPage + rightPage)/2;
+			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
+			Tuple currTuple = currPage.tuples.get((currPage.tuples.size()/2));
+			if(tuple.compareTo(currTuple)<0)
+				rightPage = middlePage;
+			else if(tuple.compareTo(currTuple)>0)
+				leftPage = middlePage;
+			else
+				throw new DBAppException("The primary key is a duplicate");
+		}
+		
+		Page page1 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(leftPage)));
+		Page page2 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(rightPage)));
+		if(this.pageNames.size()==1)
+		{
+			page2 = null;
+			return page1;
+		}
+		else
+		{
+			if(tuple.compareTo(page1.tuples.lastElement()) < 0)
+			{
+				page2 = null;
+				return page1;
+			}
+			else
+			{
+				page1 = null;
+				return page2;
+			}
+				
+		}
+	}
+	
 	private void insertIntoPage(Tuple tuple, Page page) throws DBAppException, ClassNotFoundException
 	{
 		// binary search for its location inside the page
@@ -85,10 +127,7 @@ public class Table implements java.io.Serializable{
 		if(page.tuples.size()>page.maxNoEnteries)
 			shiftTuples(page);
 		else
-			serializedata(page, this.filepath + page.name);
-		System.out.println(this.pageNames);
-		
-		
+			page = page.serializeAndDeletePage();
 	}
 
 	private void shiftTuples(Page currPage) throws ClassNotFoundException, DBAppException
@@ -101,81 +140,48 @@ public class Table implements java.io.Serializable{
 			currPage.tuples.remove(currPage.tuples.size()-1);
 			// if we reach the end of our pages, create a new page and store the last element in it
 			// otherwise, save our current page and move onto the next page and insert the tmp at the top
-			if(this.pageNames.size()-1==currPage.num)
-					{
-						Page newPage = new Page(this.name + (this.pageNames.size()), this.pageNames.size());
-						this.pageNames.add(newPage.name);
-						newPage.tuples.add(tmp);
-						serializedata(newPage, this.filepath + newPage.name);
-						serializedata(this, this.filepath + "info");
-						break;
-					}
-			serializedata(currPage,this.filepath + currPage.name);
-			currPage = (Page)deserializeData(this.filepath + this.name +(currPage.num+1));
-			currPage.tuples.insertElementAt(tmp, 0);
+			if(this.pageNames.lastElement().equals(currPage.name))
+			{
+				Page newPage = new Page(this.name + (this.numberForPage), this.numberForPage++, this.filepath);
+				this.pageNames.add(newPage.name);
+				newPage.tuples.add(tmp);
+				newPage = newPage.serializeAndDeletePage();
+				this.serializeTable();
+				break;
+			}
+			currPage.serializePage();
+			int nextPage = this.pageNames.indexOf(currPage.name) + 1;
+			currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(nextPage));
+			System.out.println(pageNames);
+			currPage.tuples.insertElementAt(tmp, 0);	
 		}
-		serializedata(currPage, this.filepath + currPage.name);
+		currPage = currPage.serializeAndDeletePage();
 
 
 	}
 
-	private Page findPageToInsert(Tuple tuple) throws ClassNotFoundException, DBAppException
+	
+
+	public void serializeTable()
 	{
-		int leftPage = 0;
-		int rightPage = pageNames.size()-1;
-		int middlePage;
-		//binary search for the page; stop once 2 pages are left
-		while(leftPage-rightPage>2)
-		{
-			middlePage = leftPage + (leftPage + rightPage)/2;
-			Page currPage = (Page)deserializeData(this.filepath + this.name + middlePage);
-			Tuple currTuple = currPage.tuples.get((currPage.tuples.size()/2));
-			if(tuple.compareTo(currTuple)<0)
-				rightPage = middlePage;
-			else if(tuple.compareTo(currTuple)>0)
-				leftPage = middlePage;
-			else
-				throw new DBAppException("The primary key is a duplicate");
-		}
-
-		Page page1 = (Page) deserializeData(this.filepath + this.name + (leftPage));
-		Page page2 = (Page) deserializeData(this.filepath + this.name + (rightPage));
-		if(this.pageNames.size()==1)
-			 return page1;
-		else
-		{
-			if(tuple.compareTo(page1.tuples.get(page1.tuples.size()-1)) < 0)
-				return page1;
-			else
-				return page2;
-		}
-	}
-	public void serializedata(Object o, String filename) {
 		try {
-			FileOutputStream file = new FileOutputStream(filename+".ser");
+			FileOutputStream file = new FileOutputStream(this.filepath + "info.ser");
 			ObjectOutputStream out = new ObjectOutputStream(file);
-			out.writeObject(o);
+			out.writeObject(this);
 			out.close();
 			file.close();
 		} catch (IOException e) {
+			System.out.println("Failed to serialize table!");
 			e.printStackTrace();
 		}
 
 	}
-
-	public Object deserializeData(String filename) throws ClassNotFoundException {
-		try {
-
-			FileInputStream fileIn = new FileInputStream(filename + ".ser");
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			Object output = in.readObject();
-			in.close();
-			fileIn.close();
-			return output;
-
-		} catch (IOException i) {
-
-			return null;
-		}
+	
+	public Table serializeAndDeleteTable()
+	{
+		serializeTable();
+		return null;
 	}
+	
+	
 }
