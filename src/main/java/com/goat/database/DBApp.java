@@ -4,12 +4,16 @@ package com.goat.database;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -20,10 +24,12 @@ import java.util.Vector;
 
 import org.apache.commons.io.FileUtils;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+
 public class DBApp {
 
 	Vector<Table> tables;
-	HelperMethods helper = new HelperMethods();
 
 	public DBApp() throws ClassNotFoundException {
 		init();
@@ -72,22 +78,21 @@ public class DBApp {
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
 		
 		// check if this table already exists
-
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName))
 				throw new DBAppException("A table of this name already exists");
 
-		// create a directory to store pages of this table for later + save our current
-		// list of tables
+		// create a directory to store pages of this table for later 
+		// + create a file called info.ser that stores all info about this table
 		File filepath = new File("./tables/" + strTableName);
 		filepath.mkdirs();
 		Table currTable = new Table(strTableName, filepath.getPath() + "/");
 		tables.add(currTable);
-		serializedata(currTable, "./tables/" + currTable.name + "/info.ser");
+		serializedata(currTable, "./tables/" + currTable.name + "/info");
 
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
-		helper.writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
+		writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
 	}
 
 	// following method creates a B+tree index
@@ -101,8 +106,8 @@ public class DBApp {
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws DBAppException, IOException, ClassNotFoundException {
 		// TODO insert into index
-		// TODO check if inserted column type is valid
-		// TODO check if there are any missing columns
+		
+		// check if the table exists
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
@@ -110,13 +115,14 @@ public class DBApp {
 
 		// check if primary key is null
 		String primaryKeyColName = "";
-		List<List<String>> colDataTypes = helper.getColumnData(omar.name);
+		List<List<String>> colDataTypes = getColumnData(omar.name);
 		// get primary key column name
 		for (int i = 0; i < colDataTypes.size(); i++)
 			if (colDataTypes.get(i).get(3).equals("True"))
 				primaryKeyColName = colDataTypes.get(i).get(1);
 
 		// if primary key is not part of the insertion
+		// TODO change it so that if any column is null, throw an exception
 		if (htblColNameValue.get(primaryKeyColName) == null)
 			throw new DBAppException("Primary key was not found");
 
@@ -135,6 +141,7 @@ public class DBApp {
 		}
 
 		// check if all datatypes are correct
+		// TODO check if it is a valid datatype aslan (if you insert float for example, it will get accepted bardo)
 		for (int i = 0; i < colDataTypes.size(); i++) {
 			String tmp = (colDataTypes.get(i).get(2));
 			if (tmp.equals("java.lang.String"))
@@ -149,9 +156,9 @@ public class DBApp {
 				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double))
 					throw new DBAppException("A column was inserted with the wrong datatype");
 		}
-
+		
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
-		omar.insert(tuple);
+		omar.insertTupleIntoTable(tuple);
 		omar = null;
 		System.out.println("Inserted " + tuple +" succesfully!");
 	}
@@ -227,6 +234,50 @@ public class DBApp {
 		return null;
 	}
 
+	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
+	// all info about this table
+	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException
+	{
+		File file = new File("./resources/metadata.csv"); 
+	    try { 
+	        FileWriter outputfile = new FileWriter("./resources/metadata.csv",true); 
+	        CSVWriter writer = new CSVWriter(outputfile);
+	        Set<String> setOfKeys = htblColNameType.keySet();
+	        for(String keys : setOfKeys)
+	        {
+	        	if(strClusteringKeyColumn.equals((String)keys))
+	        	{
+	        		String[] header = {strTableName, keys, htblColNameType.get(keys), "True", "null", "null"};
+	        		writer.writeNext(header);
+	        	}
+	        	else
+	        	{
+	        		String[] header = {strTableName, keys, htblColNameType.get(keys), "False", "null", "null"};
+	        		writer.writeNext(header);
+	        	}
+
+	        }
+	 	    writer.close(); 
+	    } 
+	    catch (IOException e) { 
+	        e.printStackTrace(); 
+	    }	
+	}
+	
+	//given a table name, returns a 2D list containing all information about its columns
+	public List<List<String>> getColumnData(String tableName) throws IOException
+	{
+		List<List<String>> records = new ArrayList<List<String>>();
+		try (CSVReader csvReader = new CSVReader(new FileReader("./resources/metadata.csv"));) {
+		    String[] values = null;
+		    while ((values = csvReader.readNext()) != null && values[0].equals(tableName)) {
+		        records.add(Arrays.asList(values));
+		    }
+		}
+		return records;
+	}
+	
+	
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();

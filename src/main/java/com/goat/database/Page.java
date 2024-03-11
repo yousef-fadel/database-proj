@@ -17,6 +17,12 @@ public class Page implements java.io.Serializable
 	Vector<Tuple> tuples = new Vector<Tuple>();
 	public int maxNoEnteries;//get maxNoEnteries from file
 	
+	/**
+	 * @param name Name should be "table.name + table.numberForPage" 
+	 * @param num should come from table (table.numberForPage)
+	 * @param tableFilePath ONLY PUT table.filepath, THE CONSTRUCTOR WILL ADD THE REST (also adds .ser to the end)
+	 * @throws DBAppException
+	 */
 	public Page(String name, int num, String tableFilePath) throws DBAppException
 	{
         try {

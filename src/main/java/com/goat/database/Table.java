@@ -1,8 +1,6 @@
 package com.goat.database;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Vector;
 
@@ -13,7 +11,10 @@ public class Table implements java.io.Serializable{
 	int numberForPage; // this is needed as pageNames.size() will break once we delete a page
 
 
-
+	/**
+	 * @param name
+	 * @param filepath Should be "tables/nameOfTable/"
+	 */
 	public Table(String name, String filepath)
 	{
 		this.name = name;
@@ -23,7 +24,7 @@ public class Table implements java.io.Serializable{
 	}
 
 	
-	public void insert(Tuple tuple) throws DBAppException, ClassNotFoundException
+	public void insertTupleIntoTable(Tuple tuple) throws DBAppException, ClassNotFoundException
 	{
 		// check if this is the first tuple to be inserted in the table; if it is create a page and insert it
 		if(pageNames.isEmpty())
