@@ -34,7 +34,7 @@ public class DBApp {
 	public DBApp() throws ClassNotFoundException {
 		init();
 		if(tables==null)
-			System.out.println("ok");
+			System.out.println("Was not able to intialize the tables for some reason; pray");
 	}
 
 	// this does whatever initialization you would like
@@ -60,7 +60,6 @@ public class DBApp {
 		    if (new File("./tables/" + name).isDirectory())
 		    {
 		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
-				System.out.println(tables);
 		    }
 		}
 //		tables = (Vector<Table>) deserializeData("./resources/tables.ser");
@@ -282,17 +281,21 @@ public class DBApp {
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 
-		dbApp.format();
-		dbApp.test1();
-		dbApp.test2();
-	
-		
-		
+//		dbApp.format();
+//		dbApp.test1(dbApp);
+//		dbApp.test2(dbApp);
 
-		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
-		System.out.println(page.tuples);
-		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
-		System.out.println(page.tuples);
+		Hashtable htblColNameValue = new Hashtable( );
+		htblColNameValue.put("id", new Integer( 7 ));
+		dbApp.insertIntoTable( "Student" , htblColNameValue );
+//
+//		
+//		
+//
+//		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
+//		System.out.println(page.tuples);
+//		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
+//		System.out.println(page.tuples);
 
 ////
 //
@@ -350,11 +353,10 @@ public class DBApp {
 		
 	}
 
-	private void test1() throws ClassNotFoundException, DBAppException, IOException
+	private void test1(DBApp	dbApp) throws ClassNotFoundException, DBAppException, IOException
 	{
 
 		String strTableName = "Student";
-		DBApp	dbApp = new DBApp( );
 	
 		
 		Hashtable htblColNameType = new Hashtable( );
@@ -377,16 +379,15 @@ public class DBApp {
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 8 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
-		Page page = (Page) dbApp.deserializeData("./tables/Student/Student0.ser");
-
+		
+		
 
 		
 	}
 	
-	private void test2() throws ClassNotFoundException, DBAppException, IOException
+	private void test2(DBApp	dbApp ) throws ClassNotFoundException, DBAppException, IOException
 	{
 		String strTableName = "Student";
-		DBApp dbApp = new DBApp();
 		Hashtable htblColNameValue = new Hashtable( );
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 25 ));

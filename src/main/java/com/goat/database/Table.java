@@ -153,7 +153,6 @@ public class Table implements java.io.Serializable{
 			currPage.serializePage();
 			int nextPage = this.pageNames.indexOf(currPage.name) + 1;
 			currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(nextPage));
-			System.out.println(pageNames);
 			currPage.tuples.insertElementAt(tmp, 0);	
 		}
 		currPage = currPage.serializeAndDeletePage();
