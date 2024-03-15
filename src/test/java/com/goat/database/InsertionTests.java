@@ -14,9 +14,11 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Vector;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,20 +48,18 @@ public class InsertionTests {
                  try {Files.delete(path);} 
                  catch (IOException e) {e.printStackTrace();}});
         
-		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
 		
-//		File configFile = new File("resources/DBApp.config");
-//		Properties props = new Properties();
-//	    props.setProperty("MaximumRowsCountinPage", "4");
-//	    FileWriter writer = new FileWriter(configFile);
-//	    props.store(writer, "");
-//	    writer.close();
+		File configFile = new File("resources/DBApp.config");
+		Properties props = new Properties();
+	    props.setProperty("MaximumRowsCountinPage", "3");
+	    FileWriter writer = new FileWriter(configFile);
+	    props.store(writer, "");
+	    writer.close();
 
+	    
 		database = new DBApp();
 
-		page1 = new Page();
-		page2 = new Page();
 		
 		htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
@@ -87,46 +87,21 @@ public class InsertionTests {
 		return output;
 	}
 	
-	
-	// fills the page; count is used as the starting point, and fillCompletely fills the page completely if it is true
-	// is used to fill the page completely if needed 
-	void fillPage(int count,boolean fillCompletely, Page page) throws DBAppException
-	{
-		for(int i = count;i<count+(page.maxNoEnteries/2);i++)
-		{
-			Hashtable<String,Object> tmp = new Hashtable<String, Object>();
-			tmp.put("id", new Integer(i));
-			page.tuples.add(new Tuple(i,tmp));
-		}
-		for(int i = 1000 + count;i<1000 + count + (page.maxNoEnteries/2 + page.maxNoEnteries%2) 
-				&& fillCompletely;i++)
-		{
-			Hashtable<String,Object> tmp = new Hashtable<String, Object>();
-			tmp.put("id", new Integer(i));
-			page.tuples.add(new Tuple(i,tmp));
-		}
-
-		
-	}
-	
-	//TODO generalize this method
 	// 7ot el rakam w shift el page
-	void shiftPage(Hashtable<String,Object> htbl)
+	void shiftPage()
 	{
 		Tuple tmp = page1.tuples.get(page1.tuples.size()-1);
-		for(int i = page1.tuples.size()-1;i > 100;i--)
-		{
-			page1.tuples.set(i, page1.tuples.get(i-1));
-		}
-		page1.tuples.set(100, new Tuple(150,htbl));
-		
-		Tuple tmp2 = page2.tuples.get(page2.tuples.size()-1);
-		for(int i = page2.tuples.size()-1;i > 0;i--)
-		{
-			page2.tuples.set(i, page2.tuples.get(i-1));
-		}
-		page2.tuples.set(0, tmp);
-		page2.tuples.add(tmp2);
+		page1.tuples.remove(page1.tuples.size()-1);
+		page2.tuples.insertElementAt(tmp, 0);
+	}
+	boolean equalTuples(Vector<Tuple> v1, Vector<Tuple> v2)
+	{
+		if(v1.size()!=v2.size())
+			return false;
+		for(int i = 0;i<v1.size();i++)
+			if(v1.get(i).compareTo(v2.get(i))!=0)
+				return false;
+		return true;
 	}
 	// Check that it creates the first page for the first insert
 	
@@ -138,9 +113,9 @@ public class InsertionTests {
 	{
 		colData.put("id", new Integer(1));
 		database.insertIntoTable("table", colData);
-		assertTrue(new File("./tables/table/table1.ser").exists(),"The serialized page was not found");
+		assertTrue(new File("./tables/table/table0.ser").exists(),"The serialized page was not found");
 		
-		Page page = (Page) deserializeData("./tables/table/table1.ser");
+		Page page = (Page) deserializeData("./tables/table/table0.ser");
 		
 		tupleForComparing = new Tuple(1,colData);
 		assertTrue(page.tuples.get(0).compareTo(tupleForComparing)==0,"The tuple was not inserted correctly");
@@ -151,33 +126,36 @@ public class InsertionTests {
 	 * pushed down; this test checks if all tuples are succesfully stored
 	 * with no loss of information
 	 */ 	
-	@DisplayName("Inserting into a full page shifts all tuples down")
+	@DisplayName("Inserting in random order automatically sorts tuples from lowest to greatest")
 	@Test
-	@Timeout(value = 200)
-	void Insertion_Shifts_All_Tuples() throws DBAppException, IOException, ClassNotFoundException
+	void Insertion_Orders_Tuples() throws DBAppException, IOException, ClassNotFoundException
 	{
-		fillPage(1,true,page1);
-		fillPage(1200,false,page2);
+		Vector<Tuple> firstPageTuples = new Vector<Tuple>(); 
 		
-		page1.name = "table0.ser";
-		page2.name = "table1.ser";
+		colData.put("id", new Integer(2));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(2,colData));
 		
-		table.pageNames.add(page1.name);
-		table.pageNames.add(page2.name);
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 8 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(8,colData));
 		
-		serializedata(page1, table.filepath+page1.name);
-		serializedata(page2, table.filepath+page2.name);
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 5 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(5,colData));
 		
-		colData.put("id", new Integer(150));
-		database.insertIntoTable("table", colData);
+		Collections.sort(firstPageTuples);
 		
-		shiftPage(colData);
+		assertTrue(new File("./tables/table/table0.ser").exists(),"The serialized page was not found");
 		
-		Page deserializedPage1 = (Page)deserializeData(table.filepath+page1.name);
-		Page deserializedPage2 = (Page)deserializeData(table.filepath+page2.name);
 		
-		assertEquals(page1.tuples,deserializedPage1.tuples);
-		assertEquals(page2.tuples,deserializedPage2.tuples);
+		Page page = (Page) deserializeData("./tables/table/table0.ser");
+		assertTrue(equalTuples(page.tuples,firstPageTuples), "Expected " + firstPageTuples.toString() + " ,but instead got" 
+				+ page.tuples);
+		
+		
 	}
 	
 	// This test checks that if all pages are full, then we create a new page
@@ -186,30 +164,48 @@ public class InsertionTests {
 	@Test
 	void Full_Page_Insertion_Leads_To_New_Page_Created() throws DBAppException, IOException, ClassNotFoundException
 	{
-		fillPage(1,true,page1);
-		fillPage(1200,true,page2);
-		page1.name = "table1.ser";
-		page2.name = "table2.ser";
+		Vector<Tuple> firstPageTuples = new Vector<Tuple>(); 
+		Vector<Tuple> secondPageTuples = new Vector<Tuple>();
 		
-		table.pageNames.add(page1.name);
-		table.pageNames.add(page2.name);
+		colData.put("id", new Integer(2));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(2,colData));
 		
-		serializedata(page1, table.filepath+page1.name);
-		serializedata(page2, table.filepath+page2.name);
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 5 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(5,colData));
 		
-		colData.put("id", new Integer(150));
-		database.insertIntoTable("table", colData);
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 8 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(8,colData));
+				
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 11 ));
+		database.insertIntoTable( "table" , colData );
+		secondPageTuples.add(new Tuple(11,colData));
 		
-		Page deserializedPage3 = (Page)deserializeData(table.filepath+table.pageNames.get(2));
-		tupleForComparing = page2.tuples.get(page2.tuples.size()-1);
 		
-		assertTrue(table.pageNames.size()==3, "A new page was not created or the name was not added to the table itself");
-		assertTrue(deserializedPage3.tuples.get(0).compareTo(tupleForComparing)==0,"The last element of the last page was expected, but it was not found in the last page");
+		
+		Collections.sort(firstPageTuples);
+		
+		System.out.println(secondPageTuples.toString());
+		assertTrue(new File("./tables/table/table0.ser").exists(),"The serialized page0 was not found");
+		assertTrue(new File("./tables/table/table1.ser").exists(),"The serialized page1 was not found");
+		
+		
+		Page page = (Page) deserializeData("./tables/table/table0.ser");
+		Page page2 = (Page) deserializeData("./tables/table/table1.ser");
+		
+		assertTrue(equalTuples(page.tuples,firstPageTuples), "Expected " + firstPageTuples.toString() + " ,but instead got" 
+				+ page.tuples);
+		assertTrue(equalTuples(page2.tuples,secondPageTuples), "Expected " + secondPageTuples.toString() + " ,but instead got" 
+				+ page.tuples);
 	}
 	
 	//TODO This test checks that if we insert onto a table with an indexed column,
 	// it inserts into that index too
-	
 	@Test
 	@Disabled("not implemented")
 	void Insertion_With_Index()
@@ -217,11 +213,114 @@ public class InsertionTests {
 		
 	}
 	
-	//TODO same as insertino for full pages, but for even more pages
+	// general case; insert into multiple pages in an unshuffled order
 	@Test
-	@Disabled
-	void Insertion_For_Multiple_Full_Pages()
+	@DisplayName("Inserting 13 elements with the page size being 3 should have them in the correct order")
+	void Insertion_For_Multiple_Full_Pages() throws ClassNotFoundException, DBAppException, IOException
 	{
+		Vector<Tuple> firstPageTuples = new Vector<Tuple>(); 
+		Vector<Tuple> secondPageTuples = new Vector<Tuple>();
+		Vector<Tuple> thirdPageTuples = new Vector<Tuple>();
+		Vector<Tuple> fourthPageTuples = new Vector<Tuple>();
+		Vector<Tuple> fifthPageTuples = new Vector<Tuple>();
+		
+		colData.put("id", new Integer(2));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(2,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 20 ));
+		database.insertIntoTable( "table" , colData );
+		thirdPageTuples.add(new Tuple(20,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 7 ));
+		database.insertIntoTable( "table" , colData );
+		secondPageTuples.add(new Tuple(7,colData));
+				
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 11 ));
+		database.insertIntoTable( "table" , colData );
+		secondPageTuples.add(new Tuple(11,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 15 ));
+		database.insertIntoTable( "table" , colData );
+		secondPageTuples.add(new Tuple(15,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 31 ));
+		database.insertIntoTable( "table" , colData );
+		fifthPageTuples.add(new Tuple(31,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 1 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(1,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 25 ));
+		database.insertIntoTable( "table" , colData );
+		fourthPageTuples.add(new Tuple(25,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 5 ));
+		database.insertIntoTable( "table" , colData );
+		firstPageTuples.add(new Tuple(5,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 30 ));
+		database.insertIntoTable( "table" , colData );
+		fourthPageTuples.add(new Tuple(30,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 17 ));
+		database.insertIntoTable( "table" , colData );
+		thirdPageTuples.add(new Tuple(17,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 19 ));
+		database.insertIntoTable( "table" , colData );
+		thirdPageTuples.add(new Tuple(19,colData));
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 22 ));
+		database.insertIntoTable( "table" , colData );
+		fourthPageTuples.add(new Tuple(22,colData));
+		
+		
+		Collections.sort(firstPageTuples);
+		Collections.sort(thirdPageTuples);
+		Collections.sort(secondPageTuples);
+		Collections.sort(fourthPageTuples);
+		
+		assertTrue(new File("./tables/table/table0.ser").exists(),"The serialized page0 was not found");
+		assertTrue(new File("./tables/table/table1.ser").exists(),"The serialized page1 was not found");
+		assertTrue(new File("./tables/table/table2.ser").exists(),"The serialized page2 was not found");
+		assertTrue(new File("./tables/table/table3.ser").exists(),"The serialized page3 was not found");
+		assertTrue(new File("./tables/table/table4.ser").exists(),"The serialized page4 was not found");
+		
+		
+		Page page1 = (Page) deserializeData("./tables/table/table0.ser");
+		Page page2 = (Page) deserializeData("./tables/table/table1.ser");
+		Page page3 = (Page) deserializeData("./tables/table/table2.ser");
+		Page page4 = (Page) deserializeData("./tables/table/table3.ser");
+		Page page5 = (Page) deserializeData("./tables/table/table4.ser");
+		System.out.println(page1.tuples);
+		System.out.println(page2.tuples);
+		System.out.println(page3.tuples);
+		System.out.println(page4.tuples);
+		System.out.println(page5.tuples);
+		assertTrue(equalTuples(page1.tuples,firstPageTuples), "Expected " + firstPageTuples.toString() + ", but instead got" 
+				+ page1.tuples + " for page " + page1.name);
+		assertTrue(equalTuples(page2.tuples,secondPageTuples), "Expected " + secondPageTuples.toString() + ", but instead got" 
+				+ page2.tuples + " for page " + page2.name);
+		assertTrue(equalTuples(page3.tuples,thirdPageTuples), "Expected " + thirdPageTuples.toString() + ", but instead got" 
+				+ page3.tuples + " for page " + page3.name);
+		assertTrue(equalTuples(page4.tuples,fourthPageTuples), "Expected " + fourthPageTuples.toString() + ", but instead got" 
+				+ page4.tuples + " for page " + page4.name);		
+		assertTrue(equalTuples(page5.tuples,fifthPageTuples), "Expected " + fifthPageTuples.toString() + ", but instead got" 
+				+ page5.tuples + " for page " + page5.name);
 		
 	}
 	// Checks that if I attempt to insert onto a column that does not exist,
@@ -271,7 +370,6 @@ public class InsertionTests {
 	}
 	
 	@Test
-	@Disabled
 	@DisplayName("Exception is thrown for having a missing column")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -283,7 +381,7 @@ public class InsertionTests {
 		
 		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table2", colData);});
-		assertEquals("",exception.getMessage());
+		assertEquals("A column is missing",exception.getMessage());
 	}
 	
 	@AfterAll
@@ -291,7 +389,7 @@ public class InsertionTests {
 	{
 		File configFile = new File("resources/DBApp.config");
 		Properties props = new Properties();
-	    props.setProperty("MaximumRowsCountinPage", "200");
+	    props.setProperty("MaximumRowsCountinPage", "4");
 	    FileWriter writer = new FileWriter(configFile);
 	    props.store(writer,"");
 	    writer.close();
