@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -18,8 +19,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.Properties;
 import java.util.Vector;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -197,4 +200,16 @@ public class CreateTableTests {
 		assertThrows(DBAppException.class, () -> 
 		{database.createTable("table", "anaMeshMawgood", htbl);});	
 	}
+	
+	@AfterAll
+	static void cleanup() throws IOException
+	{
+		File configFile = new File("resources/DBApp.config");
+		Properties props = new Properties();
+	    props.setProperty("MaximumRowsCountinPage", "4");
+	    FileWriter writer = new FileWriter(configFile);
+	    props.store(writer,"");
+	    writer.close();
+	}
+
 }
