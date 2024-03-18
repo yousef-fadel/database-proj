@@ -46,31 +46,47 @@ public class CreateTableTests {
             .forEach(path -> {
                  try {Files.delete(path);} 
                  catch (IOException e) {e.printStackTrace();}});
-		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
+		new File("./tables/table0").mkdirs();
 		new File("./tables/table1").mkdirs();
-		new File("./tables/table2").mkdirs();
 		
 		htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
 		
-		table1 = new Table("table1","./tables/table1");
-		table2 = new Table("table2","./tables/table2");
+		table1 = new Table("table0","./tables/table0/");
+		table2 = new Table("table1","./tables/table1/");
 		tables = new Vector<Table>();
 		
 		tables.add(table1);
 		tables.add(table2);
 		
-
-		FileOutputStream file = new FileOutputStream("./resources/tables.ser");
-		ObjectOutputStream out = new ObjectOutputStream(file);
-		out.writeObject(tables);
-		out.close();
-		file.close();
+		table1.serializeTable();
+		table2.serializeTable();
 		
 		database = new DBApp();
 		
 	}
+	
+	public void serializedata(Object o, String filename) throws IOException 
+	{
+		FileOutputStream file = new FileOutputStream(filename);
+		ObjectOutputStream out = new ObjectOutputStream(file);
+		out.writeObject(o);
+		out.close();
+		file.close();
+	}
+	public Object deserializeData(String filename) throws ClassNotFoundException, IOException 
+	{
+		FileInputStream fileIn = new FileInputStream(filename);
+		ObjectInputStream in = new ObjectInputStream(fileIn);
+		Object output =in.readObject();
+		in.close();
+		fileIn.close();
+		return output;
+	}
+//-------------------------------------------------------TESTS--------------------------------------------------
+	
+	
 	// If there are tables already saved on the hard disk, then the method should 
 	// find them and insert them onto our vector of tables
 	@Test
@@ -78,8 +94,9 @@ public class CreateTableTests {
 	{
 
 		database.createTable("table6", "id", htbl);
-		assertEquals(tables.get(0).name, database.tables.get(0).name);
-		assertEquals(tables.get(1).name, database.tables.get(1).name);
+		assertTrue(database.tables.size()==3);
+		assertTrue(database.tables.get(0).name.equals(tables.get(0).name) || database.tables.get(0).name.equals(tables.get(1).name) );
+		assertTrue(database.tables.get(1).name.equals(tables.get(0).name) || database.tables.get(1).name.equals(tables.get(1).name) );
 	}
 	
 	//If a table with the same already exists, an exception should be thrown
