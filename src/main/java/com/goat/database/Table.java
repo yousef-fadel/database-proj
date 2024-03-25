@@ -55,9 +55,9 @@ public class Table implements java.io.Serializable{
 		{
 			middlePage = (leftPage + rightPage)/2;
 			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
-			Tuple currTuple = currPage.tuples.get((currPage.tuples.size()/2));
+			Tuple currTuple = currPage.tuples.get(0);
 			if(tuple.compareTo(currTuple)<0)
-				rightPage = middlePage;
+				rightPage = middlePage - 1;
 			else if(tuple.compareTo(currTuple)>0)
 				leftPage = middlePage;
 			else
@@ -100,9 +100,9 @@ public class Table implements java.io.Serializable{
 		{
 			middle = (right - left)/2;
 			if(tuple.compareTo(page.tuples.get(middle))<0)
-				right = middle;
+				right = middle - 1;
 			else if (tuple.compareTo(page.tuples.get(middle))>0)
-				left = middle;
+				left = middle + 1;
 			else 
 				throw new DBAppException("The primary key is a duplicate");
 		}

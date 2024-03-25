@@ -288,6 +288,12 @@ public class DBApp {
 		dbApp.test3();
 //		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
+//		Table table = dbApp.getTable("table");
+//		for(int i = 0;i<table.pageNames.size();i++)
+//		{
+//			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
+//			System.out.println(page.tuples);
+//		}
 
 //
 //		
@@ -392,71 +398,70 @@ public class DBApp {
 		Hashtable htblColNameValue = new Hashtable( );
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 25 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
+		dbApp.insertIntoTable( "table" , htblColNameValue );
 
 	}
 
 	private void test3() throws ClassNotFoundException, DBAppException, IOException
 	{
-		DBApp database = new DBApp();
 		
 		Hashtable<String,String> htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
-		database.createTable("table", "id", htbl);
+		this.createTable("table", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 		
 		colData.put("id", new Integer(2));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 20 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 7 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 				
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 11 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 15 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 31 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 1 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 25 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 5 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 30 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 17 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 19 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 22 ));
-		database.insertIntoTable( "table" , colData );
+		this.insertIntoTable( "table" , colData );
 		
-		Table table = database.getTable("table");
+		Table table = this.getTable("table");
 		for(int i = 0;i<table.pageNames.size();i++)
 		{
 			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
