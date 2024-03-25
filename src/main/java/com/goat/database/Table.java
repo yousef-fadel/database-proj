@@ -51,9 +51,9 @@ public class Table implements java.io.Serializable{
 		int rightPage = this.pageNames.size()-1;
 		int middlePage;
 		//binary search for the page; stop once 2 pages are left
-		while(leftPage-rightPage>2)
+		while(rightPage-leftPage>=2)
 		{
-			middlePage = leftPage + (leftPage + rightPage)/2;
+			middlePage = (leftPage + rightPage)/2;
 			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
 			Tuple currTuple = currPage.tuples.get((currPage.tuples.size()/2));
 			if(tuple.compareTo(currTuple)<0)
@@ -98,7 +98,7 @@ public class Table implements java.io.Serializable{
 		int middle;
 		while(right-left>1)
 		{
-			middle = left + (right - left)/2;
+			middle = (right - left)/2;
 			if(tuple.compareTo(page.tuples.get(middle))<0)
 				right = middle;
 			else if (tuple.compareTo(page.tuples.get(middle))>0)

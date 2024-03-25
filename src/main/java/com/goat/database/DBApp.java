@@ -1,6 +1,8 @@
 /** * @author Wael Abouelsaadat */
 package com.goat.database;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -159,7 +162,7 @@ public class DBApp {
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insertTupleIntoTable(tuple);
 		omar = null;
-		System.out.println("Inserted " + tuple +" succesfully!");
+//		System.out.println("Inserted " + tuple +" succesfully!");
 	}
 
 	// following method updates one row only
@@ -269,8 +272,9 @@ public class DBApp {
 		List<List<String>> records = new ArrayList<List<String>>();
 		try (CSVReader csvReader = new CSVReader(new FileReader("./resources/metadata.csv"));) {
 		    String[] values = null;
-		    while ((values = csvReader.readNext()) != null && values[0].equals(tableName)) {
-		        records.add(Arrays.asList(values));
+		    while ((values = csvReader.readNext()) != null) {
+		    	if(values[0].equals(tableName))
+		    		records.add(Arrays.asList(values));
 		    }
 		}
 		return records;
@@ -280,14 +284,11 @@ public class DBApp {
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
-
-//		dbApp.format();
+		dbApp.format();
+		dbApp.test3();
 //		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
 
-		Hashtable htblColNameValue = new Hashtable( );
-		htblColNameValue.put("id", new Integer( 7 ));
-		dbApp.insertIntoTable( "Student" , htblColNameValue );
 //
 //		
 //		
@@ -393,5 +394,73 @@ public class DBApp {
 		htblColNameValue.put("id", new Integer( 25 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
+	}
+
+	private void test3() throws ClassNotFoundException, DBAppException, IOException
+	{
+		DBApp database = new DBApp();
+		
+		Hashtable<String,String> htbl = new Hashtable<String,String>();
+		htbl.put("id", "java.lang.Integer");
+		database.createTable("table", "id", htbl);
+		Hashtable<String,Object> colData = new Hashtable<String, Object>();
+		
+		colData.put("id", new Integer(2));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 20 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 7 ));
+		database.insertIntoTable( "table" , colData );
+				
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 11 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 15 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 31 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 1 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 25 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 5 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 30 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 17 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 19 ));
+		database.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 22 ));
+		database.insertIntoTable( "table" , colData );
+		
+		Table table = database.getTable("table");
+		for(int i = 0;i<table.pageNames.size();i++)
+		{
+			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
+			System.out.println(page.tuples);
+		}
 	}
 }
