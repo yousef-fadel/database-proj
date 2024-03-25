@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.opencsv.CSVReader; 
@@ -200,7 +201,7 @@ public class CreateTableTests {
 		assertThrows(DBAppException.class, () -> 
 		{database.createTable("table", "anaMeshMawgood", htbl);});	
 	}
-	
+
 	@AfterAll
 	static void cleanup() throws IOException
 	{
