@@ -306,11 +306,11 @@ public class InsertionTests {
 		Page page3 = (Page) deserializeData("./tables/table/table2.ser");
 		Page page4 = (Page) deserializeData("./tables/table/table3.ser");
 		Page page5 = (Page) deserializeData("./tables/table/table4.ser");
-		System.out.println(page1.tuples);
-		System.out.println(page2.tuples);
-		System.out.println(page3.tuples);
-		System.out.println(page4.tuples);
-		System.out.println(page5.tuples);
+//		System.out.println(page1.tuples);
+//		System.out.println(page2.tuples);
+//		System.out.println(page3.tuples);
+//		System.out.println(page4.tuples);
+//		System.out.println(page5.tuples);
 		assertTrue(equalTuples(page1.tuples,firstPageTuples), "Expected " + firstPageTuples.toString() + ", but instead got" 
 				+ page1.tuples + " for page " + page1.name);
 		assertTrue(equalTuples(page2.tuples,secondPageTuples), "Expected " + secondPageTuples.toString() + ", but instead got" 

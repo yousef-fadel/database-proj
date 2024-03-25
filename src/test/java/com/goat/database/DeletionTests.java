@@ -23,49 +23,54 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 @SuppressWarnings("removal")
 public class DeletionTests {
-
+	// TODO test exceptions (5odo copy paste mein insertion tests)
 	DBApp database;
 	Hashtable<String,String> htbl;
 	Hashtable<String,Object> colData;
-	Table table;
+	Table result; // use this to store the result we want (do it by comparing)
+	Table banadyMethod; // call the methods on this table
 	Tuple tupleForComparing;
-	Page page1;
-	Page page2;
+	Page deserializedPage; // 
+	Page pageAfterDeletion; // how the table should look like after deletion
 	Page page3;
 
 	@BeforeEach
 	void init() throws IOException, ClassNotFoundException, DBAppException
 	{
 		Path dir = Paths.get("./tables"); 
-        Files
-            .walk(dir)
-            .sorted(Comparator.reverseOrder())
-            .forEach(path -> {
-                 try {Files.delete(path);} 
-                 catch (IOException e) {e.printStackTrace();}});
-        
+		Files
+		.walk(dir)
+		.sorted(Comparator.reverseOrder())
+		.forEach(path -> {
+			try {Files.delete(path);} 
+			catch (IOException e) {e.printStackTrace();}});
+
 		new File("./resources/metadata.csv").delete();
 
 		File configFile = new File("resources/DBApp.config");
 		Properties props = new Properties();
-	    props.setProperty("MaximumRowsCountinPage", "3");
-	    FileWriter writer = new FileWriter(configFile);
-	    props.store(writer, "");
-	    writer.close();
-	    
+		props.setProperty("MaximumRowsCountinPage", "3");
+		FileWriter writer = new FileWriter(configFile);
+		props.store(writer, "");
+		writer.close();
+
 		database = new DBApp();
 
-		page1 = new Page("table0.ser",0,"tables/table/");
-		page2 = new Page("table1.ser",1,"tables/table/");
-		page3 = new Page("table2.ser",2,"tables/table/");
+//		page1 = new Page("table0.ser",0,"tables/table/");
+//		page2 = new Page("table1.ser",1,"tables/table/");
+//		page3 = new Page("table2.ser",2,"tables/table/");
 
 		htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
-		database.createTable("table", "id", htbl);
-
-		colData = new Hashtable<String, Object>();
-		table = database.tables.get(0);
 		
+		database.createTable("banadyMethod", "id", htbl);
+		database.createTable("result", "id", htbl);
+		
+		
+		colData = new Hashtable<String, Object>();
+		banadyMethod = database.tables.get(0);
+		result = database.tables.get(1);
+
 	}
 	public void serializedata(Object o, String filename) throws IOException 
 	{
@@ -77,45 +82,54 @@ public class DeletionTests {
 	}
 	public Object deserializeData(String filename) throws ClassNotFoundException, IOException 
 	{
-		FileInputStream fileIn = new FileInputStream(filename);
-		ObjectInputStream in = new ObjectInputStream(fileIn);
-		Object output =in.readObject();
-		in.close();
-		fileIn.close();
-		return output;
+		try {
+			FileInputStream fileIn;
+			if(filename.contains(".ser"))
+				fileIn = new FileInputStream(filename);
+			else
+				fileIn = new FileInputStream(filename + ".ser"); 
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			Object output = in.readObject();
+			in.close();
+			fileIn.close();
+			return output;
+		}
+		catch(IOException e) 
+		{
+			e.printStackTrace();
+		}
+		return null;
 	}
-	
+
 	//-------------------------------------------------------TESTS--------------------------------------------------------------
 	//This checks if one tuple is deleted from the page
 	@Test
 	void Delete_Tuple_From_Page() throws IOException, DBAppException, ClassNotFoundException
 	{
 		colData.put("id", new Integer(5));
-		Tuple tuple = new Tuple(5,colData);
-
-		colData = new Hashtable<String, Object>();
+		database.insertIntoTable("result", colData);
+		database.insertIntoTable("banadyMethod", colData);
+		
+		colData.clear();
 		colData.put("id", new Integer(10));
-		Tuple tobedeleted = new Tuple(6,colData);
+		database.insertIntoTable("banadyMethod", colData);
 
-		page1.tuples.add(tuple);
-		page1.tuples.add(tobedeleted);
-		table.pageNames.add(page1.name);
-		table.numberForPage = 1;
+		database.deleteFromTable("banadyMethod", colData);
+
+		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
+		Page resultPage = (Page) deserializeData(result.filepath + result.name + 0);
+		Tuple expectedTuple = resultPage.tuples.get(0);
 		
-		page1.serializePage();
-		database.deleteFromTable("table", colData);
-		
-		page1 = (Page) deserializeData(page1.pageFilepath);
-		System.out.println(page1.tuples.toString());
-		assertTrue(page1.tuples.size()==1, "Expected one tuple to be in the page, but instead there are "
-				+ page1.tuples.size() + " tuples in the page");
-		assertTrue(page1.tuples.get(0).compareTo(tuple)==0, "Expected tuple " + tuple + ", but instead got tuple " + page1.tuples.get(0));
+		assertTrue(banadyMethodPage.tuples.size()==1, "Expected one tuple to be in the page, but instead there are "
+				+ banadyMethodPage.tuples.size() + " tuples in the page");
+		assertTrue(banadyMethodPage.tuples.get(0).compareTo(expectedTuple)==0, 
+				"Expected tuple " + expectedTuple + ", but instead got tuple " + banadyMethodPage.tuples.get(0));
 	}
 
-	// This checks that if multiple tuples satisfy the deletion condition,
-	// all of them are also deleted
-//	@Test
-	void Delete_Multiple_Tuples_From_Page()
+	// Checks that if no tuples meet condition for deleted, then nothing is deleted
+	@Test
+	@Disabled
+	void No_Tuples_Deleted_For_False_Info()
 	{
 
 	}
@@ -125,59 +139,70 @@ public class DeletionTests {
 	void No_Empty_Space_In_Page_After_Deletion() throws DBAppException, ClassNotFoundException, IOException
 	{
 		colData.put("id", new Integer(2));
-		Tuple tuple1 = new Tuple(2,colData);
-		
+		database.insertIntoTable("result", colData);
+		database.insertIntoTable("banadyMethod", colData);
+
+		colData.clear();
 		colData = new Hashtable<String, Object>();
 		colData.put("id", new Integer(5));
-		Tuple tobedeleted = new Tuple(5,colData);
+		database.insertIntoTable("banadyMethod", colData);
 
+		colData.clear();
 		colData = new Hashtable<String, Object>();
 		colData.put("id", new Integer(10));
-		Tuple tuple2 = new Tuple(6,colData);
+		database.insertIntoTable("result", colData);
+		database.insertIntoTable("banadyMethod", colData);
 
-		page1.tuples.add(tuple1);
-		page1.tuples.add(tobedeleted);
-		page1.tuples.add(tuple2);
-		table.pageNames.add(page1.name);
-		table.numberForPage = 1;
-		
-		page1.serializePage();
-		
 		colData = new Hashtable<String, Object>();
 		colData.put("id", new Integer(5));
 		database.deleteFromTable("table", colData);
-		
-		page1 = (Page) deserializeData(page1.pageFilepath);
-		
-		assertTrue(page1.tuples.size()==2, "Expected number of tuples in page to be two, but instead there are "
-				+ "" + page1.tuples.size() + " tuples in the page");
-		assertTrue(page1.tuples.get(0).compareTo(tuple1)==0, "Expected first tuple in page to be " + tuple1 + " but instead got "
-				   + page1.tuples.get(0));		
-		assertTrue(page1.tuples.get(1).compareTo(tuple2)==0, "Expected second tuple in page to be " + tuple2 + " but instead got "
-				+ page1.tuples.get(1));
-		
+
+		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
+		Page resultPage = (Page) deserializeData(result.filepath + result.name + 0);
+
+		assertTrue(banadyMethodPage.tuples.size()==2, "Expected number of tuples in page to be two, but instead there are "
+				+ "" + banadyMethodPage.tuples.size() + " tuples in the page");
+		assertTrue(banadyMethodPage.tuples.get(0).compareTo(resultPage.tuples.get(0))==0, 
+				"Expected first tuple in page to be " + resultPage.tuples.get(0) + " but instead got "
+				+ banadyMethodPage.tuples.get(0));		
+		assertTrue(banadyMethodPage.tuples.get(1).compareTo(resultPage.tuples.get(1))==0, 
+				"Expected second tuple in page to be " + resultPage.tuples.get(1) + " but instead got "
+				+ banadyMethodPage.tuples.get(1));
+
 	}
 
 	// This checks that if we delete the last tuple from a page, it
 	// also deletes the entire page
 	@Test
-	void Delete_Page_Once_Last_Tuple_Is_Deleted() throws DBAppException, IOException
+	void Delete_Page_Once_Last_Tuple_Is_Deleted() throws DBAppException, IOException, ClassNotFoundException
 	{
 		colData.put("id", new Integer(5));
-		Tuple tuple = new Tuple(5,colData);
-
-		page1.tuples.add(tuple);
-		table.pageNames.add(page1.name);
-		table.numberForPage = 1;
-		
-		page1.serializePage();
+		database.insertIntoTable("banadyMethod", colData);	
 
 		database.deleteFromTable("table", colData);
-		
-		assertTrue(table.pageNames.size()==0, "Page name was not deleted from the table");
-		
+
+		assertTrue(banadyMethod.pageNames.size()==0, "Page name was not deleted from the table");
+
 		assertThrows(FileNotFoundException.class, () ->
-		{deserializeData(page1.pageFilepath);}, "Page was not deleted from the hard disk");
+		{deserializeData(banadyMethod.filepath + "banadyMethod0");}, "Page was not deleted from the hard disk");
+	}
+
+	// This checks that if multiple tuples satisfy the deletion condition,
+	// all of them are also deleted
+	@Disabled
+	@Test
+	void Delete_Multiple_Tuples_From_Page()
+	{
+
+	}
+
+	// This checks that if I have multiple deletion conditions,
+	// all of tuples meeting that condition are deleted
+	@Test
+	@Disabled
+	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions()
+	{
+
 	}
 
 	// This checks that deleting the tuple also deletes it from the
