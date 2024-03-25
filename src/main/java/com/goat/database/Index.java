@@ -2,9 +2,11 @@ package com.goat.database;
 
 import java.io.Serializable;
 // TODO index should be saved in tables/TableName/indices/IndexName
+// TODO index fannout should be gotten from config file
 public class Index implements Serializable{
 	String name;
 	String filepath;
+	//btree variable here
 	
 	// index name given by user; filepath hatkoon table.filepath + "/indices/" + this.name + "/"
 	public Index(String name, String filepath)
