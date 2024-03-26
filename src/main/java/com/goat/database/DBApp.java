@@ -77,6 +77,7 @@ public class DBApp {
 	// be passed in htblColNameType
 	// htblColNameValue will have the column name as key and the data
 	// type as value
+
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
 		
@@ -119,50 +120,49 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 
 
-		// check if primary key is null
-		String primaryKeyColName = "";
-		List<List<String>> colDataTypes = getColumnData(omar.name);
-		// get primary key column name
-		for (int i = 0; i < colDataTypes.size(); i++)
-			if (colDataTypes.get(i).get(3).equals("True"))
-				primaryKeyColName = colDataTypes.get(i).get(1);
+		// get the names of the columns in the table
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		ArrayList<String> colTableNames = new ArrayList<String>();
+		for (int i = 0; i < tableInfo.size(); i++)
+			colTableNames.add(tableInfo.get(i).get(1));
 
-		// if primary key is not part of the insertion
-		// TODO change it so that if any column is null, throw an exception
-		if (htblColNameValue.get(primaryKeyColName) == null)
-			throw new DBAppException("Primary key was not found");
+		// check that all columns in the table have a value in the hashtable
+		for(String currCol:colTableNames)
+			if (htblColNameValue.get(currCol) == null)
+				throw new DBAppException("The hashtable is missing data for one of the columns");
 
-		// check if the columns inserted exist
-		Set<String> setOfColNames = htblColNameValue.keySet();
-		Iterator <String> iter = setOfColNames.iterator();
-		while (iter.hasNext()) {
-			String tmp = iter.next();
-			for (int j = 0; j < colDataTypes.size(); j++) {
-				if (colDataTypes.get(j).get(1).equals(tmp))
-					break;
-				if (j == colDataTypes.size() - 1)
-					throw new DBAppException("Column inserted does not exist");
-
-			}
-		}
+		// check that the columns in the hashtable exist in the table
+		 Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		 System.out.println(colTableNames);
+		 while(colNameValueIterator.hasNext())
+		 {
+			 Map.Entry<String,Object> currCol = colNameValueIterator.next();
+			 String colName = currCol.getKey();
+			 if(!colTableNames.contains(colName))
+			 	throw new DBAppException("The hashtable has an extra column that does not exist in the table");
+		 }
 
 		// check if all datatypes are correct
 		// TODO check if it is a valid datatype aslan (if you insert float for example, it will get accepted bardo)
-		for (int i = 0; i < colDataTypes.size(); i++) {
-			String tmp = (colDataTypes.get(i).get(2));
+		for (int i = 0; i < tableInfo.size(); i++) {
+			String tmp = (tableInfo.get(i).get(2));
 			if (tmp.equals("java.lang.String"))
-				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof String))
+				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof String))
 					throw new DBAppException("A column was inserted with the wrong datatype");
 
 			if (tmp.equals("java.lang.Integer"))
-				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Integer))
+				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof Integer))
 					throw new DBAppException("A column was inserted with the wrong datatype");
 
 			if (tmp.equals("java.lang.double"))
-				if (!(htblColNameValue.get(colDataTypes.get(i).get(1)) instanceof Double))
+				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof Double))
 					throw new DBAppException("A column was inserted with the wrong datatype");
 		}
 		
+		//TODO get primary key here
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		if(primaryKeyColName == null)
+			throw new DBAppException("An error occured while looking for primary key; please try again");
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insertTupleIntoTable(tuple);
 		omar = null;
@@ -193,6 +193,14 @@ public class DBApp {
 		return null;
 	}
 
+	private String getPrimaryKeyName(List<List<String>> tableInfo)
+	{
+		for (int i = 0; i < tableInfo.size(); i++)
+			if (tableInfo.get(i).get(3).equals("True"))
+				return tableInfo.get(i).get(1);
+		
+		return null;		
+	}
 	public static void serializedata(Object o, String filename) {
 		try {
 			FileOutputStream file;
@@ -250,7 +258,6 @@ public class DBApp {
 	        CSVWriter writer = new CSVWriter(outputfile);
 	        
 	        String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
-	        Set<String> colNamesSet = htblColNameType.keySet();
 	        Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
 	        // the reason for two loops is because we want to check the data before starting to write onto
 	        // the csv file; we cant do both at the same time
