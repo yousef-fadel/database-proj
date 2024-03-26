@@ -143,30 +143,31 @@ public class DBApp {
 		 }
 
 		// check if all datatypes are correct
-		// TODO check if it is a valid datatype aslan (if you insert float for example, it will get accepted bardo)
 		for (int i = 0; i < tableInfo.size(); i++) {
-			String tmp = (tableInfo.get(i).get(2));
-			if (tmp.equals("java.lang.String"))
-				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof String))
+			String colType = (tableInfo.get(i).get(2));
+			String colName = tableInfo.get(i).get(1);
+			if (colType.equals("java.lang.String")) {
+				if (!(htblColNameValue.get(colName) instanceof String))
 					throw new DBAppException("A column was inserted with the wrong datatype");
-
-			if (tmp.equals("java.lang.Integer"))
-				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof Integer))
+			}
+			else if (colType.equals("java.lang.Integer")) {
+				if (!(htblColNameValue.get(colName) instanceof Integer))
 					throw new DBAppException("A column was inserted with the wrong datatype");
-
-			if (tmp.equals("java.lang.double"))
-				if (!(htblColNameValue.get(tableInfo.get(i).get(1)) instanceof Double))
+			}
+			else if (colType.equals("java.lang.Double")) {
+				if (!(htblColNameValue.get(colName) instanceof Double))
 					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
+				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
 		}
 		
-		//TODO get primary key here
 		String primaryKeyColName = getPrimaryKeyName(tableInfo);
 		if(primaryKeyColName == null)
 			throw new DBAppException("An error occured while looking for primary key; please try again");
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insertTupleIntoTable(tuple);
-		omar = null;
-//		System.out.println("Inserted " + tuple +" succesfully!");
+		omar = omar.serializeAndDeleteTable();
 	}
 
 	// following method updates one row only
