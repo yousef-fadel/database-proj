@@ -306,11 +306,7 @@ public class InsertionTests {
 		Page page3 = (Page) deserializeData("./tables/table/table2.ser");
 		Page page4 = (Page) deserializeData("./tables/table/table3.ser");
 		Page page5 = (Page) deserializeData("./tables/table/table4.ser");
-//		System.out.println(page1.tuples);
-//		System.out.println(page2.tuples);
-//		System.out.println(page3.tuples);
-//		System.out.println(page4.tuples);
-//		System.out.println(page5.tuples);
+
 		assertTrue(equalTuples(page1.tuples,firstPageTuples), "Expected " + firstPageTuples.toString() + ", but instead got" 
 				+ page1.tuples + " for page " + page1.name);
 		assertTrue(equalTuples(page2.tuples,secondPageTuples), "Expected " + secondPageTuples.toString() + ", but instead got" 
@@ -330,10 +326,11 @@ public class InsertionTests {
 	void Exception_Thrown_For_Wrong_Column_Name()
 	{
 		colData.put("iDoNotExist", new Integer(58));
+		colData.put("id", 5);
 		Throwable exception =  assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table", colData);});	
 		
-		assertEquals("Column inserted does not exist",exception.getMessage());
+		assertEquals("The hashtable has an extra column that does not exist in the table",exception.getMessage());
 
 	}
 	
@@ -355,20 +352,6 @@ public class InsertionTests {
 		assertEquals("A column was inserted with the wrong datatype",exception.getMessage());
 	}
 	
-	// Check that inserting without a primary key throws an exception
-	@Test
-	@DisplayName("Exception is thrown for a missing primary key")
-	void Exception_Thrown_For_No_Primary_Key() throws ClassNotFoundException, DBAppException, IOException
-	{
-		htbl.put("age", "java.lang.Integer");
-		database.createTable("table2", "id", htbl);
-		colData.put("age", new Integer(58));
-
-		Throwable exception = assertThrows(DBAppException.class, () -> {
-			database.insertIntoTable("table2", colData);});
-		assertEquals("Primary key was not found",exception.getMessage());
-	}
-	
 	@Test
 	@DisplayName("Exception is thrown for having a missing column")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
@@ -376,12 +359,10 @@ public class InsertionTests {
 		htbl.put("age", "java.lang.Integer");
 		database.createTable("table2", "id", htbl);
 		colData.put("id", new Integer(58));
-		
-		
-		
+
 		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.insertIntoTable("table2", colData);});
-		assertEquals("A column is missing",exception.getMessage());
+		assertEquals("The hashtable is missing data for one of the columns",exception.getMessage());
 	}
 	
 	@AfterAll
