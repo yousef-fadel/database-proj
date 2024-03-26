@@ -353,6 +353,36 @@ public class InsertionTests {
 	}
 	
 	@Test
+	@DisplayName("Exception is thrown for having nonexistent datatype")
+	void Exception_Thrown_For_Nonexistent_DataType() throws ClassNotFoundException, DBAppException, IOException
+	{
+		htbl.put("id", "java.lang.String");
+		htbl.put("gpa", "java.lang.Double");
+		database.createTable("student", "id", htbl);
+		
+		colData.put("id",new String("you"));
+		colData.put("gpa", new Float(2.3));
+		Throwable exception = assertThrows(DBAppException.class, () -> 
+		{database.insertIntoTable("student", colData);});
+		assertEquals("A column was inserted with the wrong datatype",exception.getMessage());
+
+		colData.clear();
+		colData.put("id", new String("wow"));
+		colData.put("gpa", new Integer(2));
+		exception = assertThrows(DBAppException.class, () -> 
+		{database.insertIntoTable("student", colData);});	
+		assertEquals("A column was inserted with the wrong datatype",exception.getMessage());
+		
+		colData.clear();
+		colData.put("id", new Integer(23));
+		colData.put("gpa", new Double(2.3));
+		exception = assertThrows(DBAppException.class, () -> 
+		{database.insertIntoTable("student", colData);});	
+		assertEquals("A column was inserted with the wrong datatype",exception.getMessage());
+
+	}
+	
+	@Test
 	@DisplayName("Exception is thrown for having a missing column")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
 	{
