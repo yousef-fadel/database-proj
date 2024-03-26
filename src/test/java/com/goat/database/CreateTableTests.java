@@ -131,19 +131,27 @@ public class CreateTableTests {
 	@Test
 	public void Deserializating_Tables_Should_Contain_All_Tables() throws ClassNotFoundException, DBAppException, IOException
 	{
-		String names[] = {"table1","table2","table3","table4","table5"};
+		String names[] = {"table0","table1","table2","table3","table4"};
 		database.createTable(names[2], "id", htbl);
 		database.createTable(names[3], "id", htbl);
 		database.createTable(names[4], "id", htbl);
-		FileInputStream fileIn = new FileInputStream("resources/tables.ser");
-		ObjectInputStream in = new ObjectInputStream(fileIn);
-		Vector<Table> tables = (Vector<Table>)in.readObject();
-		in.close();
-		fileIn.close();
-		
+		File file = new File("./tables");
+		String[] fileNames = file.list();
+		for(String name : fileNames)
+		{
+		    if (new File("./tables/" + name).isDirectory())
+		    {
+		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
+		    }
+		}
+		ArrayList<String> tableNamesDeserialized = new ArrayList<String>();
 		for(int i =0;i<tables.size();i++)
 		{
-			assertEquals(names[i],tables.get(i).name);
+			tableNamesDeserialized.add(tables.get(i).name);
+		}
+		for(int i =0;i<names.length;i++)
+		{
+			assertTrue(tableNamesDeserialized.contains(names[i]));
 		}
 	}
 	
@@ -166,6 +174,7 @@ public class CreateTableTests {
         String[] nextRow;
         while ((nextRow = reader.readNext()) != null) 
         	csvFile.add(nextRow);
+        reader.close();
         // or CSVReader reader = new CSVReader(new FileReader(csvFile)); 
         // List<String[]> rows = reader.readAll();
 
@@ -187,8 +196,10 @@ public class CreateTableTests {
 	public void Only_Certain_Datatypes_Allowed()
 	{
 		htbl.put("invalidcolumn", "java.lang.Float");
-		assertThrows(DBAppException.class, () -> 
+		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.createTable("table", "id", htbl);});	
+		
+		assertEquals("Column has invalid datatype",exception.getMessage());
 	}
 	
 	// Having the clustering key be a column that does not exist in the hashtable
@@ -198,13 +209,17 @@ public class CreateTableTests {
 	public void Primary_Key_Should_Exist_In_HashTable()
 	{
 		//only column in our htbl is id
-		assertThrows(DBAppException.class, () -> 
+		Throwable exception = assertThrows(DBAppException.class, () -> 
 		{database.createTable("table", "anaMeshMawgood", htbl);});	
+
+		assertEquals("Clustering key does not exist in columns",exception.getMessage());
+
 	}
 
 	@AfterAll
 	static void cleanup() throws IOException
 	{
+		new File("./resources/metadata.csv").delete();
 		File configFile = new File("resources/DBApp.config");
 		Properties props = new Properties();
 	    props.setProperty("MaximumRowsCountinPage", "4");
