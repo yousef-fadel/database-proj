@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -83,7 +84,12 @@ public class DBApp {
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName))
 				throw new DBAppException("A table of this name already exists");
-
+		
+		// write onto the metadata file the following info:
+		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
+		// method also checks if the datatypes are valid and that the clustering key exists in the table
+		writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
+		
 		// create a directory to store pages of this table for later 
 		// + create a file called info.ser that stores all info about this table
 		File filepath = new File("./tables/" + strTableName);
@@ -92,9 +98,7 @@ public class DBApp {
 		tables.add(currTable);
 		serializedata(currTable, "./tables/" + currTable.name + "/info");
 
-		// write onto the metadata file the following info:
-		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
-		writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
+
 	}
 
 	// following method creates a B+tree index
@@ -238,28 +242,54 @@ public class DBApp {
 
 	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
 	// all info about this table
-	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException
+	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
 	    try { 
-	        FileWriter outputfile = new FileWriter("./resources/metadata.csv",true); 
+	        FileWriter outputfile = new FileWriter(file,true); 
 	        CSVWriter writer = new CSVWriter(outputfile);
-	        Set<String> setOfKeys = htblColNameType.keySet();
-	        for(String keys : setOfKeys)
+	        
+	        String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
+	        Set<String> colNamesSet = htblColNameType.keySet();
+	        Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
+	        // the reason for two loops is because we want to check the data before starting to write onto
+	        // the csv file; we cant do both at the same time
+	        boolean clusteringKeyExists = false;
+	        while(colData.hasNext())
 	        {
-	        	if(strClusteringKeyColumn.equals((String)keys))
+	        	Map.Entry<String,String> currCol = colData.next();
+	        	String colName = currCol.getKey();
+	        	String colDataType = currCol.getValue();
+	        	if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
+	        		throw new DBAppException("Column has invalid datatype");
+	        	if(colName.equals(strClusteringKeyColumn))
+	        		clusteringKeyExists = true;
+	        
+	        }
+	        if(!clusteringKeyExists)
+	        	throw new DBAppException("Clustering key does not exist in columns");
+	        
+	        colData = htblColNameType.entrySet().iterator();	  
+	        while(colData.hasNext())
+	        {
+	        	Map.Entry<String,String> currCol = colData.next();
+	        	String colName = currCol.getKey();
+	        	String colDataType = currCol.getValue();
+	        	// check if it is valid data type aslan
+	        	if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
+	        		throw new DBAppException("Column has invalid datatype");
+	        	if(strClusteringKeyColumn.equals(colName))
 	        	{
-	        		String[] header = {strTableName, keys, htblColNameType.get(keys), "True", "null", "null"};
+	        		String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
 	        		writer.writeNext(header);
 	        	}
 	        	else
 	        	{
-	        		String[] header = {strTableName, keys, htblColNameType.get(keys), "False", "null", "null"};
+	        		String[] header = {strTableName, colName, colDataType, "False", "null", "null"};
 	        		writer.writeNext(header);
 	        	}
-
 	        }
-	 	    writer.close(); 
+	        writer.close();
 	    } 
 	    catch (IOException e) { 
 	        e.printStackTrace(); 
@@ -288,7 +318,7 @@ public class DBApp {
 		dbApp.test3();
 //		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
-//		Table table = dbApp.getTable("table");
+//		Table table = dbApp.getTable("Student");
 //		for(int i = 0;i<table.pageNames.size();i++)
 //		{
 //			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
@@ -371,16 +401,16 @@ public class DBApp {
 		dbApp.createTable( strTableName, "id", htblColNameType );
 
 		Hashtable htblColNameValue = new Hashtable( );
-		htblColNameValue.put("id", new Integer( 21 ));
+		htblColNameValue.put("id", new Integer( 5 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 		
 		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 5 ));
+		htblColNameValue.put("id", new Integer( 7 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 3 ));
+		htblColNameValue.put("id", new Integer( 20 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 		htblColNameValue.clear( );
