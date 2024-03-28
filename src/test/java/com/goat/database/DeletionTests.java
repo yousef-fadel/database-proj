@@ -202,8 +202,8 @@ public class DeletionTests {
 		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
 		Page resultPage = (Page) deserializeData(result.filepath + result.name + 0);
 
-//		assertTrue(banadyMethodPage.tuples.size()==2, "Expected two tuples to be in the page, but instead there are "
-//				+ banadyMethodPage.tuples.size() + " tuples in the page");
+		assertTrue(banadyMethodPage.tuples.size()==2, "Expected two tuples to be in the page, but instead there are "
+				+ banadyMethodPage.tuples.size() + " tuples in the page");
 		assertTrue(comparePage(banadyMethodPage,resultPage), "\nExpected the tuples to be: \n" + resultPage + "\n but instead"
 				+ " got: \n" + banadyMethodPage);
 		
@@ -233,16 +233,18 @@ public class DeletionTests {
 	void Delete_Multiple_Tuples_From_Page_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int deletionAge = random.nextInt();
+		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
+		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+                .mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
 		// we do the following in the loop: create one tuple completely random and put it in both tables
 		// and create another tuple that has an age that we will use to delete when we call the method
 		for(int i = 0;i<pageSize*5;i++)
 		{
-			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
-			int age =  random.nextInt();
-			double gpa = Double.parseDouble(df.format(random.nextDouble())); // kolo da 3ashan a5leeh 4 decimal spaces
+			int age =  uniqueAge[i];
+			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i+age);
+			colData.put("id", i*age);
 			colData.put("age", age);
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
@@ -278,19 +280,19 @@ public class DeletionTests {
 	@Test
 	void Delete_Multiple_Tuples_From_Page_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
-		double[] uniqueGPA = new Random().doubles().distinct().limit(pageSize*5+5).mapToObj(d -> (double) Math.round(d * 1000) / 1000) // Round to 3 decimal places
-                .mapToDouble(Double::doubleValue).toArray();
+		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
+		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+                .mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
 		double deletionGPA = uniqueGPA[uniqueGPA.length-1];
 		// we do the following in the loop: create one tuple completely random and put it in both tables
-		// and create another tuple that has an age that we will use to delete when we call the method
+		// and create another tuple that has gpa that we will use to delete when we call the method
 		for(int i = 0;i<pageSize*5;i++)
 		{
-			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
-			int age = random.nextInt();
+			int age = uniqueAge[i];
 			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i+age);
+			colData.put("id", i*age);
 			colData.put("age", age);
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
@@ -298,7 +300,7 @@ public class DeletionTests {
 			database.insertIntoTable("banadyMethod", colData);
 			
 			colData.clear();
-			colData.put("id", new Integer(age/2)); // to get a unqiue id we add deletion age to it
+			colData.put("id", new Integer(age/2)); 
 			colData.put("age", new Integer(age));
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(deletionGPA));
@@ -327,16 +329,18 @@ public class DeletionTests {
 	void Delete_Multiple_Tuples_From_Page_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		String deletionName = randomString();
+		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
+		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+                .mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
 		// we do the following in the loop: create one tuple completely random and put it in both tables
-		// and create another tuple that has an age that we will use to delete when we call the method
+		// and create another tuple that has a name that we will use to delete when we call the method
 		for(int i = 0;i<pageSize*5;i++)
 		{
-			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
-			int age =  Math.abs(random.nextInt());
-			double gpa = Double.parseDouble(df.format(random.nextDouble())); // kolo da 3ashan a5leeh 4 decimal spaces
+			int age =  uniqueAge[i];
+			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i+age);
+			colData.put("id", i*age);
 			colData.put("age", age);
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
@@ -375,6 +379,28 @@ public class DeletionTests {
 	{
 		
 	}
+	
+	@Test
+	@Disabled
+	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_Double()
+	{
+		
+	}
+	
+	@Test
+	@Disabled
+	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Double_And_String()
+	{
+		
+	}
+	
+	@Test
+	@Disabled
+	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_Double_And_String()
+	{
+		
+	}
+	
 
 	// This checks that deleting the tuple also deletes it from the
 	// index (if it exists)
