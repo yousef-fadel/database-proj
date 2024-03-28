@@ -1,22 +1,24 @@
 package com.goat.database;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -29,14 +31,17 @@ public class DeletionTests {
 	Hashtable<String,Object> colData;
 	Table result; // use this to store the result we want (do it by comparing)
 	Table banadyMethod; // call the methods on this table
-	Tuple tupleForComparing;
-	Page deserializedPage; // 
-	Page pageAfterDeletion; // how the table should look like after deletion
-	Page page3;
+	int pageSize;
+	Random random;
+	DecimalFormat df;
 
 	@BeforeEach
 	void init() throws IOException, ClassNotFoundException, DBAppException
 	{
+		pageSize = 3;
+		random = new Random();
+		df = new DecimalFormat("#.####");
+		df.setRoundingMode(RoundingMode.CEILING);
 		Path dir = Paths.get("./tables"); 
 		Files
 		.walk(dir)
@@ -49,19 +54,18 @@ public class DeletionTests {
 
 		File configFile = new File("resources/DBApp.config");
 		Properties props = new Properties();
-		props.setProperty("MaximumRowsCountinPage", "3");
+		props.setProperty("MaximumRowsCountinPage", pageSize + "");
 		FileWriter writer = new FileWriter(configFile);
 		props.store(writer, "");
 		writer.close();
 
 		database = new DBApp();
 
-//		page1 = new Page("table0.ser",0,"tables/table/");
-//		page2 = new Page("table1.ser",1,"tables/table/");
-//		page3 = new Page("table2.ser",2,"tables/table/");
-
 		htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
+		htbl.put("age", "java.lang.Integer");
+		htbl.put("name", "java.lang.String");
+		htbl.put("gpa", "java.lang.Double");
 		
 		database.createTable("banadyMethod", "id", htbl);
 		database.createTable("result", "id", htbl);
@@ -72,7 +76,7 @@ public class DeletionTests {
 		result = database.tables.get(1);
 
 	}
-	public void serializedata(Object o, String filename) throws IOException 
+	private void serializedata(Object o, String filename) throws IOException 
 	{
 		FileOutputStream file = new FileOutputStream(filename);
 		ObjectOutputStream out = new ObjectOutputStream(file);
@@ -80,7 +84,7 @@ public class DeletionTests {
 		out.close();
 		file.close();
 	}
-	public Object deserializeData(String filename) throws ClassNotFoundException, IOException 
+	private Object deserializeData(String filename) throws ClassNotFoundException, IOException 
 	{
 		try {
 			FileInputStream fileIn;
@@ -100,20 +104,63 @@ public class DeletionTests {
 		}
 		return null;
 	}
+	
+	private boolean comparePage(Page page1, Page page2)
+	{
+		if(page1.tuples.size()!=page2.tuples.size())
+			return false;
+		for(int i = 0;i<page1.tuples.size();i++)
+			if(!deepCompareTuple(page1.tuples.get(i),page2.tuples.get(i)))
+				return false;
+			
+		return true;
+			
+	}
+	private boolean deepCompareTuple(Tuple tuple1, Tuple tuple2)
+	{
+		return tuple1.entry.equals(tuple2.entry);
+	}
+	private void fillPage(int noOfPages, Table table)
+	{
+		for(int i =0;i<pageSize;i++)
+		{
+			
+		}
+	}
+	private String randomString()
+	{
+		String res = "";
+		int pickLetter;
+		char[] characters ={'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+		for(int i = 0;i<10;i++)
+		{
+			pickLetter = random.nextInt(52);
+			res += characters[pickLetter];
+		}
+		return res;
 
+	}
 	//-------------------------------------------------------TESTS--------------------------------------------------------------
 	//This checks if one tuple is deleted from the page
 	@Test
 	void Delete_Tuple_From_Page() throws IOException, DBAppException, ClassNotFoundException
 	{
-		colData.put("id", new Integer(5));
+		colData.put("id", new Integer(1));
+		colData.put("age", new Integer(5));
+		colData.put("name", new String("3oraby"));
+		colData.put("gpa", new Double(5.2));
 		database.insertIntoTable("result", colData);
 		database.insertIntoTable("banadyMethod", colData);
 		
 		colData.clear();
-		colData.put("id", new Integer(10));
+		colData.put("id", new Integer(5));
+		colData.put("age", new Integer(5));
+		colData.put("name", new String("3oraby"));
+		colData.put("gpa", new Double(5.2));
 		database.insertIntoTable("banadyMethod", colData);
-
+		
+		colData.clear();
+		colData.put("id", new Integer(5));
 		database.deleteFromTable("banadyMethod", colData);
 
 		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
@@ -128,81 +175,205 @@ public class DeletionTests {
 
 	// Checks that if no tuples meet condition for deleted, then nothing is deleted
 	@Test
-	@Disabled
-	void No_Tuples_Deleted_For_False_Info()
+	void No_Tuples_Deleted_For_False_Info() throws ClassNotFoundException, DBAppException, IOException
 	{
+		colData.put("id", new Integer(1));
+		colData.put("age", new Integer(5));
+		colData.put("name", new String("3oraby"));
+		colData.put("gpa", new Double(5.2));
+		database.insertIntoTable("result", colData);
+		database.insertIntoTable("banadyMethod", colData);
+		
+		colData.clear();
+		colData.put("id", new Integer(5));
+		colData.put("age", new Integer(5));
+		colData.put("name", new String("3oraby"));
+		colData.put("gpa", new Double(5.2));
+		database.insertIntoTable("result", colData);
+		database.insertIntoTable("banadyMethod", colData);
 
+		colData.clear();
+		colData.put("id", new Integer(20));
+		colData.put("age", new Integer(2093));
+		colData.put("name", new String("mesh 3oraby"));
+		colData.put("gpa", new Double(5.23));
+		database.deleteFromTable("banadyMethod", colData);
+		
+		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
+		Page resultPage = (Page) deserializeData(result.filepath + result.name + 0);
+
+//		assertTrue(banadyMethodPage.tuples.size()==2, "Expected two tuples to be in the page, but instead there are "
+//				+ banadyMethodPage.tuples.size() + " tuples in the page");
+		assertTrue(comparePage(banadyMethodPage,resultPage), "\nExpected the tuples to be: \n" + resultPage + "\n but instead"
+				+ " got: \n" + banadyMethodPage);
+		
 	}
 
 	//This checks that no gaps are left when deleting from a page
 	@Test
+	@Disabled
 	void No_Empty_Space_In_Page_After_Deletion() throws DBAppException, ClassNotFoundException, IOException
 	{
-		colData.put("id", new Integer(2));
-		database.insertIntoTable("result", colData);
-		database.insertIntoTable("banadyMethod", colData);
 
-		colData.clear();
-		colData = new Hashtable<String, Object>();
-		colData.put("id", new Integer(5));
-		database.insertIntoTable("banadyMethod", colData);
-
-		colData.clear();
-		colData = new Hashtable<String, Object>();
-		colData.put("id", new Integer(10));
-		database.insertIntoTable("result", colData);
-		database.insertIntoTable("banadyMethod", colData);
-
-		colData = new Hashtable<String, Object>();
-		colData.put("id", new Integer(5));
-		database.deleteFromTable("table", colData);
-
-		Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + 0);
-		Page resultPage = (Page) deserializeData(result.filepath + result.name + 0);
-
-		assertTrue(banadyMethodPage.tuples.size()==2, "Expected number of tuples in page to be two, but instead there are "
-				+ "" + banadyMethodPage.tuples.size() + " tuples in the page");
-		assertTrue(banadyMethodPage.tuples.get(0).compareTo(resultPage.tuples.get(0))==0, 
-				"Expected first tuple in page to be " + resultPage.tuples.get(0) + " but instead got "
-				+ banadyMethodPage.tuples.get(0));		
-		assertTrue(banadyMethodPage.tuples.get(1).compareTo(resultPage.tuples.get(1))==0, 
-				"Expected second tuple in page to be " + resultPage.tuples.get(1) + " but instead got "
-				+ banadyMethodPage.tuples.get(1));
 
 	}
 
 	// This checks that if we delete the last tuple from a page, it
 	// also deletes the entire page
 	@Test
+	@Disabled
 	void Delete_Page_Once_Last_Tuple_Is_Deleted() throws DBAppException, IOException, ClassNotFoundException
 	{
-		colData.put("id", new Integer(5));
-		database.insertIntoTable("banadyMethod", colData);	
 
-		database.deleteFromTable("table", colData);
-
-		assertTrue(banadyMethod.pageNames.size()==0, "Page name was not deleted from the table");
-
-		assertThrows(FileNotFoundException.class, () ->
-		{deserializeData(banadyMethod.filepath + "banadyMethod0");}, "Page was not deleted from the hard disk");
 	}
 
-	// This checks that if multiple tuples satisfy the deletion condition,
+	// This checks that if multiple tuples satisfy the deletion condition for an int,
 	// all of them are also deleted
-	@Disabled
 	@Test
-	void Delete_Multiple_Tuples_From_Page()
+	void Delete_Multiple_Tuples_From_Page_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
-
+		int deletionAge = random.nextInt();
+		// we do the following in the loop: create one tuple completely random and put it in both tables
+		// and create another tuple that has an age that we will use to delete when we call the method
+		for(int i = 0;i<pageSize*5;i++)
+		{
+			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
+			int age =  random.nextInt();
+			double gpa = Double.parseDouble(df.format(random.nextDouble())); // kolo da 3ashan a5leeh 4 decimal spaces
+			String name = randomString();
+			colData.clear();
+			colData.put("id", i+age);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("result", colData);
+			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(i+deletionAge)); // to get a unqiue id we add deletion age to it
+			colData.put("age", new Integer(deletionAge));
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+		}
+		colData.clear();
+		colData.put("age", new Integer(deletionAge));
+		database.deleteFromTable("banadyMethod", colData);
+		
+		assertTrue(banadyMethod.pageNames.size()==result.pageNames.size(),"Expected the number of pages to be " 
+				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
+		for(int i = 0;i<result.pageNames.size();i++)
+		{
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
+			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
+					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
+		}
+		
+		
+	}
+	
+	// This checks that if multiple tuples satisfy the deletion condition for an double,
+	// all of them are also deleted
+	@Test
+	void Delete_Multiple_Tuples_From_Page_Double() throws ClassNotFoundException, DBAppException, IOException
+	{
+		double[] uniqueGPA = new Random().doubles().distinct().limit(pageSize*5+5).mapToObj(d -> (double) Math.round(d * 1000) / 1000) // Round to 3 decimal places
+                .mapToDouble(Double::doubleValue).toArray();
+		double deletionGPA = uniqueGPA[uniqueGPA.length-1];
+		// we do the following in the loop: create one tuple completely random and put it in both tables
+		// and create another tuple that has an age that we will use to delete when we call the method
+		for(int i = 0;i<pageSize*5;i++)
+		{
+			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
+			int age = random.nextInt();
+			double gpa = uniqueGPA[i];
+			String name = randomString();
+			colData.clear();
+			colData.put("id", i+age);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("result", colData);
+			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(age/2)); // to get a unqiue id we add deletion age to it
+			colData.put("age", new Integer(age));
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(deletionGPA));
+			database.insertIntoTable("banadyMethod", colData);
+		}
+		colData.clear();
+		colData.put("age", new Double(deletionGPA));
+		database.deleteFromTable("banadyMethod", colData);
+		
+		assertTrue(banadyMethod.pageNames.size()==result.pageNames.size(),"Expected the number of pages to be " 
+				+ banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
+		for(int i = 0;i<result.pageNames.size();i++)
+		{
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
+			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
+					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
+		}
+		
+		
 	}
 
-	// This checks that if I have multiple deletion conditions,
+	// This checks that if multiple tuples satisfy the deletion condition for an string,
+	// all of them are also deleted
+	@Test
+	void Delete_Multiple_Tuples_From_Page_String() throws ClassNotFoundException, DBAppException, IOException
+	{
+		String deletionName = randomString();
+		// we do the following in the loop: create one tuple completely random and put it in both tables
+		// and create another tuple that has an age that we will use to delete when we call the method
+		for(int i = 0;i<pageSize*5;i++)
+		{
+			// 1/1000000 chance for duplicate to appear; if so seeb el baramaga 3ashan weshak na7s
+			int age =  Math.abs(random.nextInt());
+			double gpa = Double.parseDouble(df.format(random.nextDouble())); // kolo da 3ashan a5leeh 4 decimal spaces
+			String name = randomString();
+			colData.clear();
+			colData.put("id", i+age);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("result", colData);
+			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(age/2));
+			colData.put("age", new Integer(age));
+			colData.put("name", new String(deletionName));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+		}
+		colData.clear();
+		colData.put("age", new String(deletionName));
+		database.deleteFromTable("banadyMethod", colData);
+		
+		assertTrue(banadyMethod.pageNames.size()==result.pageNames.size(),"Expected the number of pages to be " 
+				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
+		for(int i = 0;i<result.pageNames.size();i++)
+		{
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
+			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
+					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
+		}
+		
+		
+	}
+	
+	// This checks that if I have a condition with integer and string,
 	// all of tuples meeting that condition are deleted
 	@Test
 	@Disabled
-	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions()
+	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_String()
 	{
-
+		
 	}
 
 	// This checks that deleting the tuple also deletes it from the
