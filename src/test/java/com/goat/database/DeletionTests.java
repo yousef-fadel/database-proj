@@ -33,15 +33,13 @@ public class DeletionTests {
 	Table banadyMethod; // call the methods on this table
 	int pageSize;
 	Random random;
-	DecimalFormat df;
 
 	@BeforeEach
 	void init() throws IOException, ClassNotFoundException, DBAppException
 	{
 		pageSize = 3;
 		random = new Random();
-		df = new DecimalFormat("#.####");
-		df.setRoundingMode(RoundingMode.CEILING);
+
 		Path dir = Paths.get("./tables"); 
 		Files
 		.walk(dir)
@@ -244,8 +242,8 @@ public class DeletionTests {
 			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i*age);
-			colData.put("age", age);
+			colData.put("id", new Integer(i*age));
+			colData.put("age", new Integer(age));
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("result", colData);
@@ -292,8 +290,8 @@ public class DeletionTests {
 			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i*age);
-			colData.put("age", age);
+			colData.put("id", new Integer(i*age));
+			colData.put("age", new Integer(age));
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("result", colData);
@@ -340,8 +338,8 @@ public class DeletionTests {
 			double gpa = uniqueGPA[i];
 			String name = randomString();
 			colData.clear();
-			colData.put("id", i*age);
-			colData.put("age", age);
+			colData.put("id", new Integer(i*age));
+			colData.put("age", new Integer(age));
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("result", colData);
