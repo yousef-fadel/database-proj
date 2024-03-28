@@ -8,7 +8,7 @@ import java.io.ObjectOutputStream;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
-
+//TODO add tostring() 3ashan neimprove readiablity bas
 public class Page implements java.io.Serializable
 {
 	String name;
@@ -63,5 +63,16 @@ public class Page implements java.io.Serializable
 		return null;
 	}
 	
+	public String toString()
+	{
+		String res = "";
+		for(int i = 0;i<tuples.size();i++)
+		{
+			res = res + "Tuple " + i + ": " + tuples.get(i);
+			if(i<tuples.size()-1)
+				res+= "\n";
+		}
+		return res;
+	}
 	
 }
