@@ -400,7 +400,6 @@ public class DeletionTests {
 	{
 		
 	}
-	
 
 	// This checks that deleting the tuple also deletes it from the
 	// index (if it exists)
