@@ -50,8 +50,8 @@ public class Table implements java.io.Serializable{
 		int leftPage = 0;
 		int rightPage = this.pageNames.size()-1;
 		int middlePage;
-		//binary search for the page; stop once 2 pages are left
-		while(rightPage-leftPage>=2)
+		//binary search for the page; stop once 2 (or 1) pages are left
+		while(rightPage-leftPage>1)
 		{
 			middlePage = (leftPage + rightPage)/2;
 			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
@@ -90,7 +90,7 @@ public class Table implements java.io.Serializable{
 	private void insertIntoPage(Tuple tuple, Page page) throws DBAppException, ClassNotFoundException
 	{
 		// binary search for its location inside the page
-		// gives us two possible locations we can insert into
+		// gives us two (or one) possible locations we can insert into 
 		int left = 0;
 		int right = 0;
 		if(!page.tuples.isEmpty())
@@ -108,7 +108,7 @@ public class Table implements java.io.Serializable{
 		}
 		
 		// left and right come from binary search up above
-		// check which position to insert into; if it is smaller than both values, then place it where the left it,
+		// check which position to insert into; if it is smaller than both values, then place it where the left is,
 		// if it is bigger than left but smaller than right, insert in between
 		// otherwise, insert at the end
 		int start = -1;
@@ -118,7 +118,7 @@ public class Table implements java.io.Serializable{
 		if(tuple.compareTo(page.tuples.get(left))<0)
 			start = left;
 		else if (tuple.compareTo(page.tuples.get(left))>0
-		&& tuple.compareTo(page.tuples.get(right))>0)
+				&& tuple.compareTo(page.tuples.get(right))>0)
 			start = right+1;
 		else
 			start = right;
@@ -161,7 +161,21 @@ public class Table implements java.io.Serializable{
 	}
 
 	
+	public void insertRowsIntoIndex(String strColName, Index index) throws ClassNotFoundException
+	{
+		for(int i =0;i<this.pageNames.size();i++)
+		{
+			Page currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(i));
+			for(Tuple tuple:currPage.tuples)
+			{
+				Object tupleValue = tuple.entry.get(strColName);
+				Datatype dataTypeValue = new Datatype(tupleValue);
+				index.insertIntoIndex(dataTypeValue, currPage.name);
+			}
+		}
+		index = index.serializeAndDeleteIndex();
 
+	}
 	public void serializeTable()
 	{
 		try {

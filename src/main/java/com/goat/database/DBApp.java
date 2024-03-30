@@ -1,8 +1,6 @@
 /** * @author Wael Abouelsaadat */
 package com.goat.database;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,17 +14,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
-
-import org.apache.commons.io.FileUtils;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -93,19 +86,63 @@ public class DBApp {
 		
 		// create a directory to store pages of this table for later 
 		// + create a file called info.ser that stores all info about this table
-		File filepath = new File("./tables/" + strTableName);
+		File filepath = new File("./tables/" + strTableName + "/indices/");
 		filepath.mkdirs();
-		Table currTable = new Table(strTableName, filepath.getPath() + "/");
+
+		Table currTable = new Table(strTableName, "./tables/" + strTableName + "/");
 		tables.add(currTable);
 		serializedata(currTable, "./tables/" + currTable.name + "/info");
 
 
 	}
 
+	// TODO take fanout from config file
 	// following method creates a B+tree index
-	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException {
+	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException {
 
-		throw new DBAppException("not implemented yet");
+		Table omar = getTable(strTableName);
+		if (omar == null)
+			throw new DBAppException("Table does not exist");
+		
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		ArrayList<String> colTableNames = new ArrayList<String>();
+		for (int i = 0; i < tableInfo.size(); i++)
+			if(tableInfo.get(i).get(1).equals(strColName) && !(tableInfo.get(i).get(5).equals(null)))
+				throw new DBAppException("Index already exists");
+				
+		for(int i = 0;i<colTableNames.size();i++)
+		{
+			if(colTableNames.contains(strColName))
+				break;
+			if(i==colTableNames.size()-1)
+				throw new DBAppException("Column name not found");
+		}
+		
+		File metadataLocation = new File("resources/metadata.csv");
+		// Read existing file 
+		CSVReader reader = new CSVReader(new FileReader(metadataLocation), ',');
+		List<String[]> metadata = reader.readAll();
+		for (int i = 0; i < metadata.size(); i++)
+			if(metadata.get(i)[0].equals(strTableName) && metadata.get(i)[1].equals(strColName))
+			{
+				// get CSV row column  and replace with by using row and column
+				metadata.get(i)[4] = strIndexName;
+				metadata.get(i)[5]= "B+tree";
+				reader.close();
+
+				CSVWriter writer = new CSVWriter(new FileWriter(metadataLocation), ',');
+				writer.writeAll(metadata);
+				writer.flush();
+				writer.close();
+				break;
+			}
+		Index index = new Index(strIndexName, omar.filepath);
+		index.serializeIndex();
+		
+		omar.insertRowsIntoIndex(strColName,index);
+		index = null;
+		omar = omar.serializeAndDeleteTable();
+		
 	}
 
 	// following method inserts one row only.
@@ -133,7 +170,6 @@ public class DBApp {
 
 		// check that the columns in the hashtable exist in the table
 		 Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
-		 System.out.println(colTableNames);
 		 while(colNameValueIterator.hasNext())
 		 {
 			 Map.Entry<String,Object> currCol = colNameValueIterator.next();
@@ -173,7 +209,7 @@ public class DBApp {
 	// following method updates one row only
 	// htblColNameValue holds the key and new value
 	// htblColNameValue will not include clustering key as column name
-	// strClusteringKeyValue is the value to look for to find the row to update.
+	// strClusteringKeyValue is the value to look for to find the row to update.	
 	public void updateTable(String strTableName, String strClusteringKeyValue,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException {
 
@@ -250,7 +286,8 @@ public class DBApp {
 	}
 
 	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
-	// all info about this table
+	// all info about this table; also checks two exceptions: if the clustering key exists in the hashtable,
+	// and if the datatype of all columns in the hashtable are valid
 	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
@@ -322,21 +359,26 @@ public class DBApp {
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
-		dbApp.format();
-		dbApp.test3();
+//		dbApp.format();
+//		dbApp.test4();
+//		dbApp.test3();
 //		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
-//		Table table = dbApp.getTable("Student");
+//		Table table = dbApp.getTable("table");
+//		System.out.println(table.pageNames);
 //		for(int i = 0;i<table.pageNames.size();i++)
 //		{
 //			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
 //			System.out.println(page.tuples);
 //		}
 
-//
-//		
-//		
-//
+
+//		String strTableName = "Student";
+//		DBApp	dbApp = new DBApp( );
+		
+		dbApp.createIndex( "table", "age", "kamal");
+		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
+		System.out.println(index.searchIndex(new Datatype(18)));
 //		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
 //		System.out.println(page.tuples);
 //		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
@@ -356,7 +398,7 @@ public class DBApp {
 //		htblColNameValue.put("gpa", new Double( 0.75 ) );
 //		dbApp.deleteFromTable( "Student", htblColNameValue );
 //
-//		//			 this will delete all rows with gpa 0.75 and name Ahmed Noor
+		//			 this will delete all rows with gpa 0.75 and name Ahmed Noor
 //		htblColNameValue enteries are ANDED together in delete
 //		htblColNameValue.clear( );
 //		htblColNameValue.put("name", new String("Ahmed Noor" ) );  
@@ -505,5 +547,51 @@ public class DBApp {
 			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
 			System.out.println(page.tuples);
 		}
+		
+	}
+	private void test4() throws ClassNotFoundException, DBAppException, IOException
+	{
+		Hashtable<String,String> htbl = new Hashtable<String,String>();
+		htbl.put("id", "java.lang.Integer");
+		htbl.put("age", "java.lang.Integer");		
+		this.createTable("table", "id", htbl);
+		Hashtable<String,Object> colData = new Hashtable<String, Object>();
+		
+		colData.put("id", new Integer(2));
+		colData.put("age", 18);
+		this.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 20 ));
+		colData.put("age", new Integer( 16 ));
+		this.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 7 ));
+		colData.put("age", new Integer( 16 ));
+		this.insertIntoTable( "table" , colData );
+				
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 11 ));
+		colData.put("age", new Integer( 18 ));
+		this.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 15 ));
+		colData.put("age", new Integer( 16 ));
+		this.insertIntoTable( "table" , colData );
+		
+		colData = new Hashtable<String, Object>();		
+		colData.put("id", new Integer( 31 ));
+		colData.put("age", new Integer( 11 ));
+		this.insertIntoTable( "table" , colData );
+		
+		Table table = this.getTable("table");
+		for(int i = 0;i<table.pageNames.size();i++)
+		{
+			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
+			System.out.println(page);
+		}
+				
 	}
 }

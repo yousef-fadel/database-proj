@@ -6,7 +6,7 @@ public class Tuple implements Serializable, Comparable {
 	Hashtable<String, Object> entry;
 	
 	// TODO implement comparable
-
+	// https://www.codejava.net/java-se/file-io/file-change-notification-example-with-watch-service-api (for primary key?)
 	public Tuple(Object Primary_key,Hashtable<String, Object> entry) {
 		this.entry=entry;
 		this.Primary_key=Primary_key;

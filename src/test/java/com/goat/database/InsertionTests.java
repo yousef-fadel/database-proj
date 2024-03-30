@@ -395,6 +395,16 @@ public class InsertionTests {
 		assertEquals("The hashtable is missing data for one of the columns",exception.getMessage());
 	}
 	
+	@Test
+	void ExceptionThrownForExtraColumn()
+	{
+		colData.put("id", new Integer(5));
+		colData.put("extracolumn", new String("where"));
+		Throwable exception = assertThrows(DBAppException.class, () -> 
+		{database.insertIntoTable("table", colData);});
+		
+		assertEquals("The hashtable has an extra column that does not exist in the table",exception.getMessage());
+	}
 	@AfterAll
 	static void cleanup() throws IOException
 	{

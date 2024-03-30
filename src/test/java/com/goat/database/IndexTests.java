@@ -106,7 +106,7 @@ public class IndexTests {
 	
 	//TODO check index file is saved
 	@Test
-	public void createIndexForTableWithNoRowsInteger() throws DBAppException, IOException
+	public void createIndexForTableWithNoRowsInteger() throws DBAppException, IOException, ClassNotFoundException
 	{
 		database.createIndex("table","id","idIndex");
 		List<List<String>> colDataTypes = database.getColumnData("table");
@@ -121,7 +121,7 @@ public class IndexTests {
 	}
 	
 	@Test
-	public void createIndexForTableWithNoRowsDouble() throws IOException, DBAppException
+	public void createIndexForTableWithNoRowsDouble() throws IOException, DBAppException, ClassNotFoundException
 	{
 		database.createIndex("table","gpa","gpaIndex");
 		List<List<String>> colDataTypes = database.getColumnData("table");
@@ -136,7 +136,7 @@ public class IndexTests {
 	}
 	
 	@Test
-	public void createIndexForTableWithNoRowsString() throws DBAppException, IOException
+	public void createIndexForTableWithNoRowsString() throws DBAppException, IOException, ClassNotFoundException
 	{
 		database.createIndex("table","name","nameIndex");
 		List<List<String>> colDataTypes = database.getColumnData("table");

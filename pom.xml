@@ -13,9 +13,15 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  <repositories>
+	<repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+	</repository>
+  </repositories>
 
   <dependencies>
-      <dependency> 
+	<dependency> 
     <groupId>com.opencsv</groupId> 
     <artifactId>opencsv</artifactId> 
     <version>4.1</version> 
@@ -33,5 +39,12 @@
     <version>2.15.1</version>
   </dependency>
 
+  <dependency>
+    <groupId>com.github.jiaguofang</groupId>
+    <artifactId>b-plus-tree</artifactId>
+    <version>master</version>
+</dependency>
+
   </dependencies>
+
 </project>

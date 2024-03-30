@@ -1,46 +1,99 @@
 package com.goat.database;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Vector;
+
+import com.goat.btree.BTree;
 // TODO index should be saved in tables/TableName/indices/IndexName
 // TODO index fannout should be gotten from config file
 public class Index implements Serializable{
 	String name;
-	String filepath;
-	//btree variable here
-	
+	String indexFilepath;
+	BTree<Datatype, Vector<String>> btree;
 	// index name given by user; filepath hatkoon table.filepath + "/indices/" + this.name + "/"
-	public Index(String name, String filepath)
+	public Index(String name, String tableFilepath)
 	{
 		this.name = name;
-		this.filepath = filepath;
+		this.indexFilepath = tableFilepath+"indices/" + name+".ser";
+		btree = new BTree<Datatype,Vector<String>>();
 	}
 	
-	public void insertIntoIndex()
+	public void insertIntoIndex(Datatype datatype,String page)
 	{
+		Vector<String> tuplePositions;
+		tuplePositions = btree.search(datatype);
+		if(tuplePositions==null)
+		{
+			tuplePositions = new Vector<String>();
+			tuplePositions.add(page);
+			btree.insert(datatype, tuplePositions);
+		}
+		else
+		{
+			tuplePositions.add(page);
+			btree.delete(datatype);
+			btree.insert(datatype, tuplePositions);
+		}
 		
 	}
 	
-	public void deleteFromIndex()
+	public void deleteFromIndex(Datatype datatype, String page)
 	{
-		
+		Vector<String> tuplePositions = btree.search(datatype);
+		if(tuplePositions!=null)
+		{
+			btree.delete(datatype);
+			tuplePositions.remove(page);
+			if(tuplePositions.size()!=0)
+				btree.insert(datatype, tuplePositions);
+		}
 	}
 	
-	//should return page
-	public void searchIndex()
+	public Vector<String> searchIndex(Datatype datatype)
 	{
-		
+		return btree.search(datatype);
 	}
 	
 	//should return list of pages
-	public void searchRangeIndex()
+	public ArrayList<Vector<String>> searchGreaterThan(Datatype datatype,boolean inclusive)
 	{
-		
+		return btree.searchGreaterThan(datatype, inclusive);
+	}
+
+	public ArrayList<Vector<String>> searchLessThan(Datatype datatype,boolean inclusive)
+	{
+		return btree.searchLessThan(datatype, inclusive);
 	}
 	
 	// save index 3ady
-	public void saveIndex()
+	public void serializeIndex()
 	{
-		
+		try {
+			FileOutputStream file = new FileOutputStream(indexFilepath);
+			ObjectOutputStream out = new ObjectOutputStream(file);
+			out.writeObject(this);
+			out.close();
+			file.close();
+		} catch (IOException e) {
+			System.out.println("Failed to serialize index!");
+			e.printStackTrace();
+		}
+	}
+	
+	public Index serializeAndDeleteIndex()
+	{
+		this.serializeIndex();
+		return null;
 	}
 
+	public static void main(String[]args)
+	{
+		Datatype x = new Datatype(1);
+		Datatype y = new Datatype(-4);
+		System.out.println(x.compareTo(y));
+	}
 }

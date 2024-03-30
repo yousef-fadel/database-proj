@@ -172,7 +172,7 @@ public class UpdateTests {
 		int res = -1;
 		while(true)
 		{
-			res = uniqueAge[random.nextInt(0,uniqueAge.length)];
+			res = uniqueAge[random.nextInt(uniqueAge.length)];
 			res+=1;
 			for(int i = 0;i<uniqueAge.length;i++)
 				if(uniqueAge[i]==res)
