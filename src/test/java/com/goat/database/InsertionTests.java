@@ -1,4 +1,4 @@
-	package com.goat.database;
+package com.goat.database;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,11 +22,10 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-@SuppressWarnings("removal")
+
+@SuppressWarnings("deprecation")
 public class InsertionTests {
 	// all tests here work on the assumption that createTable is working
 	DBApp database;
@@ -126,6 +125,7 @@ public class InsertionTests {
 	 * pushed down; this test checks if all tuples are succesfully stored
 	 * with no loss of information
 	 */ 	
+	@SuppressWarnings("unchecked")
 	@DisplayName("Inserting in random order automatically sorts tuples from lowest to greatest")
 	@Test
 	void Insertion_Orders_Tuples() throws DBAppException, IOException, ClassNotFoundException
@@ -160,6 +160,7 @@ public class InsertionTests {
 	
 	// This test checks that if all pages are full, then we create a new page
 	// to insert  
+	@SuppressWarnings("unchecked")
 	@DisplayName("Inserting into full pages leads to a new page being created")
 	@Test
 	void Full_Page_Insertion_Leads_To_New_Page_Created() throws DBAppException, IOException, ClassNotFoundException
@@ -204,16 +205,9 @@ public class InsertionTests {
 				+ page.tuples);
 	}
 	
-	//TODO This test checks that if we insert onto a table with an indexed column,
-	// it inserts into that index too
-	@Test
-	@Disabled("not implemented")
-	void Insertion_With_Index()
-	{
-		
-	}
 	
 	// general case; insert into multiple pages in an unshuffled order
+	@SuppressWarnings("unchecked")
 	@Test
 	@DisplayName("Inserting 13 elements with the page size being 3 should have them in the correct order")
 	void Insertion_For_Multiple_Full_Pages() throws ClassNotFoundException, DBAppException, IOException

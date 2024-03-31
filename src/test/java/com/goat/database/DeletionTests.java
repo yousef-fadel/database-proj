@@ -4,17 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -23,7 +18,8 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-@SuppressWarnings("removal")
+
+@SuppressWarnings("deprecation")
 public class DeletionTests {
 	// TODO test exceptions (5odo copy paste mein insertion tests)
 	DBApp database;
@@ -74,14 +70,7 @@ public class DeletionTests {
 		result = database.tables.get(1);
 
 	}
-	private void serializedata(Object o, String filename) throws IOException 
-	{
-		FileOutputStream file = new FileOutputStream(filename);
-		ObjectOutputStream out = new ObjectOutputStream(file);
-		out.writeObject(o);
-		out.close();
-		file.close();
-	}
+
 	private Object deserializeData(String filename) throws ClassNotFoundException, IOException 
 	{
 		try {
@@ -118,13 +107,7 @@ public class DeletionTests {
 	{
 		return tuple1.entry.equals(tuple2.entry);
 	}
-	private void fillPage(int noOfPages, Table table)
-	{
-		for(int i =0;i<pageSize;i++)
-		{
-			
-		}
-	}
+
 	private String randomString()
 	{
 		String res = "";

@@ -24,7 +24,6 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.opencsv.CSVReader; 
@@ -127,7 +126,6 @@ public class CreateTableTests {
 	
 	// After creating multiple tables, we should be able to fetch them from the
 	// hard disk at any time
-	@SuppressWarnings("unchecked")
 	@Test
 	public void Deserializating_Tables_Should_Contain_All_Tables() throws ClassNotFoundException, DBAppException, IOException
 	{

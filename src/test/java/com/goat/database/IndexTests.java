@@ -21,7 +21,8 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-@SuppressWarnings("removal")
+
+@SuppressWarnings("deprecation")
 public class IndexTests {
 	// TODO primary key
 	// test 2: create index for a table with multiple rows (no duplicates)

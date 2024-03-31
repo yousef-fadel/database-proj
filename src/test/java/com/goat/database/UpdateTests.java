@@ -5,11 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +23,7 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+@SuppressWarnings("deprecation")
 public class UpdateTests {
 	DBApp database;
 	Hashtable<String,String> htbl;
@@ -100,14 +99,7 @@ public class UpdateTests {
 		banadyMethod = database.tables.get(0);
 		result = database.tables.get(1);
 	}
-	private void serializedata(Object o, String filename) throws IOException 
-	{
-		FileOutputStream file = new FileOutputStream(filename);
-		ObjectOutputStream out = new ObjectOutputStream(file);
-		out.writeObject(o);
-		out.close();
-		file.close();
-	}
+
 	private Object deserializeData(String filename) throws ClassNotFoundException, IOException 
 	{
 		try {
@@ -144,13 +136,7 @@ public class UpdateTests {
 	{
 		return tuple1.entry.equals(tuple2.entry);
 	}
-	private void fillPage(int noOfPages, Table table)
-	{
-		for(int i =0;i<pageSize;i++)
-		{
-			
-		}
-	}
+
 	private String randomString()
 	{
 		String res = "";

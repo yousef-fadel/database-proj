@@ -24,6 +24,7 @@ import java.util.Vector;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
+@SuppressWarnings("deprecation")
 public class DBApp {
 
 	Vector<Table> tables;
@@ -364,7 +365,6 @@ public class DBApp {
 	}
 		
 	
-	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 //		dbApp.format();
@@ -448,6 +448,7 @@ public class DBApp {
 		
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void test1(DBApp	dbApp) throws ClassNotFoundException, DBAppException, IOException
 	{
 
@@ -480,13 +481,14 @@ public class DBApp {
 		
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void test2(DBApp	dbApp ) throws ClassNotFoundException, DBAppException, IOException
 	{
 		String strTableName = "Student";
 		Hashtable htblColNameValue = new Hashtable( );
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 25 ));
-		dbApp.insertIntoTable( "table" , htblColNameValue );
+		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 	}
 
