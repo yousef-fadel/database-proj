@@ -83,19 +83,19 @@ public class BTree<TKey extends Comparable<TKey>, TValue> implements Serializabl
 	
 	public static void main(String[]args) throws ClassNotFoundException
 	{
-		BTree<Integer, String> b = new BTree<Integer, String>();
+		BTree<String, String> b = new BTree<String, String>();
 
 //		for(int i = 0;i<=30;i++)
 //		{
 //			b.insert(i, "page" + i);
 //		}
-		b.insert(5, "page1");
-		b.insert(5, "page2");
+		b.insert("mohamed", "page1");
+		b.insert("yousef", "page2");
 		
-//		System.out.println(b.searchGreaterThan(20, false));
+		System.out.println(b.searchGreaterThan("", true));
 //		BTreeInnerNode x = (BTreeInnerNode)b.root;
 //		String s = x.printTree();
-		System.out.println(b.search(5));
+//		System.out.println(b.search(5));
 		
 	}
 }

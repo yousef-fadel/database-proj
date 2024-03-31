@@ -119,8 +119,8 @@ public class DeletionTests {
 			res += characters[pickLetter];
 		}
 		return res;
-
 	}
+	
 	//-------------------------------------------------------TESTS--------------------------------------------------------------
 	//This checks if one tuple is deleted from the page
 	@Test

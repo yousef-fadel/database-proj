@@ -1,1 +1,6 @@
-"table","id","java.lang.Integer","True","null","null"
+"banadyMethod","gpa","java.lang.Double","False","null","null"
+"banadyMethod","name","java.lang.String","False","null","null"
+"banadyMethod","id","java.lang.Integer","True","idIndex","B+tree"
+"result","gpa","java.lang.Double","False","null","null"
+"result","name","java.lang.String","False","null","null"
+"result","id","java.lang.Integer","True","idIndex","B+tree"
