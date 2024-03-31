@@ -70,7 +70,6 @@ public class DBApp {
 	// be passed in htblColNameType
 	// htblColNameValue will have the column name as key and the data
 	// type as value
-
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
 		
@@ -82,7 +81,7 @@ public class DBApp {
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
 		// method also checks if the datatypes are valid and that the clustering key exists in the table
-		writeCSV(strTableName, strClusteringKeyColumn, htblColNameType);
+		writeMetadata(strTableName, strClusteringKeyColumn, htblColNameType);
 		
 		// create a directory to store pages of this table for later 
 		// + create a file called info.ser that stores all info about this table
@@ -97,6 +96,7 @@ public class DBApp {
 	}
 
 	// TODO take fanout from config file
+	// TODO check for duplicate index names
 	// following method creates a B+tree index
 	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException {
 
@@ -105,11 +105,11 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 		
 		List<List<String>> tableInfo = getColumnData(omar.name);
-		ArrayList<String> colTableNames = new ArrayList<String>();
 		for (int i = 0; i < tableInfo.size(); i++)
-			if(tableInfo.get(i).get(1).equals(strColName) && !(tableInfo.get(i).get(5).equals(null)))
+			if(tableInfo.get(i).get(1).equals(strColName) && !tableInfo.get(i).get(5).equals("null"))
 				throw new DBAppException("Index already exists");
-				
+		
+		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 		for(int i = 0;i<colTableNames.size();i++)
 		{
 			if(colTableNames.contains(strColName))
@@ -118,27 +118,9 @@ public class DBApp {
 				throw new DBAppException("Column name not found");
 		}
 		
-		File metadataLocation = new File("resources/metadata.csv");
-		// Read existing file 
-		CSVReader reader = new CSVReader(new FileReader(metadataLocation), ',');
-		List<String[]> metadata = reader.readAll();
-		for (int i = 0; i < metadata.size(); i++)
-			if(metadata.get(i)[0].equals(strTableName) && metadata.get(i)[1].equals(strColName))
-			{
-				// get CSV row column  and replace with by using row and column
-				metadata.get(i)[4] = strIndexName;
-				metadata.get(i)[5]= "B+tree";
-				reader.close();
-
-				CSVWriter writer = new CSVWriter(new FileWriter(metadataLocation), ',');
-				writer.writeAll(metadata);
-				writer.flush();
-				writer.close();
-				break;
-			}
-		Index index = new Index(strIndexName, omar.filepath);
-		index.serializeIndex();
+		updateMetadataIndex(strTableName,strColName,strIndexName);
 		
+		Index index = new Index(strIndexName, omar.filepath);
 		omar.insertRowsIntoIndex(strColName,index);
 		index = null;
 		omar = omar.serializeAndDeleteTable();
@@ -159,9 +141,7 @@ public class DBApp {
 
 		// get the names of the columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
-		ArrayList<String> colTableNames = new ArrayList<String>();
-		for (int i = 0; i < tableInfo.size(); i++)
-			colTableNames.add(tableInfo.get(i).get(1));
+		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 
 		// check that all columns in the table have a value in the hashtable
 		for(String currCol:colTableNames)
@@ -288,7 +268,7 @@ public class DBApp {
 	// given a table name, primary key, and information about the table columns, it writes onto the csv file 
 	// all info about this table; also checks two exceptions: if the clustering key exists in the hashtable,
 	// and if the datatype of all columns in the hashtable are valid
-	public void writeCSV(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
+	public void writeMetadata(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
 	    try { 
@@ -355,6 +335,36 @@ public class DBApp {
 		return records;
 	}
 	
+	// given a 2d list containing the table info, it will return all the column names in that list
+	// run getColumnData on the metafile before running this
+	public ArrayList<String> getColumnNames(List<List<String>> tableInfo)
+	{
+		ArrayList<String> colTableNames = new ArrayList<String>();
+		for (int i = 0; i < tableInfo.size(); i++)
+			colTableNames.add(tableInfo.get(i).get(1));
+		return colTableNames;
+	}
+	
+	private void updateMetadataIndex(String strTableName,String strColName, String strIndexName) throws IOException
+	{
+		CSVReader reader = new CSVReader(new FileReader("resources/metadata.csv"));
+		List<String[]> metadata = reader.readAll();
+		for (int i = 0; i < metadata.size(); i++)
+			if(metadata.get(i)[0].equals(strTableName) && metadata.get(i)[1].equals(strColName))
+			{
+				metadata.get(i)[4] = strIndexName;
+				metadata.get(i)[5] = "B+tree";
+				reader.close();
+
+				CSVWriter writer = new CSVWriter(new FileWriter("resources/metadata.csv"));
+				writer.writeAll(metadata);
+				writer.flush();
+				writer.close();
+				break;
+			}
+
+	}
+		
 	
 	@SuppressWarnings({ "removal", "unchecked" })
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
