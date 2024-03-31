@@ -1,5 +1,7 @@
 package com.goat.database;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -24,12 +26,7 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
 public class IndexTests {
-	// TODO primary key
-	// test 2: create index for a table with multiple rows (no duplicates)
-	// test 2: create index for a table with multiple rows (w/duplicates)
-	// test 3: check that already created indices are found after running again
-	// test 4: throw an exception if you create an index for a row that does not exist
-	// test 5: throw an exception if you create an index for a table that does not exist
+	// test 2: create index for a table with multiple rows (w/duplicates) -- how 
 	
 	
 	// all tests here work on the assumption that createTable and insertTable are working fine
@@ -105,7 +102,6 @@ public class IndexTests {
 	}
 	//---------------------------------------------------------TESTS-------------------------------------------------------
 	
-	//TODO check index file is saved
 	@Test
 	public void createIndexForTableWithNoRowsInteger() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -116,9 +112,13 @@ public class IndexTests {
 			{
 				assertTrue(colDataTypes.get(i).get(4).equals("idIndex"), "The index name in the CSV file was not changed");
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
+				File directory = new File("./tables/table/indices/idIndex.ser");
+				assertTrue(directory.exists(),"Could not find index file");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
+		
+		
 	}
 	
 	@Test
@@ -131,6 +131,8 @@ public class IndexTests {
 			{
 				assertTrue(colDataTypes.get(i).get(4).equals("gpaIndex"), "The index name in the CSV file was not changed");
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
+				File directory = new File("./tables/table/indices/gpaIndex.ser");
+				assertTrue(directory.exists(),"Could not find index file");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
@@ -146,19 +148,21 @@ public class IndexTests {
 			{
 				assertTrue(colDataTypes.get(i).get(4).equals("nameIndex"), "The index name in the CSV file was not changed");
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
+				File directory = new File("./tables/table/indices/nameIndex.ser");
+				assertTrue(directory.exists(),"Could not find index file");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
 	}
 	
 	@Test
-	@Disabled
 	public void createIndexForTableWithMultipleRowsInteger() throws DBAppException, ClassNotFoundException, IOException
 	{
+		int	noOfPages = pageSize*6;
 		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
 		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
                 .mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
-		for(int i = 0;i<pageSize*6;i++)
+		for(int i = 0;i<noOfPages;i++)
 		{
 			int age =  uniqueAge[i];
 			double gpa = uniqueGPA[i];
@@ -171,17 +175,21 @@ public class IndexTests {
 			database.insertIntoTable("table", colData);
 		}
 		database.createIndex("table", "age", "ageIndex");
-		// TODO search index and check that all values are found (should be pageSize*6)
+		
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "ageIndex.ser");
+		int NumberIndexedSearchResult = resultIndex.searchGreaterThan(new Datatype(0), true).size();
+		assertTrue(NumberIndexedSearchResult == noOfPages,
+				"Expected the number of pointers to be "+ noOfPages+ ", but instead got "+ NumberIndexedSearchResult);
 	}
 	
 	@Test
-	@Disabled
 	public void createIndexForTableWithMultipleRowsString() throws DBAppException, ClassNotFoundException, IOException
 	{
+		int	noOfPages = pageSize*6;
 		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
 		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
 				.mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
-		for(int i = 0;i<pageSize*6;i++)
+		for(int i = 0;i<noOfPages;i++)
 		{
 			int age =  uniqueAge[i];
 			double gpa = uniqueGPA[i];
@@ -194,17 +202,22 @@ public class IndexTests {
 			database.insertIntoTable("table", colData);
 		}
 		database.createIndex("table", "gpa", "gpaIndex");
-		// TODO search index and check that all values are found (should be pageSize*6)
+
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "gpaIndex.ser");
+		int NumberIndexedSearchResult = resultIndex.searchGreaterThan(new Datatype(0.0), true).size();
+		assertTrue(NumberIndexedSearchResult == noOfPages,
+				"Expected the number of pointers to be "+ noOfPages+ ", but instead got "+ NumberIndexedSearchResult);
 	}
 	
 	@Test
-	@Disabled
 	public void createIndexForTableWithMultipleRowsDouble() throws DBAppException, ClassNotFoundException, IOException
 	{
+		int	noOfPages = pageSize*6;
+
 		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
 		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
 				.mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
-		for(int i = 0;i<pageSize*6;i++)
+		for(int i = 0;i<noOfPages;i++)
 		{
 			int age =  uniqueAge[i];
 			double gpa = uniqueGPA[i];
@@ -217,6 +230,50 @@ public class IndexTests {
 			database.insertIntoTable("table", colData);
 		}
 		database.createIndex("table", "name", "nameIndex");
-		// TODO search index and check that all values are found (should be pageSize*6)
+		
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "nameIndex.ser");
+		int NumberIndexedSearchResult = resultIndex.searchGreaterThan(new Datatype(""), true).size();
+		assertTrue(NumberIndexedSearchResult == noOfPages,
+				"Expected the number of pointers to be "+ noOfPages+ ", but instead got "+ NumberIndexedSearchResult);
+	}
+	
+	@Test
+	public void throwExceptionForNonExistentColumnName()
+	{
+		Throwable exception =  assertThrows(DBAppException.class, () -> 
+		{database.createIndex("table", "yaretnyMawgoodo", "0b");});	
+		
+		assertEquals("Column name not found",exception.getMessage());
+	}
+	
+	@Test
+	public void throwExceptionForNonExistentTableName()
+	{
+		Throwable exception =  assertThrows(DBAppException.class, () -> 
+		{database.createIndex("pspspspspsppspspsp", "id", "id");});	
+		
+		assertEquals("Table does not exist",exception.getMessage());
+	}
+	
+	@Test
+	// attempting to create an index for the same column twice will throw an exception
+	public void throwExceptionForSameIndexCreatedTwice() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createIndex("table", "name", "nameIndex");
+		Throwable exception =  assertThrows(DBAppException.class, () -> 
+		{database.createIndex("table", "name", "nameIndex");});	
+		
+		assertEquals("Index already exists",exception.getMessage());
+
+	}
+	@Test
+	// if an index has the same name as one that is already saved, throw exception
+	public void throwExceptionForSameIndexName() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createIndex("table", "name", "nameIndex");
+		Throwable exception =  assertThrows(DBAppException.class, () -> 
+		{database.createIndex("table", "age", "nameIndex");});	
+		
+		
 	}
 }
