@@ -1,2 +1,3 @@
-"table","age","java.lang.Integer","False","kamal","B+tree"
-"table","id","java.lang.Integer","True","kamal","B+tree"
+"table","age","java.lang.Integer","False","null","null"
+"table","id","java.lang.Integer","True","null","null"
+"Student","id","java.lang.Integer","True","null","null"

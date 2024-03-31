@@ -37,7 +37,6 @@ public class DBApp {
 	// this does whatever initialization you would like
 	// or leave it empty if there is no code you want to
 	// execute at application startup
-	@SuppressWarnings("unchecked")
 	public void init() throws ClassNotFoundException {
 		try 
 		{
@@ -59,8 +58,6 @@ public class DBApp {
 		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
 		    }
 		}
-//		tables = (Vector<Table>) deserializeData("./resources/tables.ser");
-
 		//TODO check for config file
 	}
 
@@ -85,14 +82,15 @@ public class DBApp {
 		
 		// create a directory to store pages of this table for later 
 		// + create a file called info.ser that stores all info about this table
-		File filepath = new File("./tables/" + strTableName + "/indices/");
+		String tableFilePath = "./tables/" + strTableName + "/";
+		File filepath = new File(tableFilePath + "/indices/");
 		filepath.mkdirs();
 
-		Table currTable = new Table(strTableName, "./tables/" + strTableName + "/");
+		Table currTable = new Table(strTableName,tableFilePath);
 		tables.add(currTable);
-		serializedata(currTable, "./tables/" + currTable.name + "/info");
-
-
+		currTable = currTable.serializeAndDeleteTable();
+		
+		System.out.println("Successfully created table " + strTableName);
 	}
 
 	// TODO take fanout from config file
@@ -124,7 +122,7 @@ public class DBApp {
 		omar.insertRowsIntoIndex(strColName,index);
 		index = null;
 		omar = omar.serializeAndDeleteTable();
-		
+		System.out.println("Successfully created B+tree for " + strColName);
 	}
 
 	// following method inserts one row only.
@@ -184,6 +182,8 @@ public class DBApp {
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insertTupleIntoTable(tuple);
 		omar = omar.serializeAndDeleteTable();
+		
+		System.out.println("Successfully inserted " + tuple.toString() + " into " + strTableName);
 	}
 
 	// following method updates one row only
@@ -205,6 +205,7 @@ public class DBApp {
 		throw new DBAppException("not implemented yet");
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException {
 
 		return null;
@@ -271,10 +272,7 @@ public class DBApp {
 	public void writeMetadata(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
-	    try { 
-	        FileWriter outputfile = new FileWriter(file,true); 
-	        CSVWriter writer = new CSVWriter(outputfile);
-	        
+	    try { 	
 	        String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
 	        Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
 	        // the reason for two loops is because we want to check the data before starting to write onto
@@ -294,15 +292,15 @@ public class DBApp {
 	        if(!clusteringKeyExists)
 	        	throw new DBAppException("Clustering key does not exist in columns");
 	        
+	        
+	        FileWriter outputfile = new FileWriter(file,true); 
+	        CSVWriter writer = new CSVWriter(outputfile);
 	        colData = htblColNameType.entrySet().iterator();	  
 	        while(colData.hasNext())
 	        {
 	        	Map.Entry<String,String> currCol = colData.next();
 	        	String colName = currCol.getKey();
 	        	String colDataType = currCol.getValue();
-	        	// check if it is valid data type aslan
-	        	if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
-	        		throw new DBAppException("Column has invalid datatype");
 	        	if(strClusteringKeyColumn.equals(colName))
 	        	{
 	        		String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
@@ -370,9 +368,9 @@ public class DBApp {
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 //		dbApp.format();
-//		dbApp.test4();
+		dbApp.test4();
 //		dbApp.test3();
-//		dbApp.test1(dbApp);
+		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
 //		Table table = dbApp.getTable("table");
 //		System.out.println(table.pageNames);
@@ -386,9 +384,9 @@ public class DBApp {
 //		String strTableName = "Student";
 //		DBApp	dbApp = new DBApp( );
 		
-		dbApp.createIndex( "table", "age", "kamal");
-		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
-		System.out.println(index.searchIndex(new Datatype(18)));
+//		dbApp.createIndex( "table", "age", "kamal");
+//		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
+//		System.out.println(index.searchIndex(new Datatype(18)));
 //		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
 //		System.out.println(page.tuples);
 //		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");

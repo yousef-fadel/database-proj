@@ -61,8 +61,8 @@ public class CreateTableTests {
 		table2 = new Table("table1","./tables/table1/");
 		tables = new Vector<Table>();
 		
-//		tables.add(table1);
-//		tables.add(table2);
+		tables.add(table1);
+		tables.add(table2);
 		
 		table1.serializeTable();
 		table2.serializeTable();
