@@ -1,5 +1,6 @@
 package com.goat.database;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,10 +14,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Vector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -386,10 +389,54 @@ public class UpdateTests {
 	}
 	
 	// Check that index was updated if one exists
-	void Index_Updated()
+	@RepeatedTest(value = 5)
+	void Index_Updated() throws ClassNotFoundException, DBAppException, IOException
 	{
+		database.createIndex("result", "name", "nameIndex");
+		database.createIndex("banadyMethod", "name", "nameIndex");
 		
-	
+		int age= 28;
+		int id = randomID();
+		double gpa = 1.2;
+		String name = "Mariam";
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		
+		database.insertIntoTable("banadyMethod", colData);
+		
+		name = "Marioma";
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		database.insertIntoTable("result", colData);
+		
+		colData.clear();
+		colData.put("name", new String(name));
+		
+		database.updateTable("banadyMethod", id + "", colData);
+		
+		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "idIndex.ser");
+		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "idIndex.ser");
+		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(""), true);
+		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(""), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+			
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), 
+				"Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
 	}
 	
 	// if the primary key updated does not exist; do not update (or throw exception?)

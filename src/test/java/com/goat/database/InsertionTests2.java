@@ -90,22 +90,6 @@ public class InsertionTests2 {
 		return null;
 	}
 	
-	private boolean comparePage(Page page1, Page page2)
-	{
-		if(page1.tuples.size()!=page2.tuples.size())
-			return false;
-		for(int i = 0;i<page1.tuples.size();i++)
-			if(!deepCompareTuple(page1.tuples.get(i),page2.tuples.get(i)))
-				return false;
-			
-		return true;
-			
-	}
-	private boolean deepCompareTuple(Tuple tuple1, Tuple tuple2)
-	{
-		return tuple1.entry.equals(tuple2.entry);
-	}
-
 	private String randomString()
 	{
 		String res = "";
@@ -138,14 +122,6 @@ public class InsertionTests2 {
 			database.insertIntoTable("result", colData);
 			
 		}
-	}
-	
-	private boolean isSortedString(ArrayList<String> arr)
-	{
-		for(int i =0;i<arr.size()-1;i++)
-			if(arr.get(i).compareTo(arr.get(i+1))>0)
-				return false;
-		return true;
 	}
 	
 	//------------------------------------------TESTS---------------------------------------------------------
