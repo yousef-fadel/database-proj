@@ -20,6 +20,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -177,7 +178,7 @@ public class UpdateTests {
 	void Updated_Row_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		double gpa = 1.2;
 		String name = "Mariam";
 		colData.clear();
@@ -219,7 +220,7 @@ public class UpdateTests {
 	void Updated_Row_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		double gpa = 1.2;
 		String name = "Mariam";
 		colData.clear();
@@ -261,7 +262,7 @@ public class UpdateTests {
 	void Updated_Row_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		double gpa = 1.2;
 		String name = "Mariam";
 		colData.clear();
@@ -300,7 +301,7 @@ public class UpdateTests {
 	@Test
 	void ThrowExceptionForWrongDataTypeDouble() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		int age= 28;
 		double gpa = 1.2;
 		String name = "Mariam";
@@ -323,7 +324,7 @@ public class UpdateTests {
 	@Test
 	void ThrowExceptionForWrongDataTypeInteger() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		int age= 28;
 		double gpa = 1.2;
 		String name = "Mariam";
@@ -346,7 +347,7 @@ public class UpdateTests {
 	@Test
 	void ThrowExceptionForWrongDataTypeString() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		int age= 28;
 		double gpa = 1.2;
 		String name = "Mariam";
@@ -369,7 +370,7 @@ public class UpdateTests {
 	@Test
 	void ThrowExceptionForWrongColumnName() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		int age= 28;
 		double gpa = 1.2;
 		String name = "Mariam";
@@ -390,13 +391,13 @@ public class UpdateTests {
 	
 	// Check that index was updated if one exists
 	@RepeatedTest(value = 5)
-	void Index_Updated() throws ClassNotFoundException, DBAppException, IOException
+	void Index_Updated_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result", "name", "nameIndex");
 		database.createIndex("banadyMethod", "name", "nameIndex");
 		
 		int age= 28;
-		int id = randomID();
+		int id = uniqueID[uniqueID.length-1];
 		double gpa = 1.2;
 		String name = "Mariam";
 		colData.clear();
@@ -420,10 +421,112 @@ public class UpdateTests {
 		
 		database.updateTable("banadyMethod", id + "", colData);
 		
-		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "idIndex.ser");
-		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "idIndex.ser");
+		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "nameIndex.ser");
+		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "nameIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(""), true);
 		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(""), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+			
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), 
+				"Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
+	}
+	
+	// Check that index was updated if one exists
+	@RepeatedTest(value = 5)
+	void Index_Updated_Integer() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createIndex("result", "age", "ageIndex");
+		database.createIndex("banadyMethod", "age", "ageIndex");
+		
+		int age= 28;
+		int id = uniqueID[uniqueID.length-1];
+		double gpa = 1.2;
+		String name = "Mariam";
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		
+		database.insertIntoTable("banadyMethod", colData);
+		
+		age = 30;
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		database.insertIntoTable("result", colData);
+		
+		colData.clear();
+		colData.put("age", new Integer(age));
+		
+		database.updateTable("banadyMethod", id + "", colData);
+		
+		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "ageIndex.ser");
+		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "ageIndex.ser");
+		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0), true);
+		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(0), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+			
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), 
+				"Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
+	}
+	
+	// Check that index was updated if one exists
+	@RepeatedTest(value = 5)
+	void Index_Updated_Double() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createIndex("result", "gpa", "gpaIndex");
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		
+		int age= 28;
+		int id = uniqueID[uniqueID.length-1];
+		double gpa = 1.2;
+		String name = "Mariam";
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		
+		database.insertIntoTable("banadyMethod", colData);
+		
+		gpa = 0.7;
+		colData.clear();
+		colData.put("id", new Integer(id));
+		colData.put("age", new Integer(age));
+		colData.put("name", new String(name));
+		colData.put("gpa", new Double(gpa));
+		database.insertIntoTable("result", colData);
+		
+		colData.clear();
+		colData.put("gpa", new Double(gpa));
+		
+		database.updateTable("banadyMethod", id + "", colData);
+		
+		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
+		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "gpaIndex.ser");
+		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0.0), true);
+		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(0.0), true);
 		assertEquals(resultPointers.size(), banadyMethodPointers.size());
 		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
 		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
@@ -446,7 +549,7 @@ public class UpdateTests {
 		colData.clear();
 		colData.put("name", new String("Sherif"));
 		
-		database.updateTable("banadyMethod", 234 + "", colData);
+		database.updateTable("banadyMethod", 3020 + "", colData);
 		
 		assertTrue(banadyMethod.pageNames.size()==result.pageNames.size(),"Expected the number of pages to be " 
 				+ banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());

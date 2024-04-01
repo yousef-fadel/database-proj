@@ -266,6 +266,7 @@ public class IndexTests {
 		assertEquals("Index already exists",exception.getMessage());
 
 	}
+	
 	@Test
 	// if an index has the same name as one that is already saved, throw exception
 	public void throwExceptionForSameIndexName() throws ClassNotFoundException, DBAppException, IOException
