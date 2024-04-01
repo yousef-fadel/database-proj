@@ -127,7 +127,7 @@ public class InsertionTests2 {
 
 	//------------------------------------------TESTS---------------------------------------------------------
 
-	@DisplayName("Insert into a table where the clustering key is a string should have it sorted on that string")
+	@DisplayName("InsertTable_WithStringAsClusteringKey_ShouldHaveItSortedOnThatKey")
 	@Test
 	void insertIntoStringClusteringKey() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -159,7 +159,7 @@ public class InsertionTests2 {
 		assertTrue(tableTuples.equals(sortedTableTuples),"Expected " +sortedTableTuples + ", but instead got " + tableTuples);
 	}
 
-	@DisplayName("Insert into a table where the clustering key is a double should have it sorted on that double")
+	@DisplayName("InsertTable_WithDoubleAsClusteringKey_ShouldHaveItSortedOnThatKey")
 	@Test
 	void insertIntoDoubleClusteringKey() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -191,7 +191,7 @@ public class InsertionTests2 {
 		assertTrue(tableTuples.equals(sortedTableTuples),"Expected " +sortedTableTuples + ", but instead got " + tableTuples);
 	}
 
-	@DisplayName("Inserting into an indexed integer column should have the index updated for every shifting page")
+	@DisplayName("InsertTable_WithIndexOnInteger_ShouldUpdateIndexOnEveryInsert")
 	@Test
 	// hopefully test works? it inserts into two tables: one creates index after isnertions, and the other before
 	// it then compares the indices of both tables and checks if they are the same
@@ -225,7 +225,7 @@ public class InsertionTests2 {
 		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
 	}
 
-	@DisplayName("Inserting into an indexed string column should have the index updated for every shifting page")
+	@DisplayName("InsertTable_WithIndexOnString_ShouldUpdateIndexOnEveryInsert")
 	@Test
 	// hopefully test works? it inserts into two tables: one creates index after isnertions, and the other before
 	// it then compares the indices of both tables and checks if they are the same
@@ -260,7 +260,7 @@ public class InsertionTests2 {
 		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
 	}
 
-	@DisplayName("Inserting into an indexed double column should have the index updated for every shifting page")
+	@DisplayName("InsertTable_WithIndexOnDouble_ShouldUpdateIndexOnEveryInsert")
 	@Test
 	// hopefully test works? it inserts into two tables: one creates index after isnertions, and the other before
 	// it then compares the indices of both tables and checks if they are the same
@@ -296,6 +296,7 @@ public class InsertionTests2 {
 	}
 
 	@RepeatedTest(value = 10)
+	@DisplayName("InsertTable_WithIndexOnIntegerAndStringAndDouble_ShouldUpdateIndicesOnEveryInsert")
 	void insertIntoMultipleIndices() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createTable("banadyMethod", "id", htbl);

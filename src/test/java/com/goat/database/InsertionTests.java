@@ -106,7 +106,7 @@ public class InsertionTests {
 	
 	//-----------------------------------------------------TESTS-------------------------------------------------------------------------------------------------
 	
-	@DisplayName("Inserting into an empty table")
+	@DisplayName("InsertTable_WithEmptyTable_ShouldCreateFirstPageContainingTuple")
 	@Test
 	void First_Insert_Is_Succesful() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -126,7 +126,7 @@ public class InsertionTests {
 	 * with no loss of information
 	 */ 	
 	@SuppressWarnings("unchecked")
-	@DisplayName("Inserting in random order automatically sorts tuples from lowest to greatest")
+	@DisplayName("InsertTable_InRandomOrder_ShouldHaveThemSortedInPage")
 	@Test
 	void Insertion_Orders_Tuples() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -161,7 +161,7 @@ public class InsertionTests {
 	// This test checks that if all pages are full, then we create a new page
 	// to insert  
 	@SuppressWarnings("unchecked")
-	@DisplayName("Inserting into full pages leads to a new page being created")
+	@DisplayName("InsertTable_WithFullPage_CreatesNewPageWithTupleInIt")
 	@Test
 	void Full_Page_Insertion_Leads_To_New_Page_Created() throws DBAppException, IOException, ClassNotFoundException
 	{
@@ -209,7 +209,7 @@ public class InsertionTests {
 	// general case; insert into multiple pages in an unshuffled order
 	@SuppressWarnings("unchecked")
 	@Test
-	@DisplayName("Inserting 13 elements with the page size being 3 should have them in the correct order")
+	@DisplayName("InsertTable_ForMultipleTuples_CreatesPagesAndShiftsTuplesBetweenPagesInOrder")
 	void Insertion_For_Multiple_Full_Pages() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Vector<Tuple> firstPageTuples = new Vector<Tuple>(); 
@@ -316,7 +316,7 @@ public class InsertionTests {
 	// Checks that if I attempt to insert onto a column that does not exist,
 	// an exception is thrown
 	@Test
-	@DisplayName("Exception is thrown for having a wrong column name")
+	@DisplayName("InsertTable_WithNonExistentColumnNameInTable_ThrowsException")
 	void Exception_Thrown_For_Wrong_Column_Name()
 	{
 		colData.put("iDoNotExist", new Integer(58));
@@ -331,7 +331,7 @@ public class InsertionTests {
 	// Checks that if I attempt to insert with a wrong datatype for a certain column,
 	// an exception is thrown
 	@Test
-	@DisplayName("Exception is thrown for having wrong datatype")
+	@DisplayName("InsertTable_WithWrongDataTypeForColumn_ThrowsException")
 	void Exception_Thrown_For_Wrong_DataType()
 	{
 		colData.put("id", new String("wow"));
@@ -347,7 +347,7 @@ public class InsertionTests {
 	}
 	
 	@Test
-	@DisplayName("Exception is thrown for having nonexistent datatype")
+	@DisplayName("InsertTable_WithWrongDataTypeForColumn_ThrowsException")
 	void Exception_Thrown_For_Nonexistent_DataType() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("id", "java.lang.String");
@@ -377,7 +377,7 @@ public class InsertionTests {
 	}
 	
 	@Test
-	@DisplayName("Exception is thrown for having a missing column")
+	@DisplayName("InsertTable_WithMissingColumn_ThrowsException")
 	void Exception_Thrown_For_Missing_Column() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("age", "java.lang.Integer");
@@ -390,6 +390,7 @@ public class InsertionTests {
 	}
 	
 	@Test
+	@DisplayName("InsertTable_WithExtraColumnNotInTable_ThrowsException")
 	void ExceptionThrownForExtraColumn()
 	{
 		colData.put("id", new Integer(5));
