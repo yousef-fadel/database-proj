@@ -278,7 +278,7 @@ public class InsertionTests2 {
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
 		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "gpaIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0.0), true);
-		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(""), true);
+		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(0.0), true);
 		assertEquals(resultPointers.size(), banadyMethodPointers.size());
 		
 		ArrayList<String> resultPointerNumbers = new ArrayList<String>();

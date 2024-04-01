@@ -127,7 +127,7 @@ public class DBApp {
 		// update the metadata file and change the column's index type to b+Tree
 		updateMetadataIndex(strTableName,strColName,strIndexName);
 		
-		Index index = new Index(strIndexName, omar.filepath);
+		Index index = new Index(strIndexName, strColName, omar.filepath);
 		omar.insertRowsIntoIndex(strColName,index);
 		omar.indexNames.add(strIndexName);
 		index = null;

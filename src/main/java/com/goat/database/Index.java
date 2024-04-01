@@ -12,13 +12,15 @@ import com.goat.btree.BTree;
 // TODO index fannout should be gotten from config file
 public class Index implements Serializable{
 	String name;
+	String columnName;
 	String indexFilepath;
 	BTree<Datatype, Vector<String>> btree;
-	// index name given by user; filepath hatkoon table.filepath + "/indices/" + this.name + "/"
-	public Index(String name, String tableFilepath)
+
+	public Index(String name, String columnName,String tableFilepath)
 	{
 		this.name = name;
 		this.indexFilepath = tableFilepath+"indices/" + name+".ser";
+		this.columnName = columnName;
 		btree = new BTree<Datatype,Vector<String>>();
 	}
 	

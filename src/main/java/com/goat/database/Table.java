@@ -3,6 +3,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Vector;
+import com.goat.database.*;
 
 public class Table implements java.io.Serializable{
 	public Vector<String> pageNames; 
@@ -35,6 +36,7 @@ public class Table implements java.io.Serializable{
 			pageNames.add(firstPage.name);
 			firstPage.tuples.add(tuple);
 			
+			insertIntoIndex(tuple,firstPage.name);
 			firstPage = firstPage.serializeAndDeletePage();
 			this.serializeAndDeleteTable();
 			
@@ -126,6 +128,7 @@ public class Table implements java.io.Serializable{
 			start = right;
 
 		page.tuples.insertElementAt(tuple, start);
+		insertIntoIndex(tuple,page.name);
 		// if after we insert our element an overflow occurs, we start shifting to next page
 		if(page.tuples.size()>page.maxNoEnteries)
 			shiftTuples(page);
@@ -141,6 +144,7 @@ public class Table implements java.io.Serializable{
 			// take the last element of the page, store it, and remove it from the end of the page
 			Tuple tmp = currPage.tuples.lastElement();
 			currPage.tuples.remove(currPage.tuples.size()-1);
+			deleteFromIndex(tmp,currPage.name);
 			// if we reach the end of our pages, create a new page and store the last element in it
 			// otherwise, save our current page and move onto the next page and insert the tmp at the top
 			if(this.pageNames.lastElement().equals(currPage.name))
@@ -148,6 +152,7 @@ public class Table implements java.io.Serializable{
 				Page newPage = new Page(this.name + (this.numberForPage), this.numberForPage++, this.filepath);
 				this.pageNames.add(newPage.name);
 				newPage.tuples.add(tmp);
+				insertIntoIndex(tmp, newPage.name);
 				newPage = newPage.serializeAndDeletePage();
 				this.serializeTable();
 				break;
@@ -156,12 +161,26 @@ public class Table implements java.io.Serializable{
 			int nextPage = this.pageNames.indexOf(currPage.name) + 1;
 			currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(nextPage));
 			currPage.tuples.insertElementAt(tmp, 0);	
+			insertIntoIndex(tmp, currPage.name);
 		}
 		currPage = currPage.serializeAndDeletePage();
 
 
 	}
-
+	private void deleteFromIndex(Tuple tuple, String pageName) throws ClassNotFoundException
+	{
+		if(this.indexNames.isEmpty())
+			return;
+		
+		for(String indexName : this.indexNames)
+		{
+			Index index = getIndex(indexName);
+			Object tupleData = tuple.entry.get(index.columnName);
+			index.deleteFromIndex(new Datatype(tupleData), pageName);
+			index = index.serializeAndDeleteIndex();
+		}
+		
+	}
 	
 	public void insertRowsIntoIndex(String strColName, Index index) throws ClassNotFoundException
 	{
@@ -178,6 +197,27 @@ public class Table implements java.io.Serializable{
 		index = index.serializeAndDeleteIndex();
 
 	}
+	
+	// checks the table for any existing index to insert into
+	private void insertIntoIndex(Tuple tuple, String pageName) throws ClassNotFoundException
+	{
+		if(this.indexNames.isEmpty())
+			return;
+		
+		for(String indexName : this.indexNames)
+		{
+			Index index = getIndex(indexName);
+			Object tupleData = tuple.entry.get(index.columnName);
+			index.insertIntoIndex(new Datatype(tupleData), pageName);
+			index = index.serializeAndDeleteIndex();
+		}
+	}
+	
+	private Index getIndex(String indexName) throws ClassNotFoundException
+	{
+		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
+	}
+	
 	public void serializeTable()
 	{
 		try {
