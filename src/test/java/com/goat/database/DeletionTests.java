@@ -19,7 +19,7 @@ import java.util.Random;
 import java.util.Vector;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -32,7 +32,8 @@ public class DeletionTests {
 	Table banadyMethod; // call the methods on this table
 	int pageSize;
 	Random random;
-
+	int [] uniqueID;
+	
 	@BeforeEach
 	void init() throws IOException, ClassNotFoundException, DBAppException
 	{
@@ -71,7 +72,6 @@ public class DeletionTests {
 		colData = new Hashtable<String, Object>();
 		banadyMethod = database.tables.get(0);
 		result = database.tables.get(1);
-
 	}
 
 	private Object deserializeData(String filename) throws ClassNotFoundException, IOException 
@@ -124,9 +124,9 @@ public class DeletionTests {
 		return res;
 	}
 	
-	private void insertRandomTuples(int numberOfPages) throws ClassNotFoundException, DBAppException, IOException
+	private int insertRandomTuples(int numberOfPages) throws ClassNotFoundException, DBAppException, IOException
 	{
-		int [] uniqueID = random.ints(0,5000).distinct().limit(pageSize*2*numberOfPages).toArray();
+		uniqueID = random.ints(0,5000).distinct().limit(pageSize*numberOfPages*10).toArray();
 		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
                 .mapToDouble(Double::doubleValue).limit(pageSize*2*numberOfPages).toArray();
 		
@@ -145,11 +145,13 @@ public class DeletionTests {
 			database.insertIntoTable("result", colData);
 			
 		}
+		return pageSize*numberOfPages;
 	}
 	
 	//-------------------------------------------------------TESTS--------------------------------------------------------------
 	//This checks if one tuple is deleted from the page
 	@Test
+	@DisplayName("DeleteFromTable_ForASingleTuple_ShouldRemoveTupleFromPage")
 	void Delete_Tuple_From_Page() throws IOException, DBAppException, ClassNotFoundException
 	{
 		colData.put("id", new Integer(1));
@@ -182,6 +184,7 @@ public class DeletionTests {
 
 	// Checks that if no tuples meet condition for deleted, then nothing is deleted
 	@Test
+	@DisplayName("DeleteFromTable_WithDataNotInTable_ShouldLeaveTableIntact")
 	void No_Tuples_Deleted_For_False_Info() throws ClassNotFoundException, DBAppException, IOException
 	{
 		colData.put("id", new Integer(1));
@@ -221,6 +224,7 @@ public class DeletionTests {
 	// This checks that if we delete the last tuple from a page, it
 	// also deletes the entire page
 	@Test
+	@DisplayName("DeleteFromTable_AllTuplesInPage_ShouldDeletePageToo")
 	void Delete_Page_Once_Last_Tuple_Is_Deleted() throws DBAppException, IOException, ClassNotFoundException
 	{
 		int pages = 8;
@@ -246,6 +250,7 @@ public class DeletionTests {
 	// This checks that if multiple tuples satisfy the deletion condition for an int,
 	// all of them are also deleted
 	@Test
+	@DisplayName("DeleteFromTable_WithIntegerData_ShouldRemoveAllTuplesSatisfyingIntegerData")
 	void Delete_Multiple_Tuples_From_Page_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int deletionAge = random.nextInt();
@@ -296,6 +301,7 @@ public class DeletionTests {
 	// This checks that if multiple tuples satisfy the deletion condition for an double,
 	// all of them are also deleted
 	@Test
+	@DisplayName("DeleteFromTable_WithDoubleData_ShouldRemoveAllTuplesSatisfyingDoubleData")
 	void Delete_Multiple_Tuples_From_Page_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
@@ -346,6 +352,7 @@ public class DeletionTests {
 	// This checks that if multiple tuples satisfy the deletion condition for an string,
 	// all of them are also deleted
 	@Test
+	@DisplayName("DeleteFromTable_WithStringData_ShouldRemoveAllTuplesSatisfyingStringData")
 	void Delete_Multiple_Tuples_From_Page_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		String deletionName = randomString();
@@ -396,6 +403,7 @@ public class DeletionTests {
 	// This checks that if I have a condition with integer and string,
 	// all of tuples meeting that condition are deleted
 	@Test
+	@DisplayName("DeleteFromTable_WithIntegerAndStringData_ShouldRemoveAllTuplesSatisfyingIntegerAndStringData")
 	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 
@@ -454,6 +462,7 @@ public class DeletionTests {
 	}
 	
 	@Test
+	@DisplayName("DeleteFromTable_WithIntegerAndDoubleData_ShouldRemoveAllTuplesSatisfyingIntegerAndDoubleData")
 	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
 
@@ -512,6 +521,7 @@ public class DeletionTests {
 	}
 	
 	@Test
+	@DisplayName("DeleteFromTable_WithStringAndDoubleData_ShouldRemoveAllTuplesSatisfyingStringAndDoubleData")
 	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Double_And_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
@@ -569,6 +579,7 @@ public class DeletionTests {
 	}
 	
 	@Test
+	@DisplayName("DeleteFromTable_WithIntegerAndDoubleAndStringData_ShouldRemoveAllTuplesSatisfyingIntegerAndDoubleAndStringData")
 	void Delete_Multiple_Tuple_With_Multiple_Deletion_Conditions_Integer_And_Double_And_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 
@@ -579,8 +590,8 @@ public class DeletionTests {
 		String deletionName = "Mohamed";
 		double deletionGPA = 5.4;
 		int deletionAge = 90048;
-		// we do the following in the loop: create one tuple completely random and put it in both tables
-		// and create another tuple that has a name that we will use to delete when we call the method
+		// insert everything we want our endresult to be in result, then put what we will delete in banadyMethod with
+		// deletionGPA, deletionName, and deletionAge
 		for(int i = 0;i<pageSize*5;i++)
 		{
 			int age =  uniqueAge[i];
@@ -615,6 +626,13 @@ public class DeletionTests {
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(id*5000));
+			colData.put("age", new Integer(deletionAge));
+			colData.put("name", new String(deletionName));
+			colData.put("gpa", new Double(deletionGPA));
+			database.insertIntoTable("banadyMethod", colData);
 		}
 		colData.clear();
 		colData.put("gpa", new Double(deletionGPA));
@@ -638,11 +656,12 @@ public class DeletionTests {
 	// This checks that deleting the tuple also deletes it from the
 	// index (if it exists)
 	@Test 
+	@DisplayName("DeleteFromTable_WithIndexOnDouble_ShouldDeleteFromIndexToo")
 	void Delete_Tuple_From_Double_Index_Too() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result","gpa", "gpaIndex");
 		database.createIndex("banadyMethod","gpa", "gpaIndex");
-		insertRandomTuples(10);
+		int index = insertRandomTuples(10);
 		
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0.0), true);
@@ -653,10 +672,9 @@ public class DeletionTests {
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
 		
-		int [] uniqueID = random.ints(5000,10000).distinct().limit(pageSize*4).toArray();
 		for(int i =0;i<pageSize*3;i++)
 		{
-			int id =  uniqueID[i];
+			int id =  uniqueID[++index];
 			int age =  uniqueID[i];
 			double gpa = 6.04;
 			String name = randomString();
@@ -666,7 +684,6 @@ public class DeletionTests {
 			colData.put("age", new Integer(age));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
-			database.insertIntoTable("result", colData);
 
 		}
 		colData.clear();
@@ -689,11 +706,12 @@ public class DeletionTests {
 	}
 	
 	@Test
+	@DisplayName("DeleteFromTable_WithIndexOnString_ShouldDeleteFromIndexToo")
 	void Delete_Tuple_From_String_Index_Too() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result","name", "nameIndex");
 		database.createIndex("banadyMethod","name", "nameIndex");
-		insertRandomTuples(10);
+		int index = insertRandomTuples(10);
 		
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "nameIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(""), true);
@@ -704,12 +722,11 @@ public class DeletionTests {
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
 		
-		int [] uniqueID = random.ints(5000,10000).distinct().limit(pageSize*4).toArray();
 		double [] uniqueGPA = random.doubles(5,10).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
 				.mapToDouble(Double::doubleValue).limit(pageSize*4).toArray();
 		for(int i =0;i<pageSize*3;i++)
 		{
-			int id =  uniqueID[i];
+			int id =  uniqueID[++index];
 			int age =  uniqueID[i];
 			double gpa = uniqueGPA[i];
 			String name = "Aya";
@@ -719,7 +736,6 @@ public class DeletionTests {
 			colData.put("age", age);
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
-			database.insertIntoTable("result", colData);
 			
 		}
 		colData.clear();
@@ -741,12 +757,14 @@ public class DeletionTests {
 		
 	}
 	
+	
 	@Test
+	@DisplayName("DeleteFromTable_WithIndexOnInteger_ShouldDeleteFromIndexToo")
 	void Delete_Tuple_From_Integer_Index_Too() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result","age", "ageIndex");
 		database.createIndex("banadyMethod","age", "ageIndex");
-		insertRandomTuples(10);
+		int index = insertRandomTuples(10);
 		
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "ageIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(-1), true);
@@ -757,12 +775,11 @@ public class DeletionTests {
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
 		
-		int [] uniqueID = random.ints(5000,10000).distinct().limit(pageSize*4).toArray();
 		double [] uniqueGPA = random.doubles(5,10).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
 				.mapToDouble(Double::doubleValue).limit(pageSize*4).toArray();
 		for(int i =0;i<pageSize*3;i++)
 		{
-			int id =  uniqueID[i];
+			int id =  uniqueID[++index];
 			int age =  100002;
 			double gpa = uniqueGPA[i];
 			String name = randomString();
@@ -772,7 +789,6 @@ public class DeletionTests {
 			colData.put("age", age);
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
-			database.insertIntoTable("result", colData);
 			
 		}
 		colData.clear();
@@ -793,4 +809,123 @@ public class DeletionTests {
 		
 		
 	}
+	
+	@Test
+	@DisplayName("DeleteFromTable_WithIndexOnIntegerAndDoubleAndString_ShouldDeleteFromAllThreeIndices")
+	void DeleteFromAllIndices() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createIndex("result","age", "ageIndex");
+		database.createIndex("result","name", "nameIndex");
+		database.createIndex("result","gpa", "gpaIndex");
+
+		database.createIndex("banadyMethod","age", "ageIndex");
+		database.createIndex("banadyMethod","name", "nameIndex");
+		database.createIndex("banadyMethod","gpa", "gpaIndex");
+		
+		int index = insertRandomTuples(10);
+		
+		// resulting index should be as follows:
+		Index resultAgeIndex = (Index) deserializeData(result.filepath+"/indices/" + "ageIndex.ser");
+		Index resultNameIndex = (Index) deserializeData(result.filepath+"/indices/" + "nameIndex.ser");
+		Index resultGpaIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
+		
+		ArrayList<Vector<String>> resultAgePointers = resultAgeIndex.searchGreaterThan(new Datatype(-1), true);
+		ArrayList<Vector<String>> resultNamePointers = resultNameIndex.searchGreaterThan(new Datatype(""), true);
+		ArrayList<Vector<String>> resultGpaPointers = resultGpaIndex.searchGreaterThan(new Datatype(0.0), true);
+		
+		
+		ArrayList<String> resultAgePointerNumbers = new ArrayList<String>();
+		ArrayList<String> resultNamePointerNumbers = new ArrayList<String>();
+		ArrayList<String> resultGpaPointerNumbers = new ArrayList<String>();
+		
+		for(int i = 0;i<resultAgePointers.size();i++)
+		{
+			String page = resultAgePointers.get(i).get(0);
+			resultAgePointerNumbers.add(page.substring(page.length(),page.length()));
+			
+			page = resultNamePointers.get(i).get(0);
+			resultNamePointerNumbers.add(page.substring(page.length(),page.length()));
+
+			page = resultGpaPointers.get(i).get(0);
+			resultGpaPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		
+		double [] uniqueGPA = random.doubles(5,10).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+				.mapToDouble(Double::doubleValue).limit(pageSize*4).toArray();
+		int[] uniqueAge = random.ints(5000,10000).distinct().limit(pageSize*4).toArray();
+		int deletionAge = 100002;
+		String deletionName = "Maryam";
+		Double deletionGPA = 20.34;
+		for(int i =0;i<pageSize*3;i++)
+		{
+			int id =  uniqueID[++index];
+			int age =  uniqueAge[i];
+			double gpa = uniqueGPA[i];
+			String name = randomString();
+			colData.clear();
+			colData.put("id", new Integer(id));
+			colData.put("name", new String(name));
+			colData.put("age", new Integer(deletionAge));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(id*-1));
+			colData.put("name", new String(deletionName));
+			colData.put("age", age);
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+			
+			colData.clear();
+			colData.put("id", new Integer(id*500));
+			colData.put("name", new String(name));
+			colData.put("age", age);
+			colData.put("gpa", new Double(deletionGPA));
+			database.insertIntoTable("banadyMethod", colData);
+			
+		}
+		
+		colData.clear();
+		colData.put("age", new Integer(deletionAge));
+		colData.put("name", new String(deletionName));
+		colData.put("gpa", new Double(deletionGPA));
+		database.deleteFromTable("banadyMethod", colData);
+		
+		Index banadyMethodAgeIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "ageIndex.ser");
+		Index banadyMethodNameIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "nameIndex.ser");
+		Index banadyMethodGpaIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "gpaIndex.ser");
+		
+		ArrayList<Vector<String>> banadyMethodAgePointers = banadyMethodAgeIndex.searchGreaterThan(new Datatype(-1), true);
+		ArrayList<Vector<String>> banadyMethodNamePointers = banadyMethodNameIndex.searchGreaterThan(new Datatype(""), true);
+		ArrayList<Vector<String>> banadyMethodGpaPointers = banadyMethodGpaIndex.searchGreaterThan(new Datatype(0.0), true);
+		
+		
+		ArrayList<String> banadyMethodAgePointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodNamePointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodGpaPointerNumbers = new ArrayList<String>();
+		
+		assertEquals(resultAgePointers.size(), banadyMethodAgePointers.size());
+		assertEquals(resultNamePointers.size(), banadyMethodNamePointers.size());
+		assertEquals(resultGpaPointers.size(), banadyMethodGpaPointers.size());
+		
+		for(int i = 0;i<banadyMethodAgePointers.size();i++)
+		{
+			String page = banadyMethodAgePointers.get(i).get(0);
+			banadyMethodAgePointerNumbers.add(page.substring(page.length(),page.length()));
+			
+			page = banadyMethodNamePointers.get(i).get(0);
+			banadyMethodNamePointerNumbers.add(page.substring(page.length(),page.length()));
+
+			page = banadyMethodGpaPointers.get(i).get(0);
+			banadyMethodGpaPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodAgePointerNumbers.equals(resultAgePointerNumbers), 
+				"Expected " + resultAgePointerNumbers + ", but instead got " + banadyMethodAgePointers);
+		assertTrue(banadyMethodNamePointerNumbers.equals(resultNamePointerNumbers), 
+				"Expected " + resultNamePointerNumbers + ", but instead got " + banadyMethodAgePointers);
+		assertTrue(banadyMethodGpaPointerNumbers.equals(resultGpaPointerNumbers), 
+				"Expected " + resultGpaPointerNumbers + ", but instead got " + banadyMethodAgePointers);
+	}
+	
+	
 }
