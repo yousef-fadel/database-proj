@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -103,6 +103,7 @@ public class IndexTests {
 	//---------------------------------------------------------TESTS-------------------------------------------------------
 	
 	@Test
+	@DisplayName("CreateIndex_ForIntegerWithNoRowsInTable_CreatesIndexFileAndAddsItToTableList")
 	public void createIndexForTableWithNoRowsInteger() throws DBAppException, IOException, ClassNotFoundException
 	{
 		database.createIndex("table","id","idIndex");
@@ -114,6 +115,7 @@ public class IndexTests {
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
 				File directory = new File("./tables/table/indices/idIndex.ser");
 				assertTrue(directory.exists(),"Could not find index file");
+				assertTrue(!table.indexNames.isEmpty(),"Index name was not added to the table index name list");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
@@ -122,6 +124,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForDoubleWithNoRowsInTable_CreatesIndexFileAndAddsItToTableList")
 	public void createIndexForTableWithNoRowsDouble() throws IOException, DBAppException, ClassNotFoundException
 	{
 		database.createIndex("table","gpa","gpaIndex");
@@ -133,12 +136,14 @@ public class IndexTests {
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
 				File directory = new File("./tables/table/indices/gpaIndex.ser");
 				assertTrue(directory.exists(),"Could not find index file");
+				assertTrue(!table.indexNames.isEmpty(),"Index name was not added to the table index name list");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForStringWithNoRowsInTable_CreatesIndexFileAndAddsItToTableList")
 	public void createIndexForTableWithNoRowsString() throws DBAppException, IOException, ClassNotFoundException
 	{
 		database.createIndex("table","name","nameIndex");
@@ -150,12 +155,14 @@ public class IndexTests {
 				assertTrue(colDataTypes.get(i).get(5).equals("B+tree"), "The index type in the CSV file was not changed");
 				File directory = new File("./tables/table/indices/nameIndex.ser");
 				assertTrue(directory.exists(),"Could not find index file");
+				assertTrue(!table.indexNames.isEmpty(),"Index name was not added to the table index name list");
 				return;
 			}
 		assertTrue(false, "Could not find the column ID in the metadata file");
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForIntegerWithRowsInTable_CreatesIndexWithRowsPointingToTheirPages")
 	public void createIndexForTableWithMultipleRowsInteger() throws DBAppException, ClassNotFoundException, IOException
 	{
 		int	noOfPages = pageSize*6;
@@ -183,6 +190,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForStringWithRowsInTable_CreatesIndexWithRowsPointingToTheirPages")
 	public void createIndexForTableWithMultipleRowsString() throws DBAppException, ClassNotFoundException, IOException
 	{
 		int	noOfPages = pageSize*6;
@@ -210,6 +218,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForDoubleWithRowsInTable_CreatesIndexWithRowsPointingToTheirPages")
 	public void createIndexForTableWithMultipleRowsDouble() throws DBAppException, ClassNotFoundException, IOException
 	{
 		int	noOfPages = pageSize*6;
@@ -238,6 +247,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForColumnNotInTable_ThrowsException")
 	public void throwExceptionForNonExistentColumnName()
 	{
 		Throwable exception =  assertThrows(DBAppException.class, () -> 
@@ -247,6 +257,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForNonExistentTable_ThrowsException")
 	public void throwExceptionForNonExistentTableName()
 	{
 		Throwable exception =  assertThrows(DBAppException.class, () -> 
@@ -256,6 +267,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_ForSameRowTwice_ThrowsException")
 	// attempting to create an index for the same column twice will throw an exception
 	public void throwExceptionForSameIndexCreatedTwice() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -268,6 +280,7 @@ public class IndexTests {
 	}
 	
 	@Test
+	@DisplayName("CreateIndex_WithSameNameTwice_ThrowsException")
 	// if an index has the same name as one that is already saved, throw exception
 	public void throwExceptionForSameIndexName() throws ClassNotFoundException, DBAppException, IOException
 	{
