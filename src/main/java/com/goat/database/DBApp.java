@@ -98,16 +98,23 @@ public class DBApp {
 	// TODO check for duplicate index names
 	// following method creates a B+tree index
 	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException {
-
+		// check that table exists
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
 		
+		// check that there is no index for this column specifcally
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		for (int i = 0; i < tableInfo.size(); i++)
 			if(tableInfo.get(i).get(1).equals(strColName) && !tableInfo.get(i).get(5).equals("null"))
 				throw new DBAppException("Index already exists");
 		
+		//check that this name is unique (ie no other index already has this name)
+		for(String indexName:omar.indexNames)
+			if(indexName.equals(strIndexName))
+				throw new DBAppException("A similar index name already exists for " + omar.name);
+		
+		// check if this column exists aslan
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 		for(int i = 0;i<colTableNames.size();i++)
 		{
@@ -117,10 +124,12 @@ public class DBApp {
 				throw new DBAppException("Column name not found");
 		}
 		
+		// update the metadata file and change the column's index type to b+Tree
 		updateMetadataIndex(strTableName,strColName,strIndexName);
 		
 		Index index = new Index(strIndexName, omar.filepath);
 		omar.insertRowsIntoIndex(strColName,index);
+		omar.indexNames.add(strIndexName);
 		index = null;
 		omar = omar.serializeAndDeleteTable();
 		System.out.println("Successfully created B+tree for " + strColName);

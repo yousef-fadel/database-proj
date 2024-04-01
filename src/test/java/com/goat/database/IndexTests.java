@@ -275,6 +275,6 @@ public class IndexTests {
 		Throwable exception =  assertThrows(DBAppException.class, () -> 
 		{database.createIndex("table", "age", "nameIndex");});	
 		
-		
+		assertEquals("A similar index name already exists for table",exception.getMessage());
 	}
 }

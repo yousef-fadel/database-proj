@@ -5,7 +5,8 @@ import java.io.ObjectOutputStream;
 import java.util.Vector;
 
 public class Table implements java.io.Serializable{
-	public Vector<String> pageNames; //
+	public Vector<String> pageNames; 
+	public Vector<String> indexNames; // da 3ashan ana makasel afta7 el csv file mesh aktar
 	public String filepath; //location all pages
 	public String name; //table name
 	int numberForPage; // this is needed as pageNames.size() will break once we delete a page
@@ -20,6 +21,7 @@ public class Table implements java.io.Serializable{
 		this.name = name;
 		this.filepath = filepath;
 		this.pageNames = new Vector<String>();
+		this.indexNames = new Vector<String>();
 		numberForPage = 0;
 	}
 
