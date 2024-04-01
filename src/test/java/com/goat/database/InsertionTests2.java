@@ -21,6 +21,7 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -62,13 +63,13 @@ public class InsertionTests2 {
 		htbl.put("id", "java.lang.Integer");
 		htbl.put("name", "java.lang.String");
 		htbl.put("gpa", "java.lang.Double");
-		
+
 		colData = new Hashtable<String, Object>();
 
 
 
 	}
-	
+
 	private Object deserializeData(String filename) throws ClassNotFoundException, IOException 
 	{
 		try {
@@ -89,7 +90,7 @@ public class InsertionTests2 {
 		}
 		return null;
 	}
-	
+
 	private String randomString()
 	{
 		String res = "";
@@ -102,13 +103,13 @@ public class InsertionTests2 {
 		}
 		return res;
 	}
-	
+
 	private void insertRandomTuples(int numberOfPages) throws ClassNotFoundException, DBAppException, IOException
 	{
 		int [] uniqueID = random.ints(0,5000).distinct().limit(pageSize*2*numberOfPages).toArray();
 		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
-                .mapToDouble(Double::doubleValue).limit(pageSize*2*numberOfPages).toArray();
-		
+				.mapToDouble(Double::doubleValue).limit(pageSize*2*numberOfPages).toArray();
+
 		for(int i = 0 ;i<pageSize*numberOfPages;i++)
 		{
 			int id =  uniqueID[i];
@@ -120,12 +121,12 @@ public class InsertionTests2 {
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
 			database.insertIntoTable("result", colData);
-			
+
 		}
 	}
-	
+
 	//------------------------------------------TESTS---------------------------------------------------------
-	
+
 	@DisplayName("Insert into a table where the clustering key is a string should have it sorted on that string")
 	@Test
 	void insertIntoStringClusteringKey() throws ClassNotFoundException, DBAppException, IOException
@@ -134,7 +135,7 @@ public class InsertionTests2 {
 		database.createTable("result", "name", htbl);	
 		banadyMethod = database.tables.get(0);
 		insertRandomTuples(5);
-		
+
 		// arraylist holds the tuples in the order the come from table
 		ArrayList<String> tableTuples = new ArrayList<String>();
 		for(int i =0;i<banadyMethod.pageNames.size();i++)
@@ -146,7 +147,7 @@ public class InsertionTests2 {
 				tableTuples.add((String) currTuple.entry.get("name"));
 				pageTuples.add((String) currTuple.entry.get("name"));
 			}
-			
+
 			// check if this page on its own is sorted
 			ArrayList<String> sortedPageTuples = new ArrayList<String>(pageTuples);
 			Collections.sort(sortedPageTuples);
@@ -166,7 +167,7 @@ public class InsertionTests2 {
 		database.createTable("result", "gpa", htbl);
 		banadyMethod = database.tables.get(0);
 		insertRandomTuples(6);
-		
+
 		// arraylist holds the tuples in the order the come from table
 		ArrayList<Double> tableTuples = new ArrayList<Double>();
 		for(int i =0;i<banadyMethod.pageNames.size();i++)
@@ -178,7 +179,7 @@ public class InsertionTests2 {
 				tableTuples.add((Double) currTuple.entry.get("gpa"));
 				pageTuples.add((Double) currTuple.entry.get("gpa"));
 			}
-			
+
 			// check if this page on its own is sorted
 			ArrayList<Double> sortedPageTuples = new ArrayList<Double>(pageTuples);
 			Collections.sort(sortedPageTuples);
@@ -189,7 +190,7 @@ public class InsertionTests2 {
 		Collections.sort(sortedTableTuples);
 		assertTrue(tableTuples.equals(sortedTableTuples),"Expected " +sortedTableTuples + ", but instead got " + tableTuples);
 	}
-	
+
 	@DisplayName("Inserting into an indexed integer column should have the index updated for every shifting page")
 	@Test
 	// hopefully test works? it inserts into two tables: one creates index after isnertions, and the other before
@@ -200,12 +201,12 @@ public class InsertionTests2 {
 		database.createTable("result", "id", htbl);
 		banadyMethod = database.tables.get(0);
 		result = database.tables.get(1);
-		
+
 		database.createIndex("banadyMethod", "id", "idIndex");
 		insertRandomTuples(7);
 		database.createIndex("result", "id", "idIndex");
 
-		
+
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "idIndex.ser");
 		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "idIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(-1), true);
@@ -217,7 +218,7 @@ public class InsertionTests2 {
 		{
 			String page = resultPointers.get(i).get(0);
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
-			
+
 			page = banadyMethodPointers.get(i).get(0);
 			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
@@ -234,31 +235,31 @@ public class InsertionTests2 {
 		database.createTable("result", "id", htbl);
 		banadyMethod = database.tables.get(0);
 		result = database.tables.get(1);
-		
+
 		database.createIndex("banadyMethod", "name", "nameIndex");
 		insertRandomTuples(7);
 		database.createIndex("result", "name", "nameIndex");
-		
-		
+
+
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "nameIndex.ser");
 		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "nameIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(""), true);
 		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(""), true);
 		assertEquals(resultPointers.size(), banadyMethodPointers.size());
-		
+
 		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
 		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
 		for(int i = 0;i<resultPointers.size();i++)
 		{
 			String page = resultPointers.get(i).get(0);
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
-			
+
 			page = banadyMethodPointers.get(i).get(0);
 			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
 		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
 	}
-	
+
 	@DisplayName("Inserting into an indexed double column should have the index updated for every shifting page")
 	@Test
 	// hopefully test works? it inserts into two tables: one creates index after isnertions, and the other before
@@ -269,25 +270,98 @@ public class InsertionTests2 {
 		database.createTable("result", "id", htbl);
 		banadyMethod = database.tables.get(0);
 		result = database.tables.get(1);
-		
+
 		database.createIndex("banadyMethod", "gpa", "gpaIndex");
 		insertRandomTuples(7);
 		database.createIndex("result", "gpa", "gpaIndex");
-		
-		
+
+
 		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
 		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "gpaIndex.ser");
 		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0.0), true);
 		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(0.0), true);
 		assertEquals(resultPointers.size(), banadyMethodPointers.size());
-		
+
 		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
 		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
 		for(int i = 0;i<resultPointers.size();i++)
 		{
 			String page = resultPointers.get(i).get(0);
 			resultPointerNumbers.add(page.substring(page.length(),page.length()));
-			
+
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
+	}
+
+	@RepeatedTest(value = 10)
+	void insertIntoMultipleIndices() throws ClassNotFoundException, DBAppException, IOException
+	{
+		database.createTable("banadyMethod", "id", htbl);
+		database.createTable("result", "id", htbl);
+		banadyMethod = database.tables.get(0);
+		result = database.tables.get(1);
+
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		database.createIndex("banadyMethod", "name", "nameIndex");
+		database.createIndex("banadyMethod", "id", "idIndex");
+		insertRandomTuples(8);
+		database.createIndex("result", "gpa", "gpaIndex");
+		database.createIndex("result", "name", "nameIndex");
+		database.createIndex("result", "id", "idIndex");
+
+		// check gpa index tmam
+		Index resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "gpaIndex.ser");
+		Index banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "gpaIndex.ser");
+		ArrayList<Vector<String>> resultPointers = resultIndex.searchGreaterThan(new Datatype(0.0), true);
+		ArrayList<Vector<String>> banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(0.0), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+
+		ArrayList<String> resultPointerNumbers = new ArrayList<String>();
+		ArrayList<String> banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
+
+		// check name index tmam
+		resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "nameIndex.ser");
+		banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "nameIndex.ser");
+		resultPointers = resultIndex.searchGreaterThan(new Datatype(""), true);
+		banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(""), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+
+		resultPointerNumbers = new ArrayList<String>();
+		banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+
+			page = banadyMethodPointers.get(i).get(0);
+			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
+		}
+		assertTrue(banadyMethodPointerNumbers.equals(resultPointerNumbers), "Expected " + resultPointers + ", but instead got " + banadyMethodPointers);
+
+		// check id index tmam
+		resultIndex = (Index) deserializeData(result.filepath+"/indices/" + "idIndex.ser");
+		banadyMethodIndex = (Index) deserializeData(banadyMethod.filepath+"/indices/" + "idIndex.ser");
+		resultPointers = resultIndex.searchGreaterThan(new Datatype(-1), true);
+		banadyMethodPointers = banadyMethodIndex.searchGreaterThan(new Datatype(-1), true);
+		assertEquals(resultPointers.size(), banadyMethodPointers.size());
+		resultPointerNumbers = new ArrayList<String>();
+		banadyMethodPointerNumbers = new ArrayList<String>();
+		for(int i = 0;i<resultPointers.size();i++)
+		{
+			String page = resultPointers.get(i).get(0);
+			resultPointerNumbers.add(page.substring(page.length(),page.length()));
+
 			page = banadyMethodPointers.get(i).get(0);
 			banadyMethodPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
