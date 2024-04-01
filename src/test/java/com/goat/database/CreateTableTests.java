@@ -41,7 +41,7 @@ public class CreateTableTests {
 	// also creates a hashtable for calling the create table method
 	// running tests will delete the tables.ser file tho everytime
 	@BeforeEach
-	void init() throws IOException, ClassNotFoundException
+	void init() throws IOException, ClassNotFoundException, DBAppException
 	{
 		Path dir = Paths.get("./tables"); 
         Files

@@ -29,7 +29,7 @@ public class DBApp {
 
 	Vector<Table> tables;
 
-	public DBApp() throws ClassNotFoundException {
+	public DBApp() throws ClassNotFoundException, DBAppException {
 		init();
 		if(tables==null)
 			System.out.println("Was not able to intialize the tables for some reason; pray");
@@ -38,7 +38,7 @@ public class DBApp {
 	// this does whatever initialization you would like
 	// or leave it empty if there is no code you want to
 	// execute at application startup
-	public void init() throws ClassNotFoundException {
+	public void init() throws ClassNotFoundException, DBAppException {
 		try 
 		{
 			new File("./resources/metadata.csv").createNewFile();
@@ -59,7 +59,9 @@ public class DBApp {
 		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
 		    }
 		}
-		//TODO check for config file
+		File configFilePath = new File("resources/DBApp.config");
+		if(!configFilePath.exists())
+			throw new DBAppException("The config file was not found");
 	}
 
 	// following method creates one table only
