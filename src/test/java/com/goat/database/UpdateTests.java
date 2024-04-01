@@ -23,6 +23,7 @@ import java.util.Vector;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -175,6 +176,7 @@ public class UpdateTests {
 	//-------------------------------------------------------TESTS--------------------------------------------------------------
 	@RepeatedTest(value = 10)
 	@Timeout(value = 300)
+	@DisplayName("UpdateTable_ForInteger_ShouldUpdateTuple")
 	void Updated_Row_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
@@ -217,6 +219,7 @@ public class UpdateTests {
 	// Check that double was updated after calling method
 	@RepeatedTest(value = 10)
 	@Timeout(value = 300)
+	@DisplayName("UpdateTable_ForDouble_ShouldUpdateTuple")
 	void Updated_Row_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
@@ -259,6 +262,7 @@ public class UpdateTests {
 	// Check that String was updated after calling method
 	@RepeatedTest(value = 10)
 	@Timeout(value = 300)
+	@DisplayName("UpdateTable_ForString_ShouldUpdateTuple")
 	void Updated_Row_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int age= 28;
@@ -299,6 +303,7 @@ public class UpdateTests {
 	
 	// if the row we are updating does not have the same datatype in the htbl, then an exception should be thrown
 	@Test
+	@DisplayName("UpdateTable_WithWrongDataTypeForDoubleColumn_ShouldThrowException")
 	void ThrowExceptionForWrongDataTypeDouble() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int id = uniqueID[uniqueID.length-1];
@@ -322,6 +327,7 @@ public class UpdateTests {
 	
 	// if the row we are updating does not have the same datatype in the htbl, then an exception should be thrown
 	@Test
+	@DisplayName("UpdateTable_WithWrongDataTypeForIntegerColumn_ShouldThrowException")
 	void ThrowExceptionForWrongDataTypeInteger() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int id = uniqueID[uniqueID.length-1];
@@ -345,6 +351,7 @@ public class UpdateTests {
 	
 	// if the row we are updating does not have the same datatype in the htbl, then an exception should be thrown
 	@Test
+	@DisplayName("UpdateTable_WithWrongDataTypeForStringColumn_ShouldThrowException")
 	void ThrowExceptionForWrongDataTypeString() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int id = uniqueID[uniqueID.length-1];
@@ -368,6 +375,7 @@ public class UpdateTests {
 	
 	// if a column name does not exist, an exception should be thrown
 	@Test
+	@DisplayName("UpdateTable_ForNonExistentColumn_ShouldThrowException")
 	void ThrowExceptionForWrongColumnName() throws ClassNotFoundException, DBAppException, IOException
 	{
 		int id = uniqueID[uniqueID.length-1];
@@ -391,10 +399,13 @@ public class UpdateTests {
 	
 	// Check that index was updated if one exists
 	@RepeatedTest(value = 5)
+	@DisplayName("UpdateTable_WithIndexedString_ShouldUpdateIndex")
 	void Index_Updated_String() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result", "name", "nameIndex");
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
 		database.createIndex("banadyMethod", "name", "nameIndex");
+		database.createIndex("banadyMethod", "age", "ageIndex");
 		
 		int age= 28;
 		int id = uniqueID[uniqueID.length-1];
@@ -442,9 +453,12 @@ public class UpdateTests {
 	
 	// Check that index was updated if one exists
 	@RepeatedTest(value = 5)
+	@DisplayName("UpdateTable_WithIndexedInteger_ShouldUpdateIndex")
 	void Index_Updated_Integer() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result", "age", "ageIndex");
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		database.createIndex("banadyMethod", "name", "nameIndex");
 		database.createIndex("banadyMethod", "age", "ageIndex");
 		
 		int age= 28;
@@ -493,10 +507,13 @@ public class UpdateTests {
 	
 	// Check that index was updated if one exists
 	@RepeatedTest(value = 5)
+	@DisplayName("UpdateTable_WithIndexedDouble_ShouldUpdateIndex")
 	void Index_Updated_Double() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createIndex("result", "gpa", "gpaIndex");
 		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		database.createIndex("banadyMethod", "name", "nameIndex");
+		database.createIndex("banadyMethod", "age", "ageIndex");
 		
 		int age= 28;
 		int id = uniqueID[uniqueID.length-1];
@@ -544,6 +561,7 @@ public class UpdateTests {
 	
 	// if the primary key updated does not exist; do not update (or throw exception?)
 	@Test
+	@DisplayName("UpdateTable_WithClusteringKeyNotInTable_ShouldNotUpdate")
 	void No_Update() throws ClassNotFoundException, IOException, DBAppException
 	{
 		colData.clear();
