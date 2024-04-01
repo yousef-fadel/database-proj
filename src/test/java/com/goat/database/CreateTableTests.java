@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.opencsv.CSVReader; 
@@ -93,6 +94,7 @@ public class CreateTableTests {
 	// If there are tables already saved on the hard disk, then the method should 
 	// find them and insert them onto our vector of tables
 	@Test
+	@DisplayName("CreateTable_WithPreExistingTables_ShouldFindThem")
 	void Existing_Tables_Should_Be_Found() throws IOException, ClassNotFoundException, DBAppException
 	{
 
@@ -104,6 +106,7 @@ public class CreateTableTests {
 	
 	//If a table with the same already exists, an exception should be thrown
 	@Test
+	@DisplayName("CreatingTwoTables_WithSameName_ShouldThrowException")
 	public void Throw_Exception_For_Two_Tables_With_Same_Name()
 	{
 		
@@ -116,6 +119,7 @@ public class CreateTableTests {
 	// After creating a table, there should be an empty directory 
 	// in the folder "tables" to store its pages
 	@Test
+	@DisplayName("CreateTable_Normally_ShouldFindDirectoryForThatTable")
 	public void Should_Find_Directory_For_Table() throws ClassNotFoundException, DBAppException, IOException
 	{
 		database.createTable("newtable", "id", htbl);
@@ -127,6 +131,7 @@ public class CreateTableTests {
 	// After creating multiple tables, we should be able to fetch them from the
 	// hard disk at any time
 	@Test
+	@DisplayName("CreateTable_CreatingMultipleTable_ShouldFindAllTableSerializedInFolders")
 	public void Deserializating_Tables_Should_Contain_All_Tables() throws ClassNotFoundException, DBAppException, IOException
 	{
 		String names[] = {"table0","table1","table2","table3","table4"};
@@ -155,6 +160,7 @@ public class CreateTableTests {
 	
 	// Creating tables should have the CSV file containing all info about it
 	@Test
+	@DisplayName("CreateTable_Normally_ShouldUpdateMetaDataFileToContainTableInfo")
 	public void CSV_File_Should_Contain_Column_Data() throws ClassNotFoundException, DBAppException, IOException
 	{
 		htbl.put("age", "java.lang.Double");
@@ -191,6 +197,7 @@ public class CreateTableTests {
 	// throw an exception
 	//TODO check exception message
 	@Test
+	@DisplayName("CreateTable_WithWrongDataType_ShouldThrowException")
 	public void Only_Certain_Datatypes_Allowed()
 	{
 		htbl.put("invalidcolumn", "java.lang.Float");
@@ -204,6 +211,7 @@ public class CreateTableTests {
 	// should throw an exception
 	// TODO check exception message
 	@Test
+	@DisplayName("CreateTable_WithClusteringKeyMissing_ShouldThrowException")
 	public void Primary_Key_Should_Exist_In_HashTable()
 	{
 		//only column in our htbl is id
