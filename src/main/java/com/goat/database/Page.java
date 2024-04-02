@@ -65,7 +65,7 @@ public class Page implements java.io.Serializable
 	
 	public String toString()
 	{
-		String res = "";
+		String res = this.name + "\n";
 		for(int i = 0;i<tuples.size();i++)
 		{
 			res = res + "Tuple " + i + ": " + tuples.get(i);
