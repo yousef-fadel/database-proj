@@ -19,6 +19,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 
 import com.opencsv.CSVReader;
@@ -380,10 +381,11 @@ public class DBApp {
 	
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
+		dbApp.test5();
 //		dbApp.format();
-		dbApp.test4();
+//		dbApp.test4();
 //		dbApp.test3();
-		dbApp.test1(dbApp);
+//		dbApp.test1(dbApp);
 //		dbApp.test2(dbApp);
 //		Table table = dbApp.getTable("table");
 //		System.out.println(table.pageNames);
@@ -618,4 +620,402 @@ public class DBApp {
 		}
 				
 	}
+	
+	
+	private void test5() throws ClassNotFoundException, DBAppException, IOException
+	{
+		Random random = new Random();
+		
+		Hashtable<String,String> htbl = new Hashtable<String,String>();
+		htbl.put("id", "java.lang.Integer");
+		htbl.put("age", "java.lang.Integer");
+		htbl.put("gpa", "java.lang.Double");
+		htbl.put("name", "java.lang.String");
+		this.createTable("Windy", "id", htbl);
+		Hashtable<String,Object> colData = new Hashtable<String, Object>();
+		
+		int id = 1;
+		int possibleAge[] = {18,19,20,21,22,23,24};
+		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
+		String possibleName[] = {"Yousef","Jana","Kiryu","Mo3tasm","Rana","Maryam","Farida","Jimmy",
+			"Eve","5ayen","Zoma","Mostafa","Peter","01111146949","Ramy"};
+		
+		int age = possibleAge[random.nextInt(possibleAge.length)];
+		double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		String name = possibleName[random.nextInt(possibleName.length)];
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(age));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Windy" , colData );
+		
+
+		Table windy = getTable("Windy");
+		for(String pageName:windy.pageNames)
+		{
+			Page currPage = (Page) deserializeData(windy.filepath + pageName);
+			System.out.println(currPage);
+		}
+	}
+
 }
