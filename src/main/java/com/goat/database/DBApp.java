@@ -219,10 +219,12 @@ public class DBApp {
 
 	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException {
-
-		return null;
+		ArrayList<Tuple> tupes = new ArrayList<Tuple>();
+		return tupes.iterator();
 	}
 
+	
+	// ------------------------------------------HELPER--------------------------------------------------------
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
 		for (int i = 0; i < tableInfo.size(); i++)
@@ -570,6 +572,7 @@ public class DBApp {
 		}
 		
 	}
+	
 	private void test4() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Hashtable<String,String> htbl = new Hashtable<String,String>();

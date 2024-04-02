@@ -1294,7 +1294,6 @@ public class SelectionTests
 		}
 	}
 
-	
 	@DisplayName("SelectFromTable_UsingEqualOnDoubleWithNoIndex_ShouldReturnMultipleTuples")
 	@Test
 	public void SelectWithEqualDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
@@ -1368,7 +1367,7 @@ public class SelectionTests
 	@Test
 	public void SelectWithNotEqualDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int idIndex = insertRandomTuples(10);
+		int idIndex = insertRandomTuplesAndSaveInResult(10);
 		Double selectionGPA = 0.7;
 
 		arrSqlTerms = new SQLTerm[1];
@@ -1402,7 +1401,7 @@ public class SelectionTests
 	@Test
 	public void SelectWithNotEqualDoubleIndex() throws ClassNotFoundException, DBAppException, IOException
 	{
-		int idIndex = insertRandomTuples(10);
+		int idIndex = insertRandomTuplesAndSaveInResult(10);
 		database.createIndex("banadyMethod", "gpa", "gpaIndex");
 		Double selectionGPA = 0.7;
 
@@ -1424,6 +1423,7 @@ public class SelectionTests
 			iteratorSize++;
 			selectionResult.add(currTuple.entry);
 		}
+		System.out.println(expectedResult);
 
 		assertEquals(iteratorSize,expectedResult.size());
 		for(int i = 0;i<iteratorSize;i++)
@@ -1694,4 +1694,6 @@ public class SelectionTests
 		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for <= operator");
 	}
 	
+	// TODO AND OR XOR tests
+	// TODO Exceptions
 }
