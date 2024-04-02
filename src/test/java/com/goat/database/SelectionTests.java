@@ -1246,6 +1246,452 @@ public class SelectionTests
 		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
 		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for <= operator");
 	}
+	
 	// double select tests
+	
+	private void insertRandomTuplesAndSaveResultDouble(double selectionDouble, int idIndex, boolean save) throws ClassNotFoundException, DBAppException, IOException
+	{
+		int [] uniqueAge = random.ints(0,200).distinct().limit(pageSize*7).toArray();
+		for(int i = 0;i<pageSize*3;i++)
+		{
+			int id = uniqueID[idIndex++];
+			int age = uniqueAge[i];
+			Double gpa = selectionDouble;
+			String name = randomString();
+			colData = new Hashtable<String, Object>();
+			colData.put("id", new Integer(id));
+			colData.put("age", new Integer(age));
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+			if(save)
+				expectedResult.add(colData);
+		}
+		
+	}
+	private void insertRandomTuplesWithRangeDouble(boolean greaterThan, int idIndex) throws ClassNotFoundException, DBAppException, IOException
+	{
+		double [] uniqueGPA;
+		if(greaterThan)
+			uniqueGPA = random.doubles(5.1,10).distinct().mapToObj(d -> (double) Math.round(d * 100) / 100)
+				.mapToDouble(Double::doubleValue).limit(pageSize*5).toArray();
+		else
+			uniqueGPA = random.doubles(0,3).distinct().mapToObj(d -> (double) Math.round(d * 100) / 100)
+					.mapToDouble(Double::doubleValue).limit(pageSize*5).toArray();
+		int [] uniqueAge = random.ints(0,200).distinct().limit(pageSize*7).toArray();
+		for(int i = 0;i<pageSize*3;i++)
+		{
+			int id = uniqueID[idIndex++];
+			int age = uniqueAge[i];
+			Double gpa = uniqueGPA[i];
+			colData = new Hashtable<String, Object>();
+			colData.put("id", new Integer(id));
+			colData.put("age", new Integer(age));
+			colData.put("name", new String(randomString()));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("banadyMethod", colData);
+			expectedResult.add(colData);
+		}
+	}
 
+	
+	@DisplayName("SelectFromTable_UsingEqualOnDoubleWithNoIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithEqualDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		Double selectionGPA = 0.7;
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "=";
+		arrSqlTerms[0]._objValue = new Double(selectionGPA);
+
+		insertRandomTuplesAndSaveResultDouble(selectionGPA,idIndex,true);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingEqualOnDoubleWithIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithEqualDoubleIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		Double selectionGPA = 0.7;
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "=";
+		arrSqlTerms[0]._objValue = new Double(selectionGPA);
+
+		insertRandomTuplesAndSaveResultDouble(selectionGPA,idIndex,true);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingNotEqualOnDoubleWithNoIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithNotEqualDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		Double selectionGPA = 0.7;
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "!=";
+		arrSqlTerms[0]._objValue = new Double(selectionGPA);
+
+		insertRandomTuplesAndSaveResultDouble(selectionGPA,idIndex,false);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingNotEqualOnDoubleWithIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithNotEqualDoubleIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		Double selectionGPA = 0.7;
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "!=";
+		arrSqlTerms[0]._objValue = new Double(selectionGPA);
+
+		insertRandomTuplesAndSaveResultDouble(selectionGPA,idIndex,false);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingGreaterThanDoubleWithNoIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithGreaterThanDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">";
+		arrSqlTerms[0]._objValue = new Double(5.0);
+
+		insertRandomTuplesWithRangeDouble(true, idIndex);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingGreaterThanDoubleWithIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithGreaterThanDoubleIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">";
+		arrSqlTerms[0]._objValue = new Double(5.0232);
+
+		insertRandomTuplesWithRangeDouble(true, idIndex);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingLessThanDoubleWithNoIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithLessThanDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<";
+		arrSqlTerms[0]._objValue = new Double(3.0);
+
+		insertRandomTuplesWithRangeDouble(false, idIndex);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_UsingLessThanDoubleWithIndex_ShouldReturnMultipleTuples")
+	@Test
+	public void SelectWithLessThanDoubleIndex() throws ClassNotFoundException, DBAppException, IOException
+	{
+		int idIndex = insertRandomTuples(10);
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<";
+		arrSqlTerms[0]._objValue = new Double(3.0);
+
+		insertRandomTuplesWithRangeDouble(false, idIndex);
+
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+
+		int iteratorSize = 0;
+		while(iteratorSelectionResult.hasNext())
+		{
+			Tuple currTuple =  iteratorSelectionResult.next();
+			iteratorSize++;
+			selectionResult.add(currTuple.entry);
+		}
+
+		assertEquals(iteratorSize,expectedResult.size());
+		for(int i = 0;i<iteratorSize;i++)
+		{
+			assertTrue(selectionResult.contains(expectedResult.get(i)), "Did not find " + expectedResult.get(i) + "in"
+					+ " the selection result");
+		}
+	}
+
+	@DisplayName("SelectFromTable_WithNothingMeetingConditionDoubleNoIndex_ShouldReturnEmptyIterator")
+	@Test
+	public void SelectWithUnMetConditionDoubleNoIndex() throws ClassNotFoundException, DBAppException, IOException 
+	{
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "!=";
+		arrSqlTerms[0]._objValue = new Double(3.5);
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for != operator");
+
+		insertRandomTuples(20);
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "=";
+		arrSqlTerms[0]._objValue = new Double(69.6969);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for = operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">";
+		arrSqlTerms[0]._objValue = new Double(69.9696);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for > operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">=";
+		arrSqlTerms[0]._objValue = new Double(69.9696);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for >= operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<";
+		arrSqlTerms[0]._objValue = new Double(0.5);
+
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for < operator");
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<=";
+		arrSqlTerms[0]._objValue = new Double(0.5);
+
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for <= operator");
+	}
+	
+	@DisplayName("SelectFromTable_WithNothingMeetingConditionDoubleIndex_ShouldReturnEmptyIterator")
+	@Test
+	public void SelectWithUnMetConditionDoubleIndex() throws ClassNotFoundException, DBAppException, IOException 
+	{
+		database.createIndex("banadyMethod", "gpa", "gpaIndex");
+		
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "!=";
+		arrSqlTerms[0]._objValue = new Double(3.5);
+		Iterator<Tuple>iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for != operator");
+
+		insertRandomTuples(20);
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "=";
+		arrSqlTerms[0]._objValue = new Double(69.6969);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for = operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">";
+		arrSqlTerms[0]._objValue = new Double(69.9696);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for > operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = ">=";
+		arrSqlTerms[0]._objValue = new Double(69.9696);
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for >= operator");
+
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<";
+		arrSqlTerms[0]._objValue = new Double(0.5);
+
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for < operator");
+		arrSqlTerms = new SQLTerm[1];
+		arrSqlTerms[0] = new SQLTerm();
+		arrSqlTerms[0]._strTableName = "banadyMethod";
+		arrSqlTerms[0]._strColumnName = "gpa";
+		arrSqlTerms[0]._strOperator = "<=";
+		arrSqlTerms[0]._objValue = new Double(0.5);
+
+		iteratorSelectionResult = database.selectFromTable(arrSqlTerms, new String[0]);
+		assertTrue(!iteratorSelectionResult.hasNext(),"Found result when it should've been empty for <= operator");
+	}
+	
 }
