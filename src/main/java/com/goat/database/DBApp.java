@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -98,7 +99,6 @@ public class DBApp {
 	}
 
 	// TODO take fanout from config file
-	// TODO check for duplicate index names
 	// following method creates a B+tree index
 	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException {
 		// check that table exists
@@ -141,9 +141,7 @@ public class DBApp {
 	// following method inserts one row only.
 	// htblColNameValue must include a value for the primary key
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
-			throws DBAppException, IOException, ClassNotFoundException {
-		// TODO insert into index
-		
+			throws DBAppException, IOException, ClassNotFoundException {		
 		// check if the table exists
 		Table omar = getTable(strTableName);
 		if (omar == null)
@@ -223,8 +221,8 @@ public class DBApp {
 		ArrayList<Tuple> tupes = new ArrayList<Tuple>();
 		return tupes.iterator();
 	}
+	// ------------------------------------------CHECK-----------------------------------------------------
 
-	
 	// ------------------------------------------HELPER--------------------------------------------------------
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
@@ -381,7 +379,9 @@ public class DBApp {
 	
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
-		dbApp.test5();
+		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
+		System.out.println(ageIndex.searchIndex(new Datatype(18)));
+//		dbApp.test5();
 //		dbApp.format();
 //		dbApp.test4();
 //		dbApp.test3();
@@ -621,7 +621,6 @@ public class DBApp {
 				
 	}
 	
-	
 	private void test5() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Random random = new Random();
@@ -631,23 +630,34 @@ public class DBApp {
 		htbl.put("age", "java.lang.Integer");
 		htbl.put("gpa", "java.lang.Double");
 		htbl.put("name", "java.lang.String");
-		this.createTable("Windy", "id", htbl);
+		this.createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 		
 		int id = 1;
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
-		String possibleName[] = {"Yousef","Jana","Kiryu","Mo3tasm","Rana","Maryam","Farida","Jimmy",
-			"Eve","5ayen","Zoma","Mostafa","Peter","01111146949","Ramy"};
+		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
+			"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
+//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
 		
 		int age = possibleAge[random.nextInt(possibleAge.length)];
 		double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		String name = possibleName[random.nextInt(possibleName.length)];
 		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
+		colData.put("age", new Integer(18));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
+		
+		age = possibleAge[random.nextInt(possibleAge.length)];
+		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+		name = possibleName[random.nextInt(possibleName.length)];
+		colData.clear();
+		colData.put("id", new Integer(id++));
+		colData.put("age", new Integer(18));
+		colData.put("gpa", new Double(gpa));
+		colData.put("name", new String(name));
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -657,7 +667,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -667,7 +677,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -677,7 +687,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -687,7 +697,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -697,7 +707,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -707,7 +717,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -717,7 +727,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -727,7 +737,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -737,7 +747,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -747,7 +757,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -757,7 +767,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -767,7 +777,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -777,7 +787,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -787,7 +797,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -797,7 +807,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -807,7 +817,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -817,7 +827,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -827,7 +837,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -837,7 +847,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -847,7 +857,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -857,7 +867,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -867,7 +877,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -877,7 +887,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -887,7 +897,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -897,7 +907,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -907,7 +917,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -917,7 +927,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -927,7 +937,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -937,7 +947,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -947,7 +957,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -957,7 +967,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -967,7 +977,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -977,7 +987,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -987,7 +997,7 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
@@ -997,25 +1007,19 @@ public class DBApp {
 		colData.put("age", new Integer(age));
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
+		this.insertIntoTable( "Vagabond" , colData );
 		
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Windy" , colData );
-		
-
-		Table windy = getTable("Windy");
+		File deleteFile = new File("./resources/test5output.txt");
+		deleteFile.delete();
+		PrintWriter out = new PrintWriter("./resources/test5output.txt");
+		Table windy = getTable("Vagabond");
 		for(String pageName:windy.pageNames)
 		{
 			Page currPage = (Page) deserializeData(windy.filepath + pageName);
 			System.out.println(currPage);
+			out.println(currPage);
 		}
+		out.close();
 	}
 
 }
