@@ -45,7 +45,7 @@ public class Index implements Serializable{
 	
 	public void deleteFromIndex(Datatype datatype, String page)
 	{
-		Vector<String> tuplePositions = btree.search(datatype);
+		Vector<String> tuplePositions = this.searchIndex(datatype);
 		if(tuplePositions!=null)
 		{
 			btree.delete(datatype);

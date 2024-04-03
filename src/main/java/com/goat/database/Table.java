@@ -2,6 +2,9 @@ package com.goat.database;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import com.goat.database.*;
 
@@ -26,7 +29,7 @@ public class Table implements java.io.Serializable{
 		numberForPage = 0;
 	}
 
-	
+
 	public void insertTupleIntoTable(Tuple tuple) throws DBAppException, ClassNotFoundException
 	{
 		// check if this is the first tuple to be inserted in the table; if it is create a page and insert it
@@ -35,11 +38,11 @@ public class Table implements java.io.Serializable{
 			Page firstPage = new Page(this.name + this.numberForPage , this.numberForPage++,this.filepath);
 			pageNames.add(firstPage.name);
 			firstPage.tuples.add(tuple);
-			
+
 			insertIntoIndex(tuple,firstPage.name);
 			firstPage = firstPage.serializeAndDeletePage();
 			this.serializeAndDeleteTable();
-			
+
 		}
 		else
 		{
@@ -67,7 +70,7 @@ public class Table implements java.io.Serializable{
 			else
 				throw new DBAppException("The primary key is a duplicate");
 		}
-		
+
 		Page page1 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(leftPage)));
 		Page page2 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(rightPage)));
 		if(this.pageNames.size()==1)
@@ -87,10 +90,9 @@ public class Table implements java.io.Serializable{
 				page1 = null;
 				return page2;
 			}
-				
+
 		}
 	}
-	
 	private void insertIntoPage(Tuple tuple, Page page) throws DBAppException, ClassNotFoundException
 	{
 		// binary search for its location inside the page
@@ -110,7 +112,7 @@ public class Table implements java.io.Serializable{
 			else 
 				throw new DBAppException("The primary key is a duplicate");
 		}
-		
+
 		// left and right come from binary search up above
 		// check which position to insert into; if it is smaller than both values, then place it where the left is,
 		// if it is bigger than left but smaller than right, insert in between
@@ -171,7 +173,7 @@ public class Table implements java.io.Serializable{
 	{
 		if(this.indexNames.isEmpty())
 			return;
-		
+
 		for(String indexName : this.indexNames)
 		{
 			Index index = getIndex(indexName);
@@ -179,9 +181,9 @@ public class Table implements java.io.Serializable{
 			index.deleteFromIndex(new Datatype(tupleData), pageName);
 			index = index.serializeAndDeleteIndex();
 		}
-		
+
 	}
-	
+
 	public void insertRowsIntoIndex(String strColName, Index index) throws ClassNotFoundException
 	{
 		for(int i =0;i<this.pageNames.size();i++)
@@ -197,13 +199,14 @@ public class Table implements java.io.Serializable{
 		index = index.serializeAndDeleteIndex();
 
 	}
-	
+
+
 	// checks the table for any existing index to insert into
 	private void insertIntoIndex(Tuple tuple, String pageName) throws ClassNotFoundException
 	{
 		if(this.indexNames.isEmpty())
 			return;
-		
+
 		for(String indexName : this.indexNames)
 		{
 			Index index = getIndex(indexName);
@@ -212,12 +215,95 @@ public class Table implements java.io.Serializable{
 			index = index.serializeAndDeleteIndex();
 		}
 	}
-	
+
+	public void updateTuple(Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws ClassNotFoundException, DBAppException, IOException
+	{
+		Page pageToUpdate = findPageToUpdate(clusteringKeyValue);
+		updateTupleInPage(pageToUpdate,clusteringKeyValue,updateValueEntry,indexName);
+	}
+
+	private Page findPageToUpdate(Object clusteringKeyValue) throws ClassNotFoundException, DBAppException
+	{
+		int leftPage = 0;
+		int rightPage = this.pageNames.size()-1;
+		int middlePage;
+		//binary search for the page; stop once 2 (or 1) pages are left
+		while(rightPage-leftPage>1)
+		{
+			Datatype clusteringvalue =new Datatype(clusteringKeyValue);
+
+			middlePage = (leftPage + rightPage)/2;
+			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
+			Tuple currTuple = currPage.tuples.get(0); 
+ 			Datatype currTuplePrim=new Datatype(currTuple.Primary_key);
+
+			if(clusteringvalue.compareTo(currTuplePrim)<0)
+				rightPage = middlePage;
+			else if(clusteringvalue.compareTo(currTuplePrim)>0)
+				leftPage = middlePage; // deeh momken te2leb infinte loop; ol yarab
+			else
+				return (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(middlePage)));
+		}
+
+		Page page1 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(leftPage)));
+		Page page2 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(rightPage)));
+		
+		Datatype clusteringvalue =new Datatype(clusteringKeyValue);
+		Datatype lastElement=new Datatype(page1.tuples.lastElement().Primary_key);
+		if(clusteringvalue.compareTo(lastElement) <= 0)
+		{
+			page2 = null;
+			return page1;
+		}
+		else
+		{
+			page1 = null;
+			return page2;
+		}
+
+
+	}
+
+	private void updateTupleInPage(Page page,Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws IOException, ClassNotFoundException {
+
+		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
+		int left = 0;
+		int right =page.tuples.size()-1;
+		Vector<Tuple> pageTuples =  page.tuples;
+		while(left<=right)
+		{
+			int middle = (left+right)/2;
+			Datatype middleTuple = new Datatype(pageTuples.get(middle).Primary_key);
+			if(middleTuple.compareTo(clusteringKeyValueDatatype)==0)
+			{
+				if(!indexName.equals("null"))
+				{
+					Index indexedCol = getIndex(indexName);
+					indexedCol.deleteFromIndex(new Datatype(pageTuples.get(middle).entry.get(updateValueEntry.getKey())), page.name);
+					indexedCol.insertIntoIndex(new Datatype(updateValueEntry.getValue()), page.name);
+					indexedCol = indexedCol.serializeAndDeleteIndex();
+				}
+				pageTuples.get(middle).entry.put(updateValueEntry.getKey(), updateValueEntry.getValue());
+				page = page.serializeAndDeletePage();
+				return;
+			}
+			else if(middleTuple.compareTo(clusteringKeyValueDatatype)>0)
+				right = middle-1;
+			else
+				left = middle+1;
+
+		}
+		System.out.println("Did not find clustering key, aborting update");
+	}
+
 	private Index getIndex(String indexName) throws ClassNotFoundException
 	{
 		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
 	}
-	
+
+
+
+
 	public void serializeTable()
 	{
 		try {
@@ -232,12 +318,12 @@ public class Table implements java.io.Serializable{
 		}
 
 	}
-	
+
 	public Table serializeAndDeleteTable()
 	{
 		serializeTable();
 		return null;
 	}
-	
-	
+
+
 }

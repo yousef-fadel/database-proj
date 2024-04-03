@@ -3,6 +3,7 @@ package com.goat.database;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -10,6 +11,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,7 +77,7 @@ public class DBApp {
 	// type as value
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
-		
+		//TODO use index to insert if it exists; check marking scheme 11
 		// check if this table already exists
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName))
@@ -202,9 +205,51 @@ public class DBApp {
 	// htblColNameValue will not include clustering key as column name
 	// strClusteringKeyValue is the value to look for to find the row to update.	
 	public void updateTable(String strTableName, String strClusteringKeyValue,
-			Hashtable<String, Object> htblColNameValue) throws DBAppException {
+			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException, ClassNotFoundException 
+	{
+		// check if the table exists
+		Table omar = getTable(strTableName);
+		if (omar == null)
+			throw new DBAppException("Table does not exist");
+		Map.Entry<String,Object> updateValueEntry = null;
+		for (Object o: htblColNameValue.entrySet()) 
+			updateValueEntry = (Map.Entry) o;
 
-		throw new DBAppException("not implemented yet");
+		String columnName = (String) updateValueEntry.getKey();
+		Object datatype = updateValueEntry.getValue();
+		String indexName = "null";
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		// check if column name is in table and datatype is correct
+		for(int i = 0;i<tableInfo.size();i++)
+		{
+			if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
+			{
+				if(!tableInfo.get(i).get(4).equals("null"))
+					indexName  = tableInfo.get(i).get(4);
+				break;
+			}
+			if(i==tableInfo.size()-1)
+				throw new DBAppException("Updated column was not found");
+		}
+
+		Object clusteringKeyValue = null;
+		for(int i = 0 ;i<tableInfo.size();i++)
+			if(tableInfo.get(i).get(3).equals("True"))
+			{
+				try {
+		            String strColType = tableInfo.get(i).get(2);
+		            Class<?> clazz = Class.forName(strColType);
+		            Constructor<?> constructor = clazz.getConstructor(String.class);
+		            clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
+		            break;
+		        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
+		                 IllegalAccessException | InvocationTargetException e) {
+		            e.printStackTrace();
+		        }
+			}
+		
+		omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
+		
 	}
 
 	// following method could be used to delete one or more rows.
@@ -333,7 +378,7 @@ public class DBApp {
 	}
 	
 	//given a table name, returns a 2D list containing all information about its columns
-	public List<List<String>> getColumnData(String tableName) throws IOException
+	public static List<List<String>> getColumnData(String tableName) throws IOException
 	{
 		List<List<String>> records = new ArrayList<List<String>>();
 		try (CSVReader csvReader = new CSVReader(new FileReader("./resources/metadata.csv"));) {
@@ -379,8 +424,16 @@ public class DBApp {
 	
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
-		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
-		System.out.println(ageIndex.searchIndex(new Datatype(18)));
+		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
+		htbl.put("age", new Integer(17));
+		dbApp.updateTable("Vagabond", "5", htbl);
+		Table vaga = dbApp.getTable("Vagabond");
+		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
+		System.out.println(index.searchIndex(new Datatype(17)));
+		dbApp.saveVagabond();
+//		
+//		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
+//		System.out.println(ageIndex.searchIndex(new Datatype(18)));
 //		dbApp.test5();
 //		dbApp.format();
 //		dbApp.test4();
@@ -633,6 +686,7 @@ public class DBApp {
 		this.createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 		
+		this.createIndex("Vagabond", "age", "ageIndex");
 		int id = 1;
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
@@ -1022,4 +1076,19 @@ public class DBApp {
 		out.close();
 	}
 
+	private void saveVagabond() throws FileNotFoundException, ClassNotFoundException, DBAppException
+	{
+		DBApp dbApp = new DBApp();
+		File deleteFile = new File("./resources/test5output.txt");
+		deleteFile.delete();
+		PrintWriter out = new PrintWriter("./resources/test5output.txt");
+		Table windy = dbApp.getTable("Vagabond");
+		for(String pageName:windy.pageNames)
+		{
+			Page currPage = (Page) deserializeData(windy.filepath + pageName);
+//			System.out.println(currPage);
+			out.println(currPage);
+		}
+		out.close();
+	}
 }
