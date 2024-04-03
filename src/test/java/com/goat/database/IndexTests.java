@@ -19,9 +19,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Vector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -289,5 +291,104 @@ public class IndexTests {
 		{database.createIndex("table", "age", "nameIndex");});	
 		
 		assertEquals("A similar index name already exists for table",exception.getMessage());
+	}
+	
+	@RepeatedTest(value = 10)
+	@DisplayName("CreateIndex_WithDuplicatesInteger_ShouldHaveRepeatedTableNames")
+	public void indexOnDuplicateRowsInteger() throws ClassNotFoundException, DBAppException, IOException
+	{
+
+		int	noOfPages = pageSize*6;
+		int [] uniqueAge = {18,19,20};
+		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+				.mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
+		Vector<String> expectedPages = new Vector<String>();
+		int expectedAge = uniqueAge[random.nextInt(uniqueAge.length)];
+		for(int i = 0;i<noOfPages;i++)
+		{
+			int age =  uniqueAge[random.nextInt(uniqueAge.length)];
+			double gpa = uniqueGPA[i];
+			int id = i;
+			String name = randomString();
+			colData.clear();
+			colData.put("id", id);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("table", colData);
+			if(age==expectedAge)
+				expectedPages.add(table.pageNames.lastElement());
+		}
+		database.createIndex("table", "age", "ageIndex");
+
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "ageIndex.ser");
+		Vector<String> ageSearch = resultIndex.searchIndex(new Datatype(expectedAge));
+		assertEquals(expectedPages,ageSearch);
+	}
+	
+	@RepeatedTest(value = 10)
+	@DisplayName("CreateIndex_WithDuplicatesString_ShouldHaveRepeatedTableNames")
+	public void indexOnDuplicateRowsString() throws ClassNotFoundException, DBAppException, IOException
+	{
+		
+		int	noOfPages = pageSize*6;
+		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
+		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+				.mapToDouble(Double::doubleValue).limit(pageSize*7).toArray();
+		String [] duplicateName = {"Popola","Devola","Emil"};
+		Vector<String> expectedPages = new Vector<String>();
+		String expectedName = duplicateName[random.nextInt(duplicateName.length)];
+		for(int i = 0;i<noOfPages;i++)
+		{
+			int age =  uniqueAge[i];
+			double gpa = uniqueGPA[i];
+			int id = i;
+			String name = duplicateName[random.nextInt(duplicateName.length)];
+			colData.clear();
+			colData.put("id", id);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("table", colData);
+			if(name.equals(expectedName))
+				expectedPages.add(table.pageNames.lastElement());
+		}
+		database.createIndex("table", "name", "nameIndex");
+		
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "nameIndex.ser");
+		Vector<String> nameSearch = resultIndex.searchIndex(new Datatype(expectedName));
+		assertEquals(expectedPages,nameSearch);
+	}
+	
+	@RepeatedTest(value = 10)
+	@DisplayName("CreateIndex_WithDuplicatesDouble_ShouldHaveRepeatedTableNames")
+	public void indexOnDuplicateRowsDouble() throws ClassNotFoundException, DBAppException, IOException
+	{
+		
+		int	noOfPages = pageSize*6;
+		int [] uniqueAge = random.ints(0,500).distinct().limit(pageSize*7).toArray();
+		double [] uniqueGPA = {2.1,3.9293,2};
+		Vector<String> expectedPages = new Vector<String>();
+		Double expectedGpa = uniqueGPA[random.nextInt(uniqueGPA.length)];
+		for(int i = 0;i<noOfPages;i++)
+		{
+			int age =  uniqueAge[i];
+			double gpa = uniqueGPA[random.nextInt(uniqueGPA.length)];
+			int id = i;
+			String name = randomString();
+			colData.clear();
+			colData.put("id", id);
+			colData.put("age", age);
+			colData.put("name", new String(name));
+			colData.put("gpa", new Double(gpa));
+			database.insertIntoTable("table", colData);
+			if(gpa == expectedGpa)
+				expectedPages.add(table.pageNames.lastElement());
+		}
+		database.createIndex("table", "gpa", "gpaIndex");
+		
+		Index resultIndex = (Index) deserializeData(table.filepath+"/indices/" + "gpaIndex.ser");
+		Vector<String> gpaSearch = resultIndex.searchIndex(new Datatype(expectedGpa));
+		assertEquals(expectedPages,gpaSearch);
 	}
 }
