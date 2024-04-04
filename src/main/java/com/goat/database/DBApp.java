@@ -59,10 +59,10 @@ public class DBApp {
 
 		for(String name : names)
 		{
-		    if (new File("./tables/" + name).isDirectory())
-		    {
-		        tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
-		    }
+			if (new File("./tables/" + name).isDirectory())
+			{
+				tables.add((Table) deserializeData("./tables/"+name+ "/info.ser"));
+			}
 		}
 		File configFilePath = new File("resources/DBApp.config");
 		if(!configFilePath.exists())
@@ -82,12 +82,12 @@ public class DBApp {
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName))
 				throw new DBAppException("A table of this name already exists");
-		
+
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
 		// method also checks if the datatypes are valid and that the clustering key exists in the table
 		writeMetadata(strTableName, strClusteringKeyColumn, htblColNameType);
-		
+
 		// create a directory to store pages of this table for later 
 		// + create a file called info.ser that stores all info about this table
 		String tableFilePath = "./tables/" + strTableName + "/";
@@ -97,7 +97,7 @@ public class DBApp {
 		Table currTable = new Table(strTableName,tableFilePath);
 		tables.add(currTable);
 		currTable = currTable.serializeAndDeleteTable();
-		
+
 		System.out.println("Successfully created table " + strTableName);
 	}
 
@@ -108,18 +108,18 @@ public class DBApp {
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
-		
+
 		// check that there is no index for this column specifcally
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		for (int i = 0; i < tableInfo.size(); i++)
 			if(tableInfo.get(i).get(1).equals(strColName) && !tableInfo.get(i).get(5).equals("null"))
 				throw new DBAppException("Index already exists");
-		
+
 		//check that this name is unique (ie no other index already has this name)
 		for(String indexName:omar.indexNames)
 			if(indexName.equals(strIndexName))
 				throw new DBAppException("A similar index name already exists for " + omar.name);
-		
+
 		// check if this column exists aslan
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 		for(int i = 0;i<colTableNames.size();i++)
@@ -129,10 +129,10 @@ public class DBApp {
 			if(i==colTableNames.size()-1)
 				throw new DBAppException("Column name not found");
 		}
-		
+
 		// update the metadata file and change the column's index type to b+Tree
 		updateMetadataIndex(strTableName,strColName,strIndexName);
-		
+
 		Index index = new Index(strIndexName, strColName, omar.filepath);
 		omar.insertRowsIntoIndex(strColName,index);
 		omar.indexNames.add(strIndexName);
@@ -161,14 +161,14 @@ public class DBApp {
 				throw new DBAppException("The hashtable is missing data for one of the columns");
 
 		// check that the columns in the hashtable exist in the table
-		 Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
-		 while(colNameValueIterator.hasNext())
-		 {
-			 Map.Entry<String,Object> currCol = colNameValueIterator.next();
-			 String colName = currCol.getKey();
-			 if(!colTableNames.contains(colName))
-			 	throw new DBAppException("The hashtable has an extra column that does not exist in the table");
-		 }
+		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		while(colNameValueIterator.hasNext())
+		{
+			Map.Entry<String,Object> currCol = colNameValueIterator.next();
+			String colName = currCol.getKey();
+			if(!colTableNames.contains(colName))
+				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
+		}
 
 		// check if all datatypes are correct
 		for (int i = 0; i < tableInfo.size(); i++) {
@@ -189,14 +189,14 @@ public class DBApp {
 			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
 				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
 		}
-		
+
 		String primaryKeyColName = getPrimaryKeyName(tableInfo);
 		if(primaryKeyColName == null)
 			throw new DBAppException("An error occured while looking for primary key; please try again");
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
 		omar.insertTupleIntoTable(tuple);
 		omar = omar.serializeAndDeleteTable();
-		
+
 		System.out.println("Successfully inserted " + tuple.toString() + " into " + strTableName);
 	}
 
@@ -237,19 +237,19 @@ public class DBApp {
 			if(tableInfo.get(i).get(3).equals("True"))
 			{
 				try {
-		            String strColType = tableInfo.get(i).get(2);
-		            Class<?> clazz = Class.forName(strColType);
-		            Constructor<?> constructor = clazz.getConstructor(String.class);
-		            clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
-		            break;
-		        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-		                 IllegalAccessException | InvocationTargetException e) {
-		            e.printStackTrace();
-		        }
+					String strColType = tableInfo.get(i).get(2);
+					Class<?> clazz = Class.forName(strColType);
+					Constructor<?> constructor = clazz.getConstructor(String.class);
+					clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
+					break;
+				} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
+						IllegalAccessException | InvocationTargetException e) {
+					e.printStackTrace();
+				}
 			}
-		
+
 		omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
-		
+
 	}
 
 	// following method could be used to delete one or more rows.
@@ -263,19 +263,202 @@ public class DBApp {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException {
-		ArrayList<Tuple> tupes = new ArrayList<Tuple>();
-		return tupes.iterator();
+	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
+	{
+		ArrayList<String> strops = new ArrayList<String>();
+		for(int i=0;i<strarrOperators.length;i++) {
+			strops.add(strarrOperators[i]);
+		}
+		for(int i=0;i<strarrOperators.length;i++) 
+		{
+			String strop=strarrOperators[i];
+			if(!(strop=="AND"||strop=="OR"||strop=="XOR"))
+				throw new DBAppException("Invalid operator (AND,OR,XOR)");
+		}
+		ArrayList<ArrayList<Tuple>> results=new ArrayList<ArrayList<Tuple>>();
+		for(int i=0;i<arrSQLTerms.length;i++) 
+		{
+			String table_Name=arrSQLTerms[i]._strTableName;
+			String col_Name=arrSQLTerms[i]._strColumnName;
+			String operator=arrSQLTerms[i]._strOperator;
+			Object obj=arrSQLTerms[i]._objValue;
+
+			Table kamal = getTable(table_Name);
+			if (kamal == null)
+				throw new DBAppException("Table does not exist");
+
+			for(int j=0;j<tables.size();j++) 
+			{
+				String name=tables.get(i).name;
+				if(name==table_Name)
+					break;
+				if(j==tables.size()-1) 
+					throw new DBAppException("Table not available");
+			}
+			List<List<String>> tableInfo = getColumnData(table_Name);//Gets data from csv file of table
+			ArrayList<String> colTableNames = getColumnNames(tableInfo);
+			for(int j = 0;i<colTableNames.size();j++)
+			{
+				if(colTableNames.contains(col_Name))
+					break;
+				if(j==colTableNames.size()-1)
+					throw new DBAppException("Column name not found");
+			}
+			//>, >=, <, <=, != or = 
+			if(!(operator==">" || operator==">=" || operator=="<" || operator=="<=" || operator=="!=" || operator=="="))
+				throw new DBAppException("Invalid operator");
+			String obj_class=obj.getClass().getName();
+			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
+				throw new DBAppException("Invalid datatype");
+//EXCEPTIONS-----------------------------------------------------------------------------------------
+			//With no index
+			for(String pageName:kamal.pageNames)
+			{
+				Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+
+				for(int j = 0 ; j<page.tuples.size();j++) 
+				{
+					Tuple tupleSearch=page.tuples.get(j);
+					//					Object primaryKey=tupleSearch.Primary_key;
+					ArrayList<Tuple> temp = makeConditionList(tupleSearch,col_Name,operator,obj);
+					results.add(temp);
+				}
+				
+			}
+			
+			
+			
+			while(!strops.isEmpty()) {
+				int indexAND=strops.indexOf("AND");
+				int indexOR=strops.indexOf("OR");
+				int indexXOR=strops.indexOf("XOR");
+				
+				if(indexAND!=-1) {
+					results.add(indexAND,intersect(results.get(indexAND),results.get(indexAND+1)));
+					results.remove(indexAND+1);
+					strops.remove(indexAND);
+				}else if(indexOR!=-1) {
+					results.add(indexOR,union(results.get(indexOR),results.get(indexOR+1)));
+					results.remove(indexOR+1);
+					strops.remove(indexOR);
+				}else {
+					results.add(indexXOR,XOR(results.get(indexXOR),results.get(indexXOR+1)));
+					results.remove(indexXOR+1);
+					strops.remove(indexXOR);
+				}
+					
+				
+			}
+
+		}
+
+
+
+
+
+		//Remaining array list in first element after doing all operations 
+		return results.get(0).iterator();
 	}
 	// ------------------------------------------CHECK-----------------------------------------------------
 
 	// ------------------------------------------HELPER--------------------------------------------------------
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public ArrayList<Tuple> makeConditionList(Tuple tupleSearch,String col_Name,String operator,Object obj)
+	{
+		Map.Entry<String,Object> updateValueEntry = null;
+		ArrayList<Tuple> temp = new ArrayList<Tuple>();
+		for (Object o:tupleSearch.entry.entrySet()) 
+		{
+
+			updateValueEntry = (Map.Entry) o;
+			if(updateValueEntry.getKey()==col_Name) 
+			{
+				Object tableValue=updateValueEntry.getValue();
+				Datatype obj2=new Datatype(obj);
+				Datatype tableValue2=new Datatype(tableValue);
+
+				switch(operator) 
+				{
+				case "=":
+					if(tableValue2.equals(obj2)){
+						temp.add(tupleSearch);
+					}
+				case "!=":
+					if(!(tableValue2.equals(obj2))){
+						temp.add(tupleSearch);
+					}
+				case "<":
+					if(tableValue2.compareTo(obj2)<0){
+						temp.add(tupleSearch);
+					}
+				case "<=":
+					if(tableValue2.compareTo(obj2)<=0){
+						temp.add(tupleSearch);
+					}
+				case ">":
+					if(tableValue2.compareTo(obj2)>0){
+						temp.add(tupleSearch);
+					}
+				case ">=":
+					if(tableValue2.compareTo(obj2)>=0){
+						temp.add(tupleSearch);
+					}
+				default:System.out.println("Cannot find approprtaite operator");
+				}
+			}
+		}
+		return temp;
+	}
+
+	private ArrayList<Tuple> intersect(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		for(Tuple currentPosition:firstList)
+			if(secondList.contains(currentPosition))
+				result.add(currentPosition);
+		return result;
+		
+	}
+	private ArrayList<Tuple> union(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		for (Tuple element : firstList) {
+                result.add(element);  
+        }
+		 for (Tuple element : secondList) {
+	            if (!result.contains(element)) {
+	                result.add(element);
+	            }
+	        }
+		return result;
+		
+	}
+	private ArrayList<Tuple> XOR(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		   for (Tuple element : firstList) {
+	            if (!secondList.contains(element)) {
+	                result.add(element);
+	            }
+	        }
+	        for (Tuple element : secondList) {
+	            if (!firstList.contains(element)) {
+	                result.add(element);
+	            }
+	        }
+		return result;
+		
+	}
+
+
+
+
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
 		for (int i = 0; i < tableInfo.size(); i++)
 			if (tableInfo.get(i).get(3).equals("True"))
 				return tableInfo.get(i).get(1);
-		
+
 		return null;		
 	}
 	public static void serializedata(Object o, String filename) {
@@ -331,67 +514,67 @@ public class DBApp {
 	public void writeMetadata(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
-	    try { 	
-	        String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
-	        Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
-	        // the reason for two loops is because we want to check the data before starting to write onto
-	        // the csv file; we cant do both at the same time
-	        boolean clusteringKeyExists = false;
-	        while(colData.hasNext())
-	        {
-	        	Map.Entry<String,String> currCol = colData.next();
-	        	String colName = currCol.getKey();
-	        	String colDataType = currCol.getValue();
-	        	if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
-	        		throw new DBAppException("Column has invalid datatype");
-	        	if(colName.equals(strClusteringKeyColumn))
-	        		clusteringKeyExists = true;
-	        
-	        }
-	        if(!clusteringKeyExists)
-	        	throw new DBAppException("Clustering key does not exist in columns");
-	        
-	        
-	        FileWriter outputfile = new FileWriter(file,true); 
-	        CSVWriter writer = new CSVWriter(outputfile);
-	        colData = htblColNameType.entrySet().iterator();	  
-	        while(colData.hasNext())
-	        {
-	        	Map.Entry<String,String> currCol = colData.next();
-	        	String colName = currCol.getKey();
-	        	String colDataType = currCol.getValue();
-	        	if(strClusteringKeyColumn.equals(colName))
-	        	{
-	        		String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
-	        		writer.writeNext(header);
-	        	}
-	        	else
-	        	{
-	        		String[] header = {strTableName, colName, colDataType, "False", "null", "null"};
-	        		writer.writeNext(header);
-	        	}
-	        }
-	        writer.close();
-	    } 
-	    catch (IOException e) { 
-	        e.printStackTrace(); 
-	    }	
+		try { 	
+			String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
+			Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
+			// the reason for two loops is because we want to check the data before starting to write onto
+			// the csv file; we cant do both at the same time
+			boolean clusteringKeyExists = false;
+			while(colData.hasNext())
+			{
+				Map.Entry<String,String> currCol = colData.next();
+				String colName = currCol.getKey();
+				String colDataType = currCol.getValue();
+				if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
+					throw new DBAppException("Column has invalid datatype");
+				if(colName.equals(strClusteringKeyColumn))
+					clusteringKeyExists = true;
+
+			}
+			if(!clusteringKeyExists)
+				throw new DBAppException("Clustering key does not exist in columns");
+
+
+			FileWriter outputfile = new FileWriter(file,true); 
+			CSVWriter writer = new CSVWriter(outputfile);
+			colData = htblColNameType.entrySet().iterator();	  
+			while(colData.hasNext())
+			{
+				Map.Entry<String,String> currCol = colData.next();
+				String colName = currCol.getKey();
+				String colDataType = currCol.getValue();
+				if(strClusteringKeyColumn.equals(colName))
+				{
+					String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
+					writer.writeNext(header);
+				}
+				else
+				{
+					String[] header = {strTableName, colName, colDataType, "False", "null", "null"};
+					writer.writeNext(header);
+				}
+			}
+			writer.close();
+		} 
+		catch (IOException e) { 
+			e.printStackTrace(); 
+		}	
 	}
-	
+
 	//given a table name, returns a 2D list containing all information about its columns
 	public static List<List<String>> getColumnData(String tableName) throws IOException
 	{
 		List<List<String>> records = new ArrayList<List<String>>();
 		try (CSVReader csvReader = new CSVReader(new FileReader("./resources/metadata.csv"));) {
-		    String[] values = null;
-		    while ((values = csvReader.readNext()) != null) {
-		    	if(values[0].equals(tableName))
-		    		records.add(Arrays.asList(values));
-		    }
+			String[] values = null;
+			while ((values = csvReader.readNext()) != null) {
+				if(values[0].equals(tableName))
+					records.add(Arrays.asList(values));
+			}
 		}
 		return records;
 	}
-	
+
 	// given a 2d list containing the table info, it will return all the column names in that list
 	// run getColumnData on the metafile before running this
 	public ArrayList<String> getColumnNames(List<List<String>> tableInfo)
@@ -401,7 +584,7 @@ public class DBApp {
 			colTableNames.add(tableInfo.get(i).get(1));
 		return colTableNames;
 	}
-	
+
 	private void updateMetadataIndex(String strTableName,String strColName, String strIndexName) throws IOException
 	{
 		CSVReader reader = new CSVReader(new FileReader("resources/metadata.csv"));
@@ -421,89 +604,91 @@ public class DBApp {
 			}
 
 	}
-		
-	
+
+
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
+		Object o=10.2;
+		System.out.println(o.getClass().getName());
+		//		htbl.put("name", new String("01111146949"));
+		//		htbl.put("gpa", new Double(1));
+		//		dbApp.deleteFromTable("Vagabond", htbl);
+		//		dbApp.saveVagabond();
+		//		
+		//		htbl.put("age", new Integer(70));
+		//		dbApp.updateTable("Vagabond", "37", htbl);
 
-		htbl.put("name", new String("01111146949"));
-		htbl.put("gpa", new Double(1.8));
-		dbApp.deleteFromTable("Vagabond", htbl);
-		dbApp.saveVagabond();
-		
-//		htbl.put("age", new Integer(17));
-//		dbApp.updateTable("Vagabond", "5", htbl);
-//		Table vaga = dbApp.getTable("Vagabond");
-//		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
-//		System.out.println(index.searchIndex(new Datatype(17)));
-//		
-//		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
-//		System.out.println(ageIndex.searchIndex(new Datatype(18)));
-//		dbApp.test5();
-//		dbApp.format();
-//		dbApp.test4();
-//		dbApp.test3();
-//		dbApp.test1(dbApp);
-//		dbApp.test2(dbApp);
-//		Table table = dbApp.getTable("table");
-//		System.out.println(table.pageNames);
-//		for(int i = 0;i<table.pageNames.size();i++)
-//		{
-//			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
-//			System.out.println(page.tuples);
-//		}
+		//		Table vaga = dbApp.getTable("Vagabond");
+		//		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
+		//		System.out.println(index.searchIndex(new Datatype(17)));
+		//		
+		//		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
+		//		System.out.println(ageIndex.searchIndex(new Datatype(18)));
+		//		dbApp.test5();
+		//		dbApp.format();
+		//		dbApp.test4();
+		//		dbApp.test3();
+		//		dbApp.test1(dbApp);
+		//		dbApp.test2(dbApp);
+		//		Table table = dbApp.getTable("table");
+		//		System.out.println(table.pageNames);
+		//		for(int i = 0;i<table.pageNames.size();i++)
+		//		{
+		//			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
+		//			System.out.println(page.tuples);
+		//		}
 
 
-//		String strTableName = "Student";
-//		DBApp	dbApp = new DBApp( );
-		
-//		dbApp.createIndex( "table", "age", "kamal");
-//		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
-//		System.out.println(index.searchIndex(new Datatype(18)));
-//		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
-//		System.out.println(page.tuples);
-//		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
-//		System.out.println(page.tuples);
+		//		String strTableName = "Student";
+		//		DBApp	dbApp = new DBApp( );
 
-////
-//
-//
-//
-//		//			 this will delete 1 row, the one with id 78452
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("id", new Integer( 78452 ));
-//		dbApp.deleteFromTable( "Student", htblColNameValue );
-//
-//		//			 this will delete all rows with gpa 0.75
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("gpa", new Double( 0.75 ) );
-//		dbApp.deleteFromTable( "Student", htblColNameValue );
-//
+		//		dbApp.createIndex( "table", "age", "kamal");
+		//		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
+		//		System.out.println(index.searchIndex(new Datatype(18)));
+		//		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
+		//		System.out.println(page.tuples);
+		//		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
+		//		System.out.println(page.tuples);
+
+		////
+		//
+		//
+		//
+		//		//			 this will delete 1 row, the one with id 78452
+		//		htblColNameValue.clear( );
+		//		htblColNameValue.put("id", new Integer( 78452 ));
+		//		dbApp.deleteFromTable( "Student", htblColNameValue );
+		//
+		//		//			 this will delete all rows with gpa 0.75
+		//		htblColNameValue.clear( );
+		//		htblColNameValue.put("gpa", new Double( 0.75 ) );
+		//		dbApp.deleteFromTable( "Student", htblColNameValue );
+		//
 		//			 this will delete all rows with gpa 0.75 and name Ahmed Noor
-//		htblColNameValue enteries are ANDED together in delete
-//		htblColNameValue.clear( );
-//		htblColNameValue.put("name", new String("Ahmed Noor" ) );  
-//		htblColNameValue.put("gpa", new Double( 0.75 ) );
-//		dbApp.deleteFromTable( "Student", htblColNameValue );
-//
-//
-//		SQLTerm[] arrSQLTerms;
-//		arrSQLTerms = new SQLTerm[2];
-//		arrSQLTerms[0]._strTableName =  "Student";
-//		arrSQLTerms[0]._strColumnName=  "name";
-//		arrSQLTerms[0]._strOperator  =  "=";
-//		arrSQLTerms[0]._objValue     =  "John Noor";
-//
-//		arrSQLTerms[1]._strTableName =  "Student";
-//		arrSQLTerms[1]._strColumnName=  "gpa";
-//		arrSQLTerms[1]._strOperator  =  "=";
-//		arrSQLTerms[1]._objValue     =  new Double( 1.5 );
-//
-//		String[]strarrOperators = new String[1];
-//		strarrOperators[0] = "OR";
-//		// select * from Student where name = "John Noor" or gpa = 1.5;
-//		Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+		//		htblColNameValue enteries are ANDED together in delete
+		//		htblColNameValue.clear( );
+		//		htblColNameValue.put("name", new String("Ahmed Noor" ) );  
+		//		htblColNameValue.put("gpa", new Double( 0.75 ) );
+		//		dbApp.deleteFromTable( "Student", htblColNameValue );
+		//
+		//
+		//		SQLTerm[] arrSQLTerms;
+		//		arrSQLTerms = new SQLTerm[2];
+		//		arrSQLTerms[0]._strTableName =  "Student";
+		//		arrSQLTerms[0]._strColumnName=  "name";
+		//		arrSQLTerms[0]._strOperator  =  "=";
+		//		arrSQLTerms[0]._objValue     =  "John Noor";
+		//
+		//		arrSQLTerms[1]._strTableName =  "Student";
+		//		arrSQLTerms[1]._strColumnName=  "gpa";
+		//		arrSQLTerms[1]._strOperator  =  "=";
+		//		arrSQLTerms[1]._objValue     =  new Double( 1.5 );
+		//
+		//		String[]strarrOperators = new String[1];
+		//		strarrOperators[0] = "OR";
+		//		// select * from Student where name = "John Noor" or gpa = 1.5;
+		//		Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
 
 
 	}
@@ -511,15 +696,15 @@ public class DBApp {
 	// completely delete everything: meta file, tables, all pages
 	private void format() throws IOException {
 		Path dir = Paths.get("./tables"); 
-        Files
-            .walk(dir)
-            .sorted(Comparator.reverseOrder())
-            .forEach(path -> {
-                 try {Files.delete(path);} 
-                 catch (IOException e) {e.printStackTrace();}});
+		Files
+		.walk(dir)
+		.sorted(Comparator.reverseOrder())
+		.forEach(path -> {
+			try {Files.delete(path);} 
+			catch (IOException e) {e.printStackTrace();}});
 		new File("./resources/tables.ser").delete();
 		new File("./resources/metadata.csv").delete();
-		
+
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -527,8 +712,8 @@ public class DBApp {
 	{
 
 		String strTableName = "Student";
-	
-		
+
+
 		Hashtable htblColNameType = new Hashtable( );
 		htblColNameType.put("id", "java.lang.Integer");
 		dbApp.createTable( strTableName, "id", htblColNameType );
@@ -537,7 +722,7 @@ public class DBApp {
 		htblColNameValue.put("id", new Integer( 5 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-		
+
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 7 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
@@ -549,12 +734,12 @@ public class DBApp {
 		htblColNameValue.clear( );
 		htblColNameValue.put("id", new Integer( 8 ));
 		dbApp.insertIntoTable( strTableName , htblColNameValue );
-		
-		
 
-		
+
+
+
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void test2(DBApp	dbApp ) throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -568,72 +753,72 @@ public class DBApp {
 
 	private void test3() throws ClassNotFoundException, DBAppException, IOException
 	{
-		
+
 		Hashtable<String,String> htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
 		this.createTable("table", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
-		
+
 		colData.put("id", new Integer(2));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 20 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 7 ));
 		this.insertIntoTable( "table" , colData );
-				
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 11 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 15 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 31 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 1 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 25 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 5 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 30 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 17 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 19 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 22 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		Table table = this.getTable("table");
 		for(int i = 0;i<table.pageNames.size();i++)
 		{
 			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
 			System.out.println(page.tuples);
 		}
-		
+
 	}
-	
+
 	private void test4() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Hashtable<String,String> htbl = new Hashtable<String,String>();
@@ -641,49 +826,49 @@ public class DBApp {
 		htbl.put("age", "java.lang.Integer");		
 		this.createTable("table", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
-		
+
 		colData.put("id", new Integer(2));
 		colData.put("age", 18);
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 20 ));
 		colData.put("age", new Integer( 16 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 7 ));
 		colData.put("age", new Integer( 16 ));
 		this.insertIntoTable( "table" , colData );
-				
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 11 ));
 		colData.put("age", new Integer( 18 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 15 ));
 		colData.put("age", new Integer( 16 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		colData = new Hashtable<String, Object>();		
 		colData.put("id", new Integer( 31 ));
 		colData.put("age", new Integer( 11 ));
 		this.insertIntoTable( "table" , colData );
-		
+
 		Table table = this.getTable("table");
 		for(int i = 0;i<table.pageNames.size();i++)
 		{
 			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
 			System.out.println(page);
 		}
-				
+
 	}
-	
+
 	private void test5() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Random random = new Random();
-		
+
 		Hashtable<String,String> htbl = new Hashtable<String,String>();
 		htbl.put("id", "java.lang.Integer");
 		htbl.put("age", "java.lang.Integer");
@@ -691,15 +876,15 @@ public class DBApp {
 		htbl.put("name", "java.lang.String");
 		this.createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
-		
+
 		this.createIndex("Vagabond", "age", "ageIndex");
 		int id = 1;
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
 		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
-			"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
-//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
-		
+				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
+		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
+
 		int age = possibleAge[random.nextInt(possibleAge.length)];
 		double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		String name = possibleName[random.nextInt(possibleName.length)];
@@ -708,7 +893,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -718,7 +903,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -728,7 +913,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -738,7 +923,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -748,7 +933,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -758,7 +943,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -768,7 +953,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -778,7 +963,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -788,7 +973,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -798,7 +983,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -808,7 +993,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -818,7 +1003,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -828,7 +1013,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -838,7 +1023,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -848,7 +1033,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -858,7 +1043,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -868,7 +1053,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -878,7 +1063,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -888,7 +1073,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -898,7 +1083,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -908,7 +1093,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -918,7 +1103,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -928,7 +1113,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -938,7 +1123,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -948,7 +1133,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -958,7 +1143,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -968,7 +1153,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -978,7 +1163,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -988,7 +1173,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -998,7 +1183,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1008,7 +1193,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1018,7 +1203,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1028,7 +1213,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1038,7 +1223,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1048,7 +1233,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1058,7 +1243,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		age = possibleAge[random.nextInt(possibleAge.length)];
 		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 		name = possibleName[random.nextInt(possibleName.length)];
@@ -1068,7 +1253,7 @@ public class DBApp {
 		colData.put("gpa", new Double(gpa));
 		colData.put("name", new String(name));
 		this.insertIntoTable( "Vagabond" , colData );
-		
+
 		File deleteFile = new File("./resources/test5output.txt");
 		deleteFile.delete();
 		PrintWriter out = new PrintWriter("./resources/test5output.txt");
@@ -1092,7 +1277,7 @@ public class DBApp {
 		for(String pageName:windy.pageNames)
 		{
 			Page currPage = (Page) deserializeData(windy.filepath + pageName);
-//			System.out.println(currPage);
+			//			System.out.println(currPage);
 			out.println(currPage);
 		}
 		out.close();
