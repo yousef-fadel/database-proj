@@ -256,9 +256,10 @@ public class DBApp {
 	// htblColNameValue holds the key and value. This will be used in search
 	// to identify which rows/tuples to delete.
 	// htblColNameValue enteries are ANDED together
-	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException {
+	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException {
 
-		throw new DBAppException("not implemented yet");
+		Table basyo = getTable(strTableName);
+		basyo.deleteFromTable(htblColNameValue);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -425,12 +426,17 @@ public class DBApp {
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
 		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-		htbl.put("age", new Integer(17));
-		dbApp.updateTable("Vagabond", "5", htbl);
-		Table vaga = dbApp.getTable("Vagabond");
-		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
-		System.out.println(index.searchIndex(new Datatype(17)));
+
+		htbl.put("name", new String("01111146949"));
+		htbl.put("gpa", new Double(1.8));
+		dbApp.deleteFromTable("Vagabond", htbl);
 		dbApp.saveVagabond();
+		
+//		htbl.put("age", new Integer(17));
+//		dbApp.updateTable("Vagabond", "5", htbl);
+//		Table vaga = dbApp.getTable("Vagabond");
+//		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
+//		System.out.println(index.searchIndex(new Datatype(17)));
 //		
 //		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
 //		System.out.println(ageIndex.searchIndex(new Datatype(18)));

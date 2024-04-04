@@ -289,8 +289,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -340,8 +340,8 @@ public class DeletionTests {
 				+ banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -391,8 +391,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -452,8 +452,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -511,8 +511,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -569,8 +569,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}
@@ -644,8 +644,8 @@ public class DeletionTests {
 				    + banadyMethod.pageNames.size()	+ ", but instead got " +  result.pageNames.size());
 		for(int i = 0;i<result.pageNames.size();i++)
 		{
-			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.name + i);
-			Page resultPage = (Page) deserializeData(result.filepath + result.name + i);
+			Page banadyMethodPage = (Page) deserializeData(banadyMethod.filepath + banadyMethod.pageNames.get(i));
+			Page resultPage = (Page) deserializeData(result.filepath + result.pageNames.get(i));
 			assertTrue(comparePage(banadyMethodPage,resultPage), "\n Expected the tuples in page " + banadyMethodPage.name + " to be: \n"
 					+ resultPage + "\n but instead got: \n" + banadyMethodPage);
 		}

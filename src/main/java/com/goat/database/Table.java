@@ -1,12 +1,13 @@
 package com.goat.database;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
-import com.goat.database.*;
 
 public class Table implements java.io.Serializable{
 	public Vector<String> pageNames; 
@@ -296,12 +297,76 @@ public class Table implements java.io.Serializable{
 		System.out.println("Did not find clustering key, aborting update");
 	}
 
+
+	// ----------------------------- DELETE --------------
+	
+	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException
+	{
+		ArrayList<String> resultSoFar = new ArrayList<String>();
+		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		 while(colNameValueIterator.hasNext())
+		 {
+			 Map.Entry<String,Object> deletionCondition = colNameValueIterator.next();
+			 ArrayList<String> deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
+			 if(resultSoFar.isEmpty())
+				 resultSoFar = deletionConditionResult;
+			 else
+				 resultSoFar =intersect(resultSoFar,deletionConditionResult); 
+		 }
+		 
+		 deleteTuples(resultSoFar);
+	}
+	
+	private ArrayList<String> findTuplesSatsifyingDeletion(Map.Entry<String, Object> deletionCondition) throws ClassNotFoundException
+	{
+		ArrayList<String> result = new ArrayList<String>();
+		for(String pageName:this.pageNames)
+		{
+			Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
+			for(int i = 0 ; i<page.tuples.size();i++)
+				if(page.tuples.get(i).entry.get(deletionCondition.getKey()).equals(deletionCondition.getValue()))
+					result.add( page.name + "-" + i); // pagenumber - tuple pos
+		}
+		return result;
+	}
+	
+	
+	private ArrayList<String> intersect(ArrayList<String> firstList, ArrayList<String> secondList)
+	{
+		ArrayList<String> result = new ArrayList<String>();
+		for(String currentPosition:firstList)
+			if(secondList.contains(currentPosition))
+				result.add(currentPosition);
+		return result;
+		
+	}
+	
+	private void deleteTuples(ArrayList<String> deletionTuples) throws ClassNotFoundException
+	{
+		for(int i = deletionTuples.size()-1 ;i>=0;i--)
+		{
+			String tuplePosition = deletionTuples.get(i);
+			String[] arrTuplePosition = tuplePosition.split("-",2);
+			String pageName = arrTuplePosition[0];
+			int tupleNumber = Integer.parseInt(arrTuplePosition[1]);
+			Page currPage = (Page) DBApp.deserializeData(this.filepath + pageName);
+			currPage.tuples.removeElementAt(tupleNumber);
+			if(currPage.tuples.isEmpty())
+			{
+				this.pageNames.removeElement(pageName);
+				File pageFilePath = new File(this.filepath + pageName + ".ser");
+				pageFilePath.delete();
+			}
+			currPage = currPage.serializeAndDeletePage();
+		}
+	}
+	// ----------------------------- HELPER ------------
 	private Index getIndex(String indexName) throws ClassNotFoundException
 	{
 		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
 	}
 
-
+	
 
 
 	public void serializeTable()
