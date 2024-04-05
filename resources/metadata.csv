@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "banadyMethod","gpa","java.lang.Double","False","null","null"
 "banadyMethod","age","java.lang.Integer","False","null","null"
 "banadyMethod","name","java.lang.String","False","esm","B+tree"
@@ -6,3 +7,9 @@
 "result","age","java.lang.Integer","False","null","null"
 "result","name","java.lang.String","False","esm","B+tree"
 "result","id","java.lang.Integer","True","null","null"
+=======
+"Vagabond","gpa","java.lang.Double","False","null","null"
+"Vagabond","age","java.lang.Integer","False","ageIndex","B+tree"
+"Vagabond","name","java.lang.String","False","null","null"
+"Vagabond","id","java.lang.Integer","True","null","null"
+>>>>>>> 68b2e18a0904e0f26204623473a52f1d0303615e

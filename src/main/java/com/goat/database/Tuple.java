@@ -60,5 +60,12 @@ public class Tuple implements Serializable, Comparable {
 		return 0;
 		
 	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		Tuple secondTuple = (Tuple) o;
+		return this.Primary_key.equals(secondTuple.Primary_key);
+	}
 }
 
