@@ -197,7 +197,7 @@ public class DBApp {
 		omar.insertTupleIntoTable(tuple);
 		omar = omar.serializeAndDeleteTable();
 
-		System.out.println("Successfully inserted " + tuple.toString() + " into " + strTableName);
+		System.out.println(" " + tuple.toString() + " into " + strTableName);
 	}
 
 	// following method updates one row only
@@ -256,7 +256,7 @@ public class DBApp {
 	// htblColNameValue holds the key and value. This will be used in search
 	// to identify which rows/tuples to delete.
 	// htblColNameValue enteries are ANDED together
-	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException {
+	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException, IOException {
 
 		Table basyo = getTable(strTableName);
 		basyo.deleteFromTable(htblColNameValue);
@@ -310,7 +310,7 @@ public class DBApp {
 			String obj_class=obj.getClass().getName();
 			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
 				throw new DBAppException("Invalid datatype");
-//EXCEPTIONS-----------------------------------------------------------------------------------------
+			//EXCEPTIONS-----------------------------------------------------------------------------------------
 			//With no index
 			for(String pageName:kamal.pageNames)
 			{
@@ -323,16 +323,16 @@ public class DBApp {
 					ArrayList<Tuple> temp = makeConditionList(tupleSearch,col_Name,operator,obj);
 					results.add(temp);
 				}
-				
+
 			}
-			
-			
-			
+
+
+
 			while(!strops.isEmpty()) {
 				int indexAND=strops.indexOf("AND");
 				int indexOR=strops.indexOf("OR");
 				int indexXOR=strops.indexOf("XOR");
-				
+
 				if(indexAND!=-1) {
 					results.add(indexAND,intersect(results.get(indexAND),results.get(indexAND+1)));
 					results.remove(indexAND+1);
@@ -346,8 +346,8 @@ public class DBApp {
 					results.remove(indexXOR+1);
 					strops.remove(indexXOR);
 				}
-					
-				
+
+
 			}
 
 		}
@@ -417,37 +417,37 @@ public class DBApp {
 			if(secondList.contains(currentPosition))
 				result.add(currentPosition);
 		return result;
-		
+
 	}
 	private ArrayList<Tuple> union(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
 	{
 		ArrayList<Tuple> result = new ArrayList<Tuple>();
 		for (Tuple element : firstList) {
-                result.add(element);  
-        }
-		 for (Tuple element : secondList) {
-	            if (!result.contains(element)) {
-	                result.add(element);
-	            }
-	        }
+			result.add(element);  
+		}
+		for (Tuple element : secondList) {
+			if (!result.contains(element)) {
+				result.add(element);
+			}
+		}
 		return result;
-		
+
 	}
 	private ArrayList<Tuple> XOR(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
 	{
 		ArrayList<Tuple> result = new ArrayList<Tuple>();
-		   for (Tuple element : firstList) {
-	            if (!secondList.contains(element)) {
-	                result.add(element);
-	            }
-	        }
-	        for (Tuple element : secondList) {
-	            if (!firstList.contains(element)) {
-	                result.add(element);
-	            }
-	        }
+		for (Tuple element : firstList) {
+			if (!secondList.contains(element)) {
+				result.add(element);
+			}
+		}
+		for (Tuple element : secondList) {
+			if (!firstList.contains(element)) {
+				result.add(element);
+			}
+		}
 		return result;
-		
+
 	}
 
 
@@ -608,87 +608,34 @@ public class DBApp {
 
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
 		DBApp dbApp =new DBApp();
-		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-		Object o=10.2;
-		System.out.println(o.getClass().getName());
-		//		htbl.put("name", new String("01111146949"));
-		//		htbl.put("gpa", new Double(1));
-		//		dbApp.deleteFromTable("Vagabond", htbl);
-		//		dbApp.saveVagabond();
-		//		
-		//		htbl.put("age", new Integer(70));
-		//		dbApp.updateTable("Vagabond", "37", htbl);
+//		dbApp.format();
+//		dbApp.test5();
+//		dbApp.createIndex("Vagabond", "age", "age");
+		
+//		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
+//		htbl.put("age", new Integer(18));
+//		dbApp.deleteFromTable("Vagabond", htbl);
 
-		//		Table vaga = dbApp.getTable("Vagabond");
-		//		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
-		//		System.out.println(index.searchIndex(new Datatype(17)));
-		//		
-		//		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
-		//		System.out.println(ageIndex.searchIndex(new Datatype(18)));
-		//		dbApp.test5();
-		//		dbApp.format();
-		//		dbApp.test4();
-		//		dbApp.test3();
-		//		dbApp.test1(dbApp);
-		//		dbApp.test2(dbApp);
-		//		Table table = dbApp.getTable("table");
-		//		System.out.println(table.pageNames);
-		//		for(int i = 0;i<table.pageNames.size();i++)
-		//		{
-		//			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
-		//			System.out.println(page.tuples);
-		//		}
+//		dbApp.saveVagabond();
+//		dbApp.format();
+//		dbApp.insertx();
+		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
+		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
+		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
+		System.out.println(result.searchGreaterThan(new Datatype(""), false));
+		
+		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+		for(String pageName : banadyTable.pageNames)
+		{
+			System.out.println(deserializeData(banadyTable.filepath + pageName));
+		}
+		for(String pageName : resultTable.pageNames)
+		{
+			System.out.println(deserializeData(resultTable.filepath + pageName));
+		}
+		
 
-
-		//		String strTableName = "Student";
-		//		DBApp	dbApp = new DBApp( );
-
-		//		dbApp.createIndex( "table", "age", "kamal");
-		//		Index index = (Index) deserializeData("./tables/table/indices/kamal.ser");
-		//		System.out.println(index.searchIndex(new Datatype(18)));
-		//		Page page = (Page) DBApp.deserializeData("./tables/Student/Student0.ser");
-		//		System.out.println(page.tuples);
-		//		page =  (Page) DBApp.deserializeData("./tables/Student/Student1.ser");
-		//		System.out.println(page.tuples);
-
-		////
-		//
-		//
-		//
-		//		//			 this will delete 1 row, the one with id 78452
-		//		htblColNameValue.clear( );
-		//		htblColNameValue.put("id", new Integer( 78452 ));
-		//		dbApp.deleteFromTable( "Student", htblColNameValue );
-		//
-		//		//			 this will delete all rows with gpa 0.75
-		//		htblColNameValue.clear( );
-		//		htblColNameValue.put("gpa", new Double( 0.75 ) );
-		//		dbApp.deleteFromTable( "Student", htblColNameValue );
-		//
-		//			 this will delete all rows with gpa 0.75 and name Ahmed Noor
-		//		htblColNameValue enteries are ANDED together in delete
-		//		htblColNameValue.clear( );
-		//		htblColNameValue.put("name", new String("Ahmed Noor" ) );  
-		//		htblColNameValue.put("gpa", new Double( 0.75 ) );
-		//		dbApp.deleteFromTable( "Student", htblColNameValue );
-		//
-		//
-		//		SQLTerm[] arrSQLTerms;
-		//		arrSQLTerms = new SQLTerm[2];
-		//		arrSQLTerms[0]._strTableName =  "Student";
-		//		arrSQLTerms[0]._strColumnName=  "name";
-		//		arrSQLTerms[0]._strOperator  =  "=";
-		//		arrSQLTerms[0]._objValue     =  "John Noor";
-		//
-		//		arrSQLTerms[1]._strTableName =  "Student";
-		//		arrSQLTerms[1]._strColumnName=  "gpa";
-		//		arrSQLTerms[1]._strOperator  =  "=";
-		//		arrSQLTerms[1]._objValue     =  new Double( 1.5 );
-		//
-		//		String[]strarrOperators = new String[1];
-		//		strarrOperators[0] = "OR";
-		//		// select * from Student where name = "John Noor" or gpa = 1.5;
-		//		Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
 
 
 	}
@@ -885,374 +832,17 @@ public class DBApp {
 				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
 
-		int age = possibleAge[random.nextInt(possibleAge.length)];
-		double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		String name = possibleName[random.nextInt(possibleName.length)];
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(18));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(18));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
-
-		age = possibleAge[random.nextInt(possibleAge.length)];
-		gpa = possibleGPA[random.nextInt(possibleGPA.length)];
-		name = possibleName[random.nextInt(possibleName.length)];
-		colData.clear();
-		colData.put("id", new Integer(id++));
-		colData.put("age", new Integer(age));
-		colData.put("gpa", new Double(gpa));
-		colData.put("name", new String(name));
-		this.insertIntoTable( "Vagabond" , colData );
+		for(int i = 0;i<40;i++)
+		{
+			int age = possibleAge[random.nextInt(possibleAge.length)];
+			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
+			String name = possibleName[random.nextInt(possibleName.length)];
+			colData.put("id", new Integer(id++));
+			colData.put("age", new Integer(18));
+			colData.put("gpa", new Double(gpa));
+			colData.put("name", new String(name));
+			this.insertIntoTable( "Vagabond" , colData );
+		}
 
 		File deleteFile = new File("./resources/test5output.txt");
 		deleteFile.delete();
@@ -1281,5 +871,145 @@ public class DBApp {
 			out.println(currPage);
 		}
 		out.close();
+	}
+	
+	private void insertx() throws ClassNotFoundException, DBAppException, IOException
+	{
+		DBApp database = new DBApp();
+		Hashtable<String,String> htbl = new Hashtable<String, String>();
+		htbl = new Hashtable<String,String>();
+		htbl.put("id", "java.lang.Integer");
+		htbl.put("age", "java.lang.Integer");
+		htbl.put("name", "java.lang.String");
+		htbl.put("gpa", "java.lang.Double");
+		
+		database.createTable("banadyMethod", "id", htbl);
+		database.createTable("result", "id", htbl);
+		
+		database.createIndex("banadyMethod", "name", "esm");
+		database.createIndex("result", "name", "esm");
+		
+		String x = 
+				  " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into banadyMethod\r\n"
+				+ " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into result\r\n"
+				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into banadyMethod\r\n"
+				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into result\r\n"
+				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into banadyMethod\r\n"
+				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into result\r\n"
+				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into banadyMethod\r\n"
+				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into result\r\n"
+				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into banadyMethod\r\n"
+				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into result\r\n"
+				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into banadyMethod\r\n"
+				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into result\r\n"
+				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into banadyMethod\r\n"
+				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into result\r\n"
+				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into banadyMethod\r\n"
+				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into result\r\n"
+				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into banadyMethod\r\n"
+				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into result\r\n"
+				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into banadyMethod\r\n"
+				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into result\r\n"
+				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into banadyMethod\r\n"
+				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into result\r\n"
+				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into banadyMethod\r\n"
+				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into result\r\n"
+				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into banadyMethod\r\n"
+				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into result\r\n"
+				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into banadyMethod\r\n"
+				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into result\r\n"
+				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into banadyMethod\r\n"
+				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into result\r\n"
+				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into banadyMethod\r\n"
+				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into result\r\n"
+				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into banadyMethod\r\n"
+				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into result\r\n"
+				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into banadyMethod\r\n"
+				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into result\r\n"
+				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into banadyMethod\r\n"
+				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into result\r\n"
+				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into banadyMethod\r\n"
+				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into result\r\n"
+				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into banadyMethod\r\n"
+				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into result\r\n"
+				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into banadyMethod\r\n"
+				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into result\r\n"
+				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into banadyMethod\r\n"
+				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into result\r\n"
+				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into banadyMethod\r\n"
+				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into result\r\n"
+				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into banadyMethod\r\n"
+				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into result\r\n"
+				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into banadyMethod\r\n"
+				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into result\r\n"
+				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into banadyMethod\r\n"
+				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into result\r\n"
+				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into banadyMethod\r\n"
+				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into result\r\n"
+				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into banadyMethod\r\n"
+				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into result\r\n"
+				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into banadyMethod\r\n"
+				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into result\r\n"
+				+ " {gpa=6.935, age=2112, name=Aya, id=2400} into banadyMethod\r\n"
+				+ " {gpa=8.153, age=3475, name=Aya, id=2977} into banadyMethod\r\n"
+				+ " {gpa=6.202, age=4834, name=Aya, id=156} into banadyMethod\r\n"
+				+ " {gpa=7.978, age=4925, name=Aya, id=962} into banadyMethod\r\n"
+				+ " {gpa=6.622, age=2304, name=Aya, id=480} into banadyMethod\r\n"
+				+ " {gpa=5.225, age=965, name=Aya, id=3699} into banadyMethod\r\n"
+				+ " {gpa=6.94, age=3373, name=Aya, id=1622} into banadyMethod\r\n"
+				+ " {gpa=7.024, age=2557, name=Aya, id=1466} into banadyMethod\r\n"
+				+ " {gpa=5.839, age=2226, name=Aya, id=4843} into banadyMethod\r\n";
+		
+    			
+  	String lines[] = x.split("\\r?\\n");
+		for(String s : lines)
+		{
+			String attributes[] = s.split(",");
+
+			double gpa=-1;
+			int age=-1;
+			String name="";
+			int id=-1;
+			for(int i = 0;i<4;i++)
+			{
+				String abc = attributes[i];
+				abc = abc.trim();
+				
+				if(i==0)
+					gpa = Double.parseDouble(abc.substring(5));
+				if(i==1)
+					age = Integer.parseInt(abc.substring(5));
+				if(i==2)
+					name = abc.substring(5);
+				if(i==3)
+				{
+					int pain = abc.indexOf("}");
+					id = Integer.parseInt(abc.substring(3, pain));
+				}
+				
+				
+				
+			}
+			Hashtable<String,Object> htblObj = new Hashtable<String, Object>();
+			if(attributes[3].contains("banadyMethod"))
+			{
+				htblObj.put("gpa", gpa);
+				htblObj.put("name", name);
+				htblObj.put("id", id);
+				htblObj.put("age", age);
+				
+				database.insertIntoTable("banadyMethod", htblObj);
+			}
+			else
+			{
+				htblObj.put("gpa", gpa);
+				htblObj.put("name", name);
+				htblObj.put("id", id);
+				htblObj.put("age", age);
+				
+				database.insertIntoTable("result", htblObj);
+			}
+		}
+
 	}
 }

@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -177,7 +179,7 @@ public class Table implements java.io.Serializable{
 
 		for(String indexName : this.indexNames)
 		{
-			Index index = getIndex(indexName);
+			Index index = getIndexWithIndexName(indexName);
 			Object tupleData = tuple.entry.get(index.columnName);
 			index.deleteFromIndex(new Datatype(tupleData), pageName);
 			index = index.serializeAndDeleteIndex();
@@ -210,13 +212,14 @@ public class Table implements java.io.Serializable{
 
 		for(String indexName : this.indexNames)
 		{
-			Index index = getIndex(indexName);
+			Index index = getIndexWithIndexName(indexName);
 			Object tupleData = tuple.entry.get(index.columnName);
 			index.insertIntoIndex(new Datatype(tupleData), pageName);
 			index = index.serializeAndDeleteIndex();
 		}
 	}
 
+	// ------------------------------------------------------------------UPDATE---------------------------------------------------
 	public void updateTuple(Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws ClassNotFoundException, DBAppException, IOException
 	{
 		Page pageToUpdate = findPageToUpdate(clusteringKeyValue);
@@ -279,7 +282,7 @@ public class Table implements java.io.Serializable{
 			{
 				if(!indexName.equals("null"))
 				{
-					Index indexedCol = getIndex(indexName);
+					Index indexedCol = getIndexWithIndexName(indexName);
 					indexedCol.deleteFromIndex(new Datatype(pageTuples.get(middle).entry.get(updateValueEntry.getKey())), page.name);
 					indexedCol.insertIntoIndex(new Datatype(updateValueEntry.getValue()), page.name);
 					indexedCol = indexedCol.serializeAndDeleteIndex();
@@ -300,14 +303,19 @@ public class Table implements java.io.Serializable{
 
 	// ----------------------------- DELETE --------------
 	
-	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException
+	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, IOException
 	{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		 while(colNameValueIterator.hasNext())
 		 {
 			 Map.Entry<String,Object> deletionCondition = colNameValueIterator.next();
-			 ArrayList<String> deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
+			 ArrayList<String> deletionConditionResult;
+			 Index colIndex = getIndexWithColName(deletionCondition.getKey()); 
+			 if(colIndex==null)
+				 deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
+			 else
+				 deletionConditionResult = findTuplesSatsifyingDeletionIndex(deletionCondition,colIndex);
 			 if(resultSoFar.isEmpty())
 				 resultSoFar = deletionConditionResult;
 			 else
@@ -329,8 +337,28 @@ public class Table implements java.io.Serializable{
 		}
 		return result;
 	}
-	
-	
+	private ArrayList<String> findTuplesSatsifyingDeletionIndex(Map.Entry<String, Object> deletionCondition,Index colIndex) throws ClassNotFoundException
+	{
+		ArrayList<String> result = new ArrayList<String>();
+		// get page locations from index
+		Vector<String> pageResult = colIndex.searchIndex(new Datatype(deletionCondition.getValue()));
+		// sheel duplicates from pageResult
+		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(pageResult);  
+		pageResult.clear(); 
+		pageResult.addAll(hashSet); 
+		// add tuple pos to each page
+		for(String pageName:pageResult)
+		{
+			Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
+			for(int i = 0;i<page.tuples.size();i++)
+			{
+				Tuple tuple = page.tuples.get(i);
+				if(tuple.entry.get(deletionCondition.getKey()).equals(deletionCondition.getValue()))			
+					result.add(pageName + "-" + i); 
+			}
+		}
+		return result;
+	}
 	private ArrayList<String> intersect(ArrayList<String> firstList, ArrayList<String> secondList)
 	{
 		ArrayList<String> result = new ArrayList<String>();
@@ -349,24 +377,42 @@ public class Table implements java.io.Serializable{
 			String[] arrTuplePosition = tuplePosition.split("-",2);
 			String pageName = arrTuplePosition[0];
 			int tupleNumber = Integer.parseInt(arrTuplePosition[1]);
+			// delete from page and index
 			Page currPage = (Page) DBApp.deserializeData(this.filepath + pageName);
+			deleteFromIndex(currPage.tuples.get(tupleNumber),pageName);
 			currPage.tuples.removeElementAt(tupleNumber);
 			if(currPage.tuples.isEmpty())
 			{
 				this.pageNames.removeElement(pageName);
 				File pageFilePath = new File(this.filepath + pageName + ".ser");
 				pageFilePath.delete();
+				this.serializeTable();
 			}
-			currPage = currPage.serializeAndDeletePage();
+			else
+				currPage = currPage.serializeAndDeletePage();
+			
+			
 		}
 	}
+	
 	// ----------------------------- HELPER ------------
-	private Index getIndex(String indexName) throws ClassNotFoundException
+	private Index getIndexWithIndexName(String indexName) throws ClassNotFoundException
 	{
+		
 		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
 	}
 
-	
+	private Index getIndexWithColName (String colName) throws ClassNotFoundException, IOException
+	{
+		List<List<String>> tableInfo = DBApp.getColumnData(this.name);
+		for(int i = 0;i<tableInfo.size();i++)
+		{
+			if(tableInfo.get(i).get(1).equals(colName) && !tableInfo.get(i).get(4).equals("null"))
+				return (Index) DBApp.deserializeData(this.filepath + "indices/" + tableInfo.get(i).get(4));
+				
+		}
+		return null;
+	}
 
 
 	public void serializeTable()

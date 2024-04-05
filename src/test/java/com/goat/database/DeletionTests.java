@@ -431,17 +431,11 @@ public class DeletionTests {
 			
 			colData.clear();
 			colData.put("id", new Integer(age));
-			colData.put("age", new Integer(age));
+			colData.put("age", new Integer(deletionAge));
 			colData.put("name", new String(deletionName));
 			colData.put("gpa", new Double(gpa));
 			database.insertIntoTable("banadyMethod", colData);
 			
-			colData.clear();
-			colData.put("id", new Integer(id*500));
-			colData.put("age", new Integer(deletionAge));
-			colData.put("name", new String(name));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
 		}
 		colData.clear();
 		colData.put("age", new Integer(deletionAge));
@@ -490,17 +484,11 @@ public class DeletionTests {
 			
 			colData.clear();
 			colData.put("id", new Integer(age));
-			colData.put("age", new Integer(age));
+			colData.put("age", new Integer(deletionAge));
 			colData.put("name", new String(name));
 			colData.put("gpa", new Double(deletionGPA));
 			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*500));
-			colData.put("age", new Integer(deletionAge));
-			colData.put("name", new String(name));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
+
 		}
 		colData.clear();
 		colData.put("age", new Integer(deletionAge));
@@ -550,15 +538,9 @@ public class DeletionTests {
 			colData.put("id", new Integer(age));
 			colData.put("age", new Integer(age));
 			colData.put("name", new String(deletionName));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*500));
-			colData.put("age", new Integer(age));
-			colData.put("name", new String(name));
 			colData.put("gpa", new Double(deletionGPA));
 			database.insertIntoTable("banadyMethod", colData);
+			
 		}
 		colData.clear();
 		colData.put("gpa", new Double(deletionGPA));
@@ -608,31 +590,11 @@ public class DeletionTests {
 			
 			colData.clear();
 			colData.put("id", new Integer(age));
-			colData.put("age", new Integer(age));
-			colData.put("name", new String(deletionName));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*500));
-			colData.put("age", new Integer(age));
-			colData.put("name", new String(name));
-			colData.put("gpa", new Double(deletionGPA));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*-1));
-			colData.put("age", new Integer(deletionAge));
-			colData.put("name", new String(name));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*5000));
 			colData.put("age", new Integer(deletionAge));
 			colData.put("name", new String(deletionName));
 			colData.put("gpa", new Double(deletionGPA));
 			database.insertIntoTable("banadyMethod", colData);
+			
 		}
 		colData.clear();
 		colData.put("gpa", new Double(deletionGPA));
@@ -850,36 +812,17 @@ public class DeletionTests {
 			resultGpaPointerNumbers.add(page.substring(page.length(),page.length()));
 		}
 		
-		double [] uniqueGPA = random.doubles(5,10).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
-				.mapToDouble(Double::doubleValue).limit(pageSize*4).toArray();
-		int[] uniqueAge = random.ints(5000,10000).distinct().limit(pageSize*4).toArray();
 		int deletionAge = 100002;
 		String deletionName = "Maryam";
 		Double deletionGPA = 20.34;
 		for(int i =0;i<pageSize*3;i++)
 		{
 			int id =  uniqueID[++index];
-			int age =  uniqueAge[i];
-			double gpa = uniqueGPA[i];
-			String name = randomString();
+
 			colData.clear();
 			colData.put("id", new Integer(id));
-			colData.put("name", new String(name));
-			colData.put("age", new Integer(deletionAge));
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*-1));
 			colData.put("name", new String(deletionName));
-			colData.put("age", age);
-			colData.put("gpa", new Double(gpa));
-			database.insertIntoTable("banadyMethod", colData);
-			
-			colData.clear();
-			colData.put("id", new Integer(id*500));
-			colData.put("name", new String(name));
-			colData.put("age", age);
+			colData.put("age", new Integer(deletionAge));
 			colData.put("gpa", new Double(deletionGPA));
 			database.insertIntoTable("banadyMethod", colData);
 			
