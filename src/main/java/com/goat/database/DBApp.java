@@ -32,12 +32,14 @@ import com.opencsv.CSVWriter;
 @SuppressWarnings("deprecation")
 public class DBApp {
 
-	Vector<Table> tables;
+	Vector<Table> tables=new Vector<Table>();
 
 	public DBApp() throws ClassNotFoundException, DBAppException {
 		init();
 		if(tables==null)
 			System.out.println("Was not able to intialize the tables for some reason; pray");
+		
+			
 	}
 
 	// this does whatever initialization you would like
@@ -265,185 +267,15 @@ public class DBApp {
 	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
 	{
-		ArrayList<String> strops = new ArrayList<String>();
-		for(int i=0;i<strarrOperators.length;i++) 
-			strops.add(strarrOperators[i]);
-
-		for(int i=0;i<strarrOperators.length;i++) 
-		{
-			String strop=strarrOperators[i];
-			if(!(strop.equals("AND")||strop.equals("OR")||strop.equals("XOR")))
-				throw new DBAppException("Invalid operator (AND,OR,XOR)");
-		}
-		ArrayList<ArrayList<Tuple>> results=new ArrayList<ArrayList<Tuple>>();
-		for(int i=0;i<arrSQLTerms.length;i++) 
-		{
-			String table_Name=arrSQLTerms[i]._strTableName;
-			String col_Name=arrSQLTerms[i]._strColumnName;
-			String operator=arrSQLTerms[i]._strOperator;
-			Object obj=arrSQLTerms[i]._objValue;
-
-			Table kamal = getTable(table_Name);
-			if (kamal == null)
-				throw new DBAppException("Table does not exist");
-
-			List<List<String>> tableInfo = getColumnData(table_Name);//Gets data from csv file of table
-			ArrayList<String> colTableNames = getColumnNames(tableInfo);
-			for(int j = 0;i<colTableNames.size();j++)
-			{
-				if(colTableNames.contains(col_Name))
-					break;
-				if(j==colTableNames.size()-1)
-					throw new DBAppException("Column name not found");
-			}
-			//>, >=, <, <=, != or = 
-			if(!(operator==">" || operator==">=" || operator=="<" || operator=="<=" || operator=="!=" || operator=="="))
-				throw new DBAppException("Invalid operator");
-			String obj_class=obj.getClass().getName();
-			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
-				throw new DBAppException("Invalid datatype");
-
-			//EXCEPTIONS-----------------------------------------------------------------------------------------
-			//With no index
-			ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
-
-			for(String pageName:kamal.pageNames)
-			{
-				Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
-				for(int j = 0 ; j<page.tuples.size();j++) 
-				{
-					Tuple tupleSearch=page.tuples.get(j);
-					//					Object primaryKey=tupleSearch.Primary_key;
-					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
-					if(t!=null)
-						conditionSatisfied.add(t);
-				}
-
-			}
-			if(!conditionSatisfied.isEmpty())
-				results.add(conditionSatisfied);
-
-		}
-		while(!strops.isEmpty()) {
-			int indexAND=strops.indexOf("AND");
-			int indexOR=strops.indexOf("OR");
-			int indexXOR=strops.indexOf("XOR");
-
-			if(indexAND!=-1) {
-				ArrayList<Tuple> andResult = intersect(results.get(indexAND),results.get(indexAND+1));
-				results.remove(indexAND);
-				results.add(indexAND,andResult);
-				results.remove(indexAND+1);
-				strops.remove(indexAND);
-			}else if(indexOR!=-1) {
-				ArrayList<Tuple> orResult = union(results.get(indexOR),results.get(indexOR+1));
-				results.remove(indexOR);
-				results.add(indexOR,orResult);
-				results.remove(indexOR+1);
-				strops.remove(indexOR);
-			}else if (indexXOR!=-1){
-				ArrayList<Tuple> xorResult = XOR(results.get(indexXOR),results.get(indexXOR+1));
-				results.remove(indexXOR);
-				results.add(indexXOR,xorResult);
-				results.remove(indexXOR+1);
-				strops.remove(indexXOR);
-			}
-
-
-		}
-		ArrayList<Tuple> final_result=new ArrayList<Tuple>();
-		for(int i=0;i<results.size();i++) {
-			final_result.addAll(results.get(i));
-		}
-		//Remaining array list in first element after doing all operations 
-		return final_result.iterator();
+		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
+		Table basyo = getTable(table_Name);
+		
+		return (basyo.selectTable(arrSQLTerms,strarrOperators));
 	}
 	// ------------------------------------------CHECK-----------------------------------------------------
 
 	// ------------------------------------------HELPER--------------------------------------------------------
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Tuple makeConditionList(Tuple tupleSearch,String col_Name,String operator,Object obj)
-	{
-		Tuple temp = null;
-
-		Datatype tableValue2=new Datatype(tupleSearch.entry.get(col_Name));
-		Datatype obj2=new Datatype(obj);
-
-		switch(operator) 
-		{
-		case "=":
-			if(tableValue2.compareTo(obj2)==0){
-				return (tupleSearch);
-			}break;
-		case "!=":
-			if(tableValue2.compareTo(obj2)!=0){
-				return (tupleSearch);
-			}break;
-		case "<":
-			if(tableValue2.compareTo(obj2)<0){
-				return (tupleSearch);
-			}break;
-		case "<=":
-			if(tableValue2.compareTo(obj2)<=0){
-				return(tupleSearch);
-			}break;
-		case ">":
-			if(tableValue2.compareTo(obj2)>0){
-				return(tupleSearch);
-			}break;
-		case ">=":
-			if(tableValue2.compareTo(obj2)>=0){
-				return(tupleSearch);
-			}break;
-		default:System.out.println("Cannot find approprtaite operator");break;
-		}
-
-
-		return temp;
-	}
-
-	private ArrayList<Tuple> intersect(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
-	{
-		ArrayList<Tuple> result = new ArrayList<Tuple>();
-		for(Tuple currentPosition:firstList)
-			if(secondList.contains(currentPosition))
-				result.add(currentPosition);
-		return result;
-
-
-	}
-	private ArrayList<Tuple> union(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
-	{
-		ArrayList<Tuple> result = new ArrayList<Tuple>();
-		result.addAll(firstList);  
-		
-		for(int i = 0;i<secondList.size();i++)
-			if(!result.contains(secondList.get(i)))
-				result.add(secondList.get(i));
-			
-		
-		return result;
-	}
-	private ArrayList<Tuple> XOR(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
-	{
-		ArrayList<Tuple> result = new ArrayList<Tuple>();
-		for (Tuple element : firstList) {
-			if (!secondList.contains(element)) {
-				result.add(element);
-			}
-		}
-		for (Tuple element : secondList) {
-			if (!firstList.contains(element)) {
-				result.add(element);
-			}
-		}
-		return result;
-
-	}
-
-
-
-
+	
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
 		for (int i = 0; i < tableInfo.size(); i++)
@@ -597,7 +429,8 @@ public class DBApp {
 	}
 
 
-	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException{
+	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException
+	{
 		DBApp dbApp =new DBApp();
 //		dbApp.format();
 //		dbApp.test5();
@@ -610,27 +443,24 @@ public class DBApp {
 //		dbApp.saveVagabond();
 //		dbApp.format();
 //		dbApp.insertx();
-		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
-		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
-		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
-		System.out.println(result.searchGreaterThan(new Datatype(""), false));
-		
-		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-		for(String pageName : banadyTable.pageNames)
-		{
-			System.out.println(deserializeData(banadyTable.filepath + pageName));
-		}
-		for(String pageName : resultTable.pageNames)
-		{
-			System.out.println(deserializeData(resultTable.filepath + pageName));
-		}
+//		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
+//		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
+//		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
+//		System.out.println(result.searchGreaterThan(new Datatype(""), false));
+//		
+//		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+//		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+//		for(String pageName : banadyTable.pageNames)
+//		{
+//			System.out.println(deserializeData(banadyTable.filepath + pageName));
+//		}
+//		for(String pageName : resultTable.pageNames)
+//		{
+//			System.out.println(deserializeData(resultTable.filepath + pageName));
+//		}
 		
 
 		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-		//		htbl.put("name", new String("01111146949"));
-		//		htbl.put("gpa", new Double(1));
-		//		dbApp.deleteFromTable("Vagabond", htbl);
 		dbApp.saveVagabond();
 		SQLTerm[] arrSQLTerms;
 		arrSQLTerms = new SQLTerm[2];
@@ -638,14 +468,14 @@ public class DBApp {
 		arrSQLTerms[0]._strTableName = "Vagabond";
 		arrSQLTerms[0]._strColumnName= "name";
 		arrSQLTerms[0]._strOperator = "=";
-		arrSQLTerms[0]._objValue = "Kiryu";
+		arrSQLTerms[0]._objValue = "5ayen";
 		arrSQLTerms[1]=new SQLTerm();
 		arrSQLTerms[1]._strTableName = "Vagabond";
-		arrSQLTerms[1]._strColumnName= "gpa";
+		arrSQLTerms[1]._strColumnName= "age";
 		arrSQLTerms[1]._strOperator = "=";
-		arrSQLTerms[1]._objValue = new Double(1.2);
+		arrSQLTerms[1]._objValue = new Integer(24);
 		String[]strarrOperators = new String[1];
-		strarrOperators[0] = "XOR"; 
+		strarrOperators[0] = "OR"; 
 		try {
 			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
 			while(resultSet.hasNext())
@@ -658,30 +488,6 @@ public class DBApp {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-
-		//		htbl.put("age", new Integer(70));
-		//		dbApp.updateTable("Vagabond", "37", htbl);
-
-		//		Table vaga = dbApp.getTable("Vagabond");
-		//		Index index = (Index) dbApp.deserializeData("./tables/Vagabond/indices/ageIndex.ser");
-		//		System.out.println(index.searchIndex(new Datatype(17)));
-		//		
-		//		Index ageIndex = (Index) deserializeData(dbApp.getTable("Vagabond").filepath + "indices/ageIndex");
-		//		System.out.println(ageIndex.searchIndex(new Datatype(18)));
-//								dbApp.test5();
-//								dbApp.format();
-		//		dbApp.test4();
-		//		dbApp.test3();
-		//		dbApp.test1(dbApp);
-		//		dbApp.test2(dbApp);
-		//		Table table = dbApp.getTable("table");
-		//		System.out.println(table.pageNames);
-		//		for(int i = 0;i<table.pageNames.size();i++)
-		//		{
-		//			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
-		//			System.out.println(page.tuples);
-		//		}
 
 
 
@@ -869,7 +675,7 @@ public class DBApp {
 		htbl.put("age", "java.lang.Integer");
 		htbl.put("gpa", "java.lang.Double");
 		htbl.put("name", "java.lang.String");
-		this.createTable("Vagabond", "id", htbl);
+		createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 
 		this.createIndex("Vagabond", "age", "ageIndex");
@@ -879,12 +685,12 @@ public class DBApp {
 		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
 				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
-		for(int i=0;i<17;i++) {
+		for(int i=0;i<18;i++) {
 			int age = possibleAge[random.nextInt(possibleAge.length)];
 			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 			String name = possibleName[random.nextInt(possibleName.length)];
 			colData.put("id", new Integer(id++));
-			colData.put("age", new Integer(18));
+			colData.put("age", new Integer(age));
 			colData.put("gpa", new Double(gpa));
 			colData.put("name", new String(name));
 			this.insertIntoTable( "Vagabond" , colData );

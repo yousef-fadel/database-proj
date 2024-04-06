@@ -239,7 +239,7 @@ public class Table implements java.io.Serializable{
 			middlePage = (leftPage + rightPage)/2;
 			Page currPage = (Page) DBApp.deserializeData(this.filepath  + this.pageNames.get(middlePage));
 			Tuple currTuple = currPage.tuples.get(0); 
- 			Datatype currTuplePrim=new Datatype(currTuple.Primary_key);
+			Datatype currTuplePrim=new Datatype(currTuple.Primary_key);
 
 			if(clusteringvalue.compareTo(currTuplePrim)<0)
 				rightPage = middlePage;
@@ -251,7 +251,7 @@ public class Table implements java.io.Serializable{
 
 		Page page1 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(leftPage)));
 		Page page2 = (Page) DBApp.deserializeData(this.filepath + (this.pageNames.get(rightPage)));
-		
+
 		Datatype clusteringvalue =new Datatype(clusteringKeyValue);
 		Datatype lastElement=new Datatype(page1.tuples.lastElement().Primary_key);
 		if(clusteringvalue.compareTo(lastElement) <= 0)
@@ -302,29 +302,29 @@ public class Table implements java.io.Serializable{
 
 
 	// ----------------------------- DELETE --------------
-	
+
 	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, IOException
 	{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
-		 while(colNameValueIterator.hasNext())
-		 {
-			 Map.Entry<String,Object> deletionCondition = colNameValueIterator.next();
-			 ArrayList<String> deletionConditionResult;
-			 Index colIndex = getIndexWithColName(deletionCondition.getKey()); 
-			 if(colIndex==null)
-				 deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
-			 else
-				 deletionConditionResult = findTuplesSatsifyingDeletionIndex(deletionCondition,colIndex);
-			 if(resultSoFar.isEmpty())
-				 resultSoFar = deletionConditionResult;
-			 else
-				 resultSoFar =intersect(resultSoFar,deletionConditionResult); 
-		 }
-		 
-		 deleteTuples(resultSoFar);
+		while(colNameValueIterator.hasNext())
+		{
+			Map.Entry<String,Object> deletionCondition = colNameValueIterator.next();
+			ArrayList<String> deletionConditionResult;
+			Index colIndex = getIndexWithColName(deletionCondition.getKey()); 
+			if(colIndex==null)
+				deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
+			else
+				deletionConditionResult = findTuplesSatsifyingDeletionIndex(deletionCondition,colIndex);
+			if(resultSoFar.isEmpty())
+				resultSoFar = deletionConditionResult;
+			else
+				resultSoFar =intersect(resultSoFar,deletionConditionResult); 
+		}
+
+		deleteTuples(resultSoFar);
 	}
-	
+
 	private ArrayList<String> findTuplesSatsifyingDeletion(Map.Entry<String, Object> deletionCondition) throws ClassNotFoundException
 	{
 		ArrayList<String> result = new ArrayList<String>();
@@ -366,9 +366,9 @@ public class Table implements java.io.Serializable{
 			if(secondList.contains(currentPosition))
 				result.add(currentPosition);
 		return result;
-		
+
 	}
-	
+
 	private void deleteTuples(ArrayList<String> deletionTuples) throws ClassNotFoundException
 	{
 		for(int i = deletionTuples.size()-1 ;i>=0;i--)
@@ -390,15 +390,240 @@ public class Table implements java.io.Serializable{
 			}
 			else
 				currPage = currPage.serializeAndDeletePage();
-			
-			
+
+
 		}
 	}
-	
+
+	//-------------------------------------SELECT-------------------------------------------------------
+	public Iterator selectTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws ClassNotFoundException, DBAppException, IOException 
+	{
+		DBApp dbapp=new DBApp();
+		ArrayList<String> strops = new ArrayList<String>();
+		for(int i=0;i<strarrOperators.length;i++) 
+			strops.add(strarrOperators[i]);
+
+		for(int i=0;i<strarrOperators.length;i++) 
+		{
+			String strop=strarrOperators[i];
+			if(!(strop.equals("AND")||strop.equals("OR")||strop.equals("XOR")))
+				throw new DBAppException("Invalid operator (AND,OR,XOR)");
+		}
+		ArrayList<ArrayList<Tuple>> results=new ArrayList<ArrayList<Tuple>>();
+		for(int i=0;i<arrSQLTerms.length;i++) 
+		{
+			String table_Name=arrSQLTerms[i]._strTableName;
+			String col_Name=arrSQLTerms[i]._strColumnName;
+			String operator=arrSQLTerms[i]._strOperator;
+			Object obj=arrSQLTerms[i]._objValue;
+
+			Table kamal = dbapp.getTable(table_Name);
+			if (kamal == null)
+				throw new DBAppException("Table does not exist");
+
+			List<List<String>> tableInfo = dbapp.getColumnData(table_Name);//Gets data from csv file of table
+			ArrayList<String> colTableNames = dbapp.getColumnNames(tableInfo);
+			for(int j = 0;i<colTableNames.size();j++)
+			{
+				if(colTableNames.contains(col_Name))
+					break;
+				if(j==colTableNames.size()-1)
+					throw new DBAppException("Column name not found");
+			}
+			//>, >=, <, <=, != or = 
+			if(!(operator==">" || operator==">=" || operator=="<" || operator=="<=" || operator=="!=" || operator=="="))
+				throw new DBAppException("Invalid operator");
+			String obj_class=obj.getClass().getName();
+			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
+				throw new DBAppException("Invalid datatype");
+			boolean flag=true;
+			for(int k=0;k<tableInfo.size();k++) {
+				if(tableInfo.get(k).get(0).equals(table_Name) && tableInfo.get(k).get(1).equals(col_Name) && tableInfo.get(k).get(5).equals("B+tree")) { 
+					selectWithIndex(kamal,col_Name,operator,obj,results);
+					flag=false;
+				}
+					
+
+			}
+			if(flag==true)
+				selectWithNoIndex(kamal,col_Name,operator,obj,results);
+
+			//EXCEPTIONS-----------------------------------------------------------------------------------------
+		}
+		while(!strops.isEmpty()) {
+			int indexAND=strops.indexOf("AND");
+			int indexOR=strops.indexOf("OR");
+			int indexXOR=strops.indexOf("XOR");
+
+			if(indexAND!=-1) {
+				ArrayList<Tuple> andResult = intersectArray(results.get(indexAND),results.get(indexAND+1));
+				results.remove(indexAND);
+				results.add(indexAND,andResult);
+				results.remove(indexAND+1);
+				strops.remove(indexAND);
+			}else if(indexOR!=-1) {
+				ArrayList<Tuple> orResult = union(results.get(indexOR),results.get(indexOR+1));
+				results.remove(indexOR);
+				results.add(indexOR,orResult);
+				results.remove(indexOR+1);
+				strops.remove(indexOR);
+			}else if (indexXOR!=-1){
+				ArrayList<Tuple> xorResult = XOR(results.get(indexXOR),results.get(indexXOR+1));
+				results.remove(indexXOR);
+				results.add(indexXOR,xorResult);
+				results.remove(indexXOR+1);
+				strops.remove(indexXOR);
+			}
+
+
+		}
+		ArrayList<Tuple> final_result=new ArrayList<Tuple>();
+		for(int i=0;i<results.size();i++) {
+			final_result.addAll(results.get(i));
+		}
+		//Remaining array list in first element after doing all operations 
+		return final_result.iterator();
+	}
+
+
+
+
+
+
+
 	// ----------------------------- HELPER ------------
+
+	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException 
+	{
+		ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
+
+		for(String pageName:kamal.pageNames)
+		{
+			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+			for(int j = 0 ; j<page.tuples.size();j++) 
+			{
+				Tuple tupleSearch=page.tuples.get(j);
+				Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+				if(t!=null)
+					conditionSatisfied.add(t);
+			}
+
+		}
+		if(!conditionSatisfied.isEmpty())
+			results.add(conditionSatisfied);
+
+
+	}
+	
+
+	public void selectWithIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException, IOException 
+	{
+		ArrayList<Tuple> conditionIndex = new ArrayList<Tuple>();
+		Index colIndex = getIndexWithColName(col_Name);
+		Datatype obj2=new Datatype(obj);
+		Vector<String> searchPages=colIndex.searchIndex(obj2);
+		
+	
+		
+		for(String pageName:searchPages) {
+			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+			for(int j = 0 ; j<page.tuples.size();j++) 
+			{
+				Tuple tupleSearch=page.tuples.get(j);
+				Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+				if(t!=null)
+					conditionIndex.add(t);
+			}
+			
+		}
+		if(!conditionIndex.isEmpty())
+			results.add(conditionIndex);
+
+
+	}
+
+	
+	public Tuple makeConditionList(Tuple tupleSearch,String col_Name,String operator,Object obj)
+	{
+		Tuple temp = null;
+
+		Datatype tableValue2=new Datatype(tupleSearch.entry.get(col_Name));
+		Datatype obj2=new Datatype(obj);
+
+		switch(operator) 
+		{
+		case "=":
+			if(tableValue2.compareTo(obj2)==0){
+				return (tupleSearch);
+			}break;
+		case "!=":
+			if(tableValue2.compareTo(obj2)!=0){
+				return (tupleSearch);
+			}break;
+		case "<":
+			if(tableValue2.compareTo(obj2)<0){
+				return (tupleSearch);
+			}break;
+		case "<=":
+			if(tableValue2.compareTo(obj2)<=0){
+				return(tupleSearch);
+			}break;
+		case ">":
+			if(tableValue2.compareTo(obj2)>0){
+				return(tupleSearch);
+			}break;
+		case ">=":
+			if(tableValue2.compareTo(obj2)>=0){
+				return(tupleSearch);
+			}break;
+		default:System.out.println("Cannot find approprtaite operator");break;
+		}
+
+
+		return temp;
+	}
+
+	private ArrayList<Tuple> intersectArray(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		for(Tuple currentPosition:firstList)
+			if(secondList.contains(currentPosition))
+				result.add(currentPosition);
+		return result;
+
+
+	}
+	private ArrayList<Tuple> union(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		result.addAll(firstList);  
+
+		for(int i = 0;i<secondList.size();i++)
+			if(!result.contains(secondList.get(i)))
+				result.add(secondList.get(i));
+
+
+		return result;
+	}
+	private ArrayList<Tuple> XOR(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+	{
+		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		for (Tuple element : firstList) {
+			if (!secondList.contains(element)) {
+				result.add(element);
+			}
+		}
+		for (Tuple element : secondList) {
+			if (!firstList.contains(element)) {
+				result.add(element);
+			}
+		}
+		return result;
+
+	}
 	private Index getIndexWithIndexName(String indexName) throws ClassNotFoundException
 	{
-		
+
 		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
 	}
 
@@ -409,7 +634,7 @@ public class Table implements java.io.Serializable{
 		{
 			if(tableInfo.get(i).get(1).equals(colName) && !tableInfo.get(i).get(4).equals("null"))
 				return (Index) DBApp.deserializeData(this.filepath + "indices/" + tableInfo.get(i).get(4));
-				
+
 		}
 		return null;
 	}
