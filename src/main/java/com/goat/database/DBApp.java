@@ -38,8 +38,8 @@ public class DBApp {
 		init();
 		if(tables==null)
 			System.out.println("Was not able to intialize the tables for some reason; pray");
-		
-			
+
+
 	}
 
 	// this does whatever initialization you would like
@@ -215,42 +215,45 @@ public class DBApp {
 			throw new DBAppException("Table does not exist");
 		Map.Entry<String,Object> updateValueEntry = null;
 		for (Object o: htblColNameValue.entrySet()) 
+		{ 
 			updateValueEntry = (Map.Entry) o;
-
-		String columnName = (String) updateValueEntry.getKey();
-		Object datatype = updateValueEntry.getValue();
-		String indexName = "null";
-		List<List<String>> tableInfo = getColumnData(omar.name);
-		// check if column name is in table and datatype is correct
-		for(int i = 0;i<tableInfo.size();i++)
-		{
-			if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
+			String columnName = (String) updateValueEntry.getKey();
+			Object datatype = updateValueEntry.getValue();
+			String indexName = "null";
+			List<List<String>> tableInfo = getColumnData(omar.name);
+			// check if column name is in table and datatype is correct
+			for(int i = 0;i<tableInfo.size();i++)
 			{
-				if(!tableInfo.get(i).get(4).equals("null"))
-					indexName  = tableInfo.get(i).get(4);
-				break;
-			}
-			if(i==tableInfo.size()-1)
-				throw new DBAppException("Updated column was not found");
-		}
-
-		Object clusteringKeyValue = null;
-		for(int i = 0 ;i<tableInfo.size();i++)
-			if(tableInfo.get(i).get(3).equals("True"))
-			{
-				try {
-					String strColType = tableInfo.get(i).get(2);
-					Class<?> clazz = Class.forName(strColType);
-					Constructor<?> constructor = clazz.getConstructor(String.class);
-					clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
+				if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
+				{
+					if(!tableInfo.get(i).get(4).equals("null"))
+						indexName  = tableInfo.get(i).get(4);
 					break;
-				} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-						IllegalAccessException | InvocationTargetException e) {
-					e.printStackTrace();
 				}
+				if(i==tableInfo.size()-1)
+					throw new DBAppException("Updated column was not found");
 			}
 
-		omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
+			Object clusteringKeyValue = null;
+			for(int i = 0 ;i<tableInfo.size();i++)
+				if(tableInfo.get(i).get(3).equals("True"))
+				{
+					try {
+						String strColType = tableInfo.get(i).get(2);
+						Class<?> clazz = Class.forName(strColType);
+						Constructor<?> constructor = clazz.getConstructor(String.class);
+						clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
+						break;
+					} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
+							IllegalAccessException | InvocationTargetException e) {
+						e.printStackTrace();
+					}
+				}
+
+			omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
+		}	
+
+
 
 	}
 
@@ -269,13 +272,13 @@ public class DBApp {
 	{
 		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
 		Table basyo = getTable(table_Name);
-		
+
 		return (basyo.selectTable(arrSQLTerms,strarrOperators));
 	}
 	// ------------------------------------------CHECK-----------------------------------------------------
 
 	// ------------------------------------------HELPER--------------------------------------------------------
-	
+
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
 		for (int i = 0; i < tableInfo.size(); i++)
@@ -432,62 +435,67 @@ public class DBApp {
 	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();
-//		dbApp.format();
-//		dbApp.test5();
-//		dbApp.createIndex("Vagabond", "age", "age");
-		
-//		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-//		htbl.put("age", new Integer(18));
-//		dbApp.deleteFromTable("Vagabond", htbl);
+		//		dbApp.format();
+		//		dbApp.test5();
+		//		dbApp.createIndex("Vagabond", "age", "age");
 
-//		dbApp.saveVagabond();
-//		dbApp.format();
-//		dbApp.insertx();
-//		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
-//		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
-//		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
-//		System.out.println(result.searchGreaterThan(new Datatype(""), false));
-//		
-//		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-//		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-//		for(String pageName : banadyTable.pageNames)
-//		{
-//			System.out.println(deserializeData(banadyTable.filepath + pageName));
-//		}
-//		for(String pageName : resultTable.pageNames)
-//		{
-//			System.out.println(deserializeData(resultTable.filepath + pageName));
-//		}
-		
+		//		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
+		//		htbl.put("age", new Integer(18));
+		//		dbApp.deleteFromTable("Vagabond", htbl);
+
+		//		dbApp.format();
+		//		dbApp.insertx();
+		//		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
+		//		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
+		//		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
+		//		System.out.println(result.searchGreaterThan(new Datatype(""), false));
+		//		
+		//		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+		//		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
+		//		for(String pageName : banadyTable.pageNames)
+		//		{
+		//			System.out.println(deserializeData(banadyTable.filepath + pageName));
+		//		}
+		//		for(String pageName : resultTable.pageNames)
+		//		{
+		//			System.out.println(deserializeData(resultTable.filepath + pageName));
+		//		}
+
 
 		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
+		htbl.put("name", new String("Nourhan" ) );
+		htbl.put("gpa", new Double( 0.7 ) ); 
+		dbApp.updateTable("Vagabond", "1", htbl);
 		dbApp.saveVagabond();
-		SQLTerm[] arrSQLTerms;
-		arrSQLTerms = new SQLTerm[2];
-		arrSQLTerms[0]=new SQLTerm();
-		arrSQLTerms[0]._strTableName = "Vagabond";
-		arrSQLTerms[0]._strColumnName= "name";
-		arrSQLTerms[0]._strOperator = "=";
-		arrSQLTerms[0]._objValue = "5ayen";
-		arrSQLTerms[1]=new SQLTerm();
-		arrSQLTerms[1]._strTableName = "Vagabond";
-		arrSQLTerms[1]._strColumnName= "age";
-		arrSQLTerms[1]._strOperator = "=";
-		arrSQLTerms[1]._objValue = new Integer(24);
-		String[]strarrOperators = new String[1];
-		strarrOperators[0] = "OR"; 
-		try {
-			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-			while(resultSet.hasNext())
-			{
-				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
-				System.out.println(resultSet.next());
-			}
 
-		} catch (ClassNotFoundException | DBAppException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+//		dbApp.saveVagabond();
+//		SQLTerm[] arrSQLTerms;
+//		arrSQLTerms = new SQLTerm[2];
+//		arrSQLTerms[0]=new SQLTerm();
+//		arrSQLTerms[0]._strTableName = "Vagabond";
+//		arrSQLTerms[0]._strColumnName= "name";
+//		arrSQLTerms[0]._strOperator = "=";
+//		arrSQLTerms[0]._objValue = "5ayen";
+//		arrSQLTerms[1]=new SQLTerm();
+//		arrSQLTerms[1]._strTableName = "Vagabond";
+//		arrSQLTerms[1]._strColumnName= "age";
+//		arrSQLTerms[1]._strOperator = "=";
+//		arrSQLTerms[1]._objValue = new Integer(24);
+//		String[]strarrOperators = new String[1];
+//		strarrOperators[0] = "OR"; 
+//		try {
+//			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+//			while(resultSet.hasNext())
+//			{
+//				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
+//				System.out.println(resultSet.next());
+//			}
+//
+//		} catch (ClassNotFoundException | DBAppException | IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 
 
@@ -724,7 +732,7 @@ public class DBApp {
 		}
 		out.close();
 	}
-	
+
 	private void insertx() throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp database = new DBApp();
@@ -734,86 +742,86 @@ public class DBApp {
 		htbl.put("age", "java.lang.Integer");
 		htbl.put("name", "java.lang.String");
 		htbl.put("gpa", "java.lang.Double");
-		
+
 		database.createTable("banadyMethod", "id", htbl);
 		database.createTable("result", "id", htbl);
-		
+
 		database.createIndex("banadyMethod", "name", "esm");
 		database.createIndex("result", "name", "esm");
-		
+
 		String x = 
-				  " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into banadyMethod\r\n"
-				+ " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into result\r\n"
-				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into banadyMethod\r\n"
-				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into result\r\n"
-				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into banadyMethod\r\n"
-				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into result\r\n"
-				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into banadyMethod\r\n"
-				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into result\r\n"
-				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into banadyMethod\r\n"
-				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into result\r\n"
-				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into banadyMethod\r\n"
-				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into result\r\n"
-				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into banadyMethod\r\n"
-				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into result\r\n"
-				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into banadyMethod\r\n"
-				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into result\r\n"
-				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into banadyMethod\r\n"
-				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into result\r\n"
-				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into banadyMethod\r\n"
-				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into result\r\n"
-				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into banadyMethod\r\n"
-				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into result\r\n"
-				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into banadyMethod\r\n"
-				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into result\r\n"
-				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into banadyMethod\r\n"
-				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into result\r\n"
-				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into banadyMethod\r\n"
-				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into result\r\n"
-				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into banadyMethod\r\n"
-				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into result\r\n"
-				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into banadyMethod\r\n"
-				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into result\r\n"
-				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into banadyMethod\r\n"
-				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into result\r\n"
-				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into banadyMethod\r\n"
-				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into result\r\n"
-				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into banadyMethod\r\n"
-				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into result\r\n"
-				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into banadyMethod\r\n"
-				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into result\r\n"
-				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into banadyMethod\r\n"
-				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into result\r\n"
-				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into banadyMethod\r\n"
-				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into result\r\n"
-				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into banadyMethod\r\n"
-				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into result\r\n"
-				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into banadyMethod\r\n"
-				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into result\r\n"
-				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into banadyMethod\r\n"
-				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into result\r\n"
-				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into banadyMethod\r\n"
-				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into result\r\n"
-				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into banadyMethod\r\n"
-				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into result\r\n"
-				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into banadyMethod\r\n"
-				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into result\r\n"
-				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into banadyMethod\r\n"
-				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into result\r\n"
-				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into banadyMethod\r\n"
-				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into result\r\n"
-				+ " {gpa=6.935, age=2112, name=Aya, id=2400} into banadyMethod\r\n"
-				+ " {gpa=8.153, age=3475, name=Aya, id=2977} into banadyMethod\r\n"
-				+ " {gpa=6.202, age=4834, name=Aya, id=156} into banadyMethod\r\n"
-				+ " {gpa=7.978, age=4925, name=Aya, id=962} into banadyMethod\r\n"
-				+ " {gpa=6.622, age=2304, name=Aya, id=480} into banadyMethod\r\n"
-				+ " {gpa=5.225, age=965, name=Aya, id=3699} into banadyMethod\r\n"
-				+ " {gpa=6.94, age=3373, name=Aya, id=1622} into banadyMethod\r\n"
-				+ " {gpa=7.024, age=2557, name=Aya, id=1466} into banadyMethod\r\n"
-				+ " {gpa=5.839, age=2226, name=Aya, id=4843} into banadyMethod\r\n";
-		
-    			
-  	String lines[] = x.split("\\r?\\n");
+				" {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into banadyMethod\r\n"
+						+ " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into result\r\n"
+						+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into banadyMethod\r\n"
+						+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into result\r\n"
+						+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into banadyMethod\r\n"
+						+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into result\r\n"
+						+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into banadyMethod\r\n"
+						+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into result\r\n"
+						+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into banadyMethod\r\n"
+						+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into result\r\n"
+						+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into banadyMethod\r\n"
+						+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into result\r\n"
+						+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into banadyMethod\r\n"
+						+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into result\r\n"
+						+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into banadyMethod\r\n"
+						+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into result\r\n"
+						+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into banadyMethod\r\n"
+						+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into result\r\n"
+						+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into banadyMethod\r\n"
+						+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into result\r\n"
+						+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into banadyMethod\r\n"
+						+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into result\r\n"
+						+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into banadyMethod\r\n"
+						+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into result\r\n"
+						+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into banadyMethod\r\n"
+						+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into result\r\n"
+						+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into banadyMethod\r\n"
+						+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into result\r\n"
+						+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into banadyMethod\r\n"
+						+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into result\r\n"
+						+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into banadyMethod\r\n"
+						+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into result\r\n"
+						+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into banadyMethod\r\n"
+						+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into result\r\n"
+						+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into banadyMethod\r\n"
+						+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into result\r\n"
+						+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into banadyMethod\r\n"
+						+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into result\r\n"
+						+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into banadyMethod\r\n"
+						+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into result\r\n"
+						+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into banadyMethod\r\n"
+						+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into result\r\n"
+						+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into banadyMethod\r\n"
+						+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into result\r\n"
+						+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into banadyMethod\r\n"
+						+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into result\r\n"
+						+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into banadyMethod\r\n"
+						+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into result\r\n"
+						+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into banadyMethod\r\n"
+						+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into result\r\n"
+						+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into banadyMethod\r\n"
+						+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into result\r\n"
+						+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into banadyMethod\r\n"
+						+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into result\r\n"
+						+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into banadyMethod\r\n"
+						+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into result\r\n"
+						+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into banadyMethod\r\n"
+						+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into result\r\n"
+						+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into banadyMethod\r\n"
+						+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into result\r\n"
+						+ " {gpa=6.935, age=2112, name=Aya, id=2400} into banadyMethod\r\n"
+						+ " {gpa=8.153, age=3475, name=Aya, id=2977} into banadyMethod\r\n"
+						+ " {gpa=6.202, age=4834, name=Aya, id=156} into banadyMethod\r\n"
+						+ " {gpa=7.978, age=4925, name=Aya, id=962} into banadyMethod\r\n"
+						+ " {gpa=6.622, age=2304, name=Aya, id=480} into banadyMethod\r\n"
+						+ " {gpa=5.225, age=965, name=Aya, id=3699} into banadyMethod\r\n"
+						+ " {gpa=6.94, age=3373, name=Aya, id=1622} into banadyMethod\r\n"
+						+ " {gpa=7.024, age=2557, name=Aya, id=1466} into banadyMethod\r\n"
+						+ " {gpa=5.839, age=2226, name=Aya, id=4843} into banadyMethod\r\n";
+
+
+		String lines[] = x.split("\\r?\\n");
 		for(String s : lines)
 		{
 			String attributes[] = s.split(",");
@@ -826,7 +834,7 @@ public class DBApp {
 			{
 				String abc = attributes[i];
 				abc = abc.trim();
-				
+
 				if(i==0)
 					gpa = Double.parseDouble(abc.substring(5));
 				if(i==1)
@@ -838,9 +846,9 @@ public class DBApp {
 					int pain = abc.indexOf("}");
 					id = Integer.parseInt(abc.substring(3, pain));
 				}
-				
-				
-				
+
+
+
 			}
 			Hashtable<String,Object> htblObj = new Hashtable<String, Object>();
 			if(attributes[3].contains("banadyMethod"))
@@ -849,7 +857,7 @@ public class DBApp {
 				htblObj.put("name", name);
 				htblObj.put("id", id);
 				htblObj.put("age", age);
-				
+
 				database.insertIntoTable("banadyMethod", htblObj);
 			}
 			else
@@ -858,7 +866,7 @@ public class DBApp {
 				htblObj.put("name", name);
 				htblObj.put("id", id);
 				htblObj.put("age", age);
-				
+
 				database.insertIntoTable("result", htblObj);
 			}
 		}

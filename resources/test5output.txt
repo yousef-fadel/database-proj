@@ -1,5 +1,5 @@
 Vagabond0
-Tuple 0: {id=1, age=21, gpa=1.2, name=Rana}
+Tuple 0: {id=1, age=21, gpa=0.7, name=Nourhan}
 Tuple 1: {id=2, age=19, gpa=4.0, name=Yousef}
 Tuple 2: {id=3, age=22, gpa=2.0, name=Maryam}
 Vagabond1

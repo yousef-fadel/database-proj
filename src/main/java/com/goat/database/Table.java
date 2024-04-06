@@ -485,14 +485,6 @@ public class Table implements java.io.Serializable{
 		return final_result.iterator();
 	}
 
-
-
-
-
-
-
-	// ----------------------------- HELPER ------------
-
 	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException 
 	{
 		ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
@@ -606,6 +598,7 @@ public class Table implements java.io.Serializable{
 		return result;
 	}
 	private ArrayList<Tuple> XOR(ArrayList<Tuple> firstList, ArrayList<Tuple> secondList)
+
 	{
 		ArrayList<Tuple> result = new ArrayList<Tuple>();
 		for (Tuple element : firstList) {
@@ -619,7 +612,7 @@ public class Table implements java.io.Serializable{
 			}
 		}
 		return result;
-
+		// ----------------------------- HELPER ------------
 	}
 	private Index getIndexWithIndexName(String indexName) throws ClassNotFoundException
 	{
