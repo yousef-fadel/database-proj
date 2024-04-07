@@ -325,7 +325,7 @@ public class Table implements java.io.Serializable{
 		}
 		System.out.println("Did not find clustering key, aborting update");
 	}
-
+ 
 
 	// ----------------------------- DELETE --------------
 
