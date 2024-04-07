@@ -41,6 +41,52 @@ public class BTree<TKey extends Comparable<TKey>, TValue> implements Serializabl
 		return (index == -1) ? null : leaf.getValue(index);
 	}
 	
+	//Code abdo---------------------------------------------------------------------------
+	public int getPageNumberForInsert(TKey primaryKey){
+		BTreeLeafNode<TKey, TValue> currentNode = getLeafNodeBeforeKey(primaryKey);
+		int pageNumber = 0;
+		if(currentNode != null && currentNode.getRightSibling() == null && currentNode.getKey(currentNode.getKeyCount()-1).compareTo(primaryKey)<0){
+			return Integer.parseInt(((String)currentNode.getValue(currentNode.getKeyCount()-1)).split("-")[0]);
+		}
+		while (currentNode!=null){
+			for (int i = 0; i < currentNode.getKeyCount(); i++) {
+				if(currentNode.getKey(i).compareTo(primaryKey) < 0){
+					pageNumber = Integer.parseInt(((String)currentNode.getValue(i)).split("-")[0]);
+				} else if(currentNode.getKey(i).compareTo(primaryKey) == 0){
+					return -1;
+				}else {
+					return pageNumber;
+				}
+			}
+			currentNode = (BTreeLeafNode<TKey, TValue>) currentNode.getRightSibling();
+		}
+		return 1;
+	}
+
+	private BTreeLeafNode<TKey, TValue> getLeafNodeBeforeKey(TKey key) {
+		BTreeNode<TKey> currentNode = this.root;
+		BTreeLeafNode<TKey, TValue> prevLeafNode = null;
+
+		while (currentNode instanceof BTreeInnerNode<?>) {
+			BTreeInnerNode<TKey> innerNode = (BTreeInnerNode<TKey>) currentNode;
+			int childIndex=0;
+//			int childIndex = innerNode.getChildIndex(key);
+			if (childIndex == -1) {
+				// Key is smaller than all children, follow the leftmost child
+				currentNode = innerNode.getChild(0);
+			} else {
+				// Key is greater than or equal to the child at the specified index
+				currentNode = innerNode.getChild(childIndex+1);
+				if (!(currentNode instanceof BTreeInnerNode)) {
+					prevLeafNode = (BTreeLeafNode<TKey, TValue>) currentNode;
+				}
+			}
+		}
+		return prevLeafNode;
+	}
+	
+	//Code abdo---------------------------------------------------------------------------
+
 	public ArrayList<TValue> searchGreaterThan(TKey start,boolean inclusive)
 	{
 		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(start);

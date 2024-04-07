@@ -171,11 +171,16 @@ public class DBApp {
 			if(!colTableNames.contains(colName))
 				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
 		}
-
+		String indexName="null";
 		// check if all datatypes are correct
 		for (int i = 0; i < tableInfo.size(); i++) {
-			String colType = (tableInfo.get(i).get(2));
+			String colType = tableInfo.get(i).get(2);
 			String colName = tableInfo.get(i).get(1);
+			String tableName=tableInfo.get(i).get(0);
+			String isPrime=tableInfo.get(i).get(3);
+			
+			if(tableName.equals(strTableName) && isPrime.equals("True"))
+				indexName=tableInfo.get(i).get(4);
 			if (colType.equals("java.lang.String")) {
 				if (!(htblColNameValue.get(colName) instanceof String))
 					throw new DBAppException("A column was inserted with the wrong datatype");
@@ -196,7 +201,10 @@ public class DBApp {
 		if(primaryKeyColName == null)
 			throw new DBAppException("An error occured while looking for primary key; please try again");
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
-		omar.insertTupleIntoTable(tuple);
+		
+		
+		
+		omar.insertTupleIntoTable(tuple,indexName);
 		omar = omar.serializeAndDeleteTable();
 
 		System.out.println(" " + tuple.toString() + " into " + strTableName);
@@ -224,15 +232,16 @@ public class DBApp {
 			// check if column name is in table and datatype is correct
 			for(int i = 0;i<tableInfo.size();i++)
 			{
-				if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
+				if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(3).equals("True") && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
 				{
 					if(!tableInfo.get(i).get(4).equals("null"))
 						indexName  = tableInfo.get(i).get(4);
 					break;
 				}
-				if(i==tableInfo.size()-1)
-					throw new DBAppException("Updated column was not found");
 			}
+			//check colomn changing is not primary key
+			if(columnName.equals(getPrimaryKeyName(tableInfo)))
+				throw new DBAppException("Cannot change primary key");
 
 			Object clusteringKeyValue = null;
 			for(int i = 0 ;i<tableInfo.size();i++)
@@ -278,6 +287,52 @@ public class DBApp {
 	// ------------------------------------------CHECK-----------------------------------------------------
 
 	// ------------------------------------------HELPER--------------------------------------------------------
+
+	public boolean searchTableNoIndex(Hashtable<String, Object> htblColNameValue,Table omar) throws IOException, ClassNotFoundException {
+		ArrayList<Tuple> tableTuples=new ArrayList<Tuple>();
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		Datatype primvalue=new Datatype(htblColNameValue.get(primaryKeyColName));
+
+		for(String pageName:omar.pageNames) {
+			Page page = (Page) DBApp.deserializeData(omar.filepath + pageName);
+			tableTuples.addAll(page.tuples);	
+		}
+		int left = 0;
+		int right = tableTuples.size() - 1;
+
+		while (left <= right) {
+			int mid = left + (right - left) / 2;
+			Tuple midElement = tableTuples.get(mid);
+			Datatype tupleprimary=new Datatype(midElement.Primary_key);
+			int comparison = tupleprimary.compareTo(primvalue);
+
+			if (comparison == 0) {
+				return true; // Target found
+			} else if (comparison < 0) {
+				left = mid + 1; // Search in the right half
+			} else {
+				right = mid - 1; // Search in the left half
+			}
+		}
+
+		return false;
+
+	}
+
+	public boolean searchTableIndex(Hashtable<String, Object> htblColNameValue,Table omar) throws IOException, ClassNotFoundException 
+	{
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		Datatype primvalue=new Datatype(htblColNameValue.get(primaryKeyColName));
+		Index index=omar.getIndexWithColName(primaryKeyColName);
+		if(index.searchIndex(primvalue)==null)
+			return false;
+		else
+			return true;
+		
+		
+	}
 
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
@@ -432,44 +487,30 @@ public class DBApp {
 	}
 
 
-	public static void main( String[] args ) throws ClassNotFoundException, DBAppException, IOException
+	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();
-		//		dbApp.format();
-		//		dbApp.test5();
-		//		dbApp.createIndex("Vagabond", "age", "age");
-
-		//		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-		//		htbl.put("age", new Integer(18));
-		//		dbApp.deleteFromTable("Vagabond", htbl);
-
-		//		dbApp.format();
-		//		dbApp.insertx();
-		//		Index banady = (Index) deserializeData("tables/banadyMethod/indices/esm.ser");
-		//		Index result = (Index) deserializeData("tables/result/indices/esm.ser");
-		//		System.out.println(banady.searchGreaterThan(new Datatype(""), false));
-		//		System.out.println(result.searchGreaterThan(new Datatype(""), false));
-		//		
-		//		Table banadyTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-		//		Table resultTable = (Table) deserializeData("tables/banadyMethod/info.ser");
-		//		for(String pageName : banadyTable.pageNames)
-		//		{
-		//			System.out.println(deserializeData(banadyTable.filepath + pageName));
-		//		}
-		//		for(String pageName : resultTable.pageNames)
-		//		{
-		//			System.out.println(deserializeData(resultTable.filepath + pageName));
-		//		}
-
-
-		Hashtable<String,Object> htbl = new Hashtable<String,Object>();
-		htbl.put("name", new String("Nourhan" ) );
-		htbl.put("gpa", new Double( 0.7 ) ); 
-		dbApp.updateTable("Vagabond", "1", htbl);
+//		dbApp.format();
+//		dbApp.test5();
+//		dbApp.createIndex("Vagabond", "id", "idIndex");
+		Hashtable<String,Object> colData = new Hashtable<String,Object>();
+		colData.put("id", new Integer(3));
+		colData.put("age", new Integer(24));
+		colData.put("gpa", new Double(0.7));
+		colData.put("name", new String("Hamada"));
+		dbApp.insertIntoTable( "Vagabond" , colData );
+//		dbApp.deleteFromTable( "Vagabond" , colData );
+//		dbApp.updateTable("Vagabond", "18", colData);
 		dbApp.saveVagabond();
-
-
+//
+//		
+//		htbl.put("name", new String("Nourhan" ) );
+//		htbl.put("gpa", new Double( 0.7 ) ); 
+//		dbApp.updateTable("Vagabond", "1", htbl);
 //		dbApp.saveVagabond();
+
+
+//		
 //		SQLTerm[] arrSQLTerms;
 //		arrSQLTerms = new SQLTerm[2];
 //		arrSQLTerms[0]=new SQLTerm();

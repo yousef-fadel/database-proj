@@ -33,7 +33,7 @@ public class Table implements java.io.Serializable{
 	}
 
 
-	public void insertTupleIntoTable(Tuple tuple) throws DBAppException, ClassNotFoundException
+	public void insertTupleIntoTable(Tuple tuple,String indexName) throws DBAppException, ClassNotFoundException
 	{
 		// check if this is the first tuple to be inserted in the table; if it is create a page and insert it
 		if(pageNames.isEmpty())
@@ -49,7 +49,11 @@ public class Table implements java.io.Serializable{
 		}
 		else
 		{
-			Page pageToInsertInto = findPageToInsert(tuple);
+			Page pageToInsertInto;
+			if(indexName.equals("null"))
+				pageToInsertInto=findPageToInsert(tuple);
+			else 
+				pageToInsertInto=findPageToInsertIndex(tuple,indexName,this);
 			insertIntoPage(tuple, pageToInsertInto);
 			this.serializeTable();
 		}
@@ -95,6 +99,16 @@ public class Table implements java.io.Serializable{
 			}
 
 		}
+	}
+	
+	private Page findPageToInsertIndex(Tuple tuple,String indexName,Table kamal) throws ClassNotFoundException, DBAppException{
+//		Index index=kamal.getIndexWithIndexName(indexName);
+//		
+//		String pageName=index.searchIndex(new Datatype(tuple.Primary_key)).get(0);//Primary key never duplicate
+//		String pageName=kamal.pageNames.getLast();
+//		Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);	
+		return findPageToInsert(tuple);
+		
 	}
 	private void insertIntoPage(Tuple tuple, Page page) throws DBAppException, ClassNotFoundException
 	{
@@ -222,7 +236,11 @@ public class Table implements java.io.Serializable{
 	// ------------------------------------------------------------------UPDATE---------------------------------------------------
 	public void updateTuple(Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws ClassNotFoundException, DBAppException, IOException
 	{
-		Page pageToUpdate = findPageToUpdate(clusteringKeyValue);
+		Page pageToUpdate;
+		if(indexName.equals("null"))
+			pageToUpdate = findPageToUpdate(clusteringKeyValue);
+		else
+			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,indexName,this);
 		updateTupleInPage(pageToUpdate,clusteringKeyValue,updateValueEntry,indexName);
 	}
 
@@ -268,6 +286,14 @@ public class Table implements java.io.Serializable{
 
 	}
 
+	
+	
+	private Page findPageToUpdateIndex(Object clusteringKeyValue,String indexName,Table kamal) throws ClassNotFoundException, DBAppException{
+		Index index=kamal.getIndexWithIndexName(indexName);
+		String pageName=index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
+		Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+		return page;
+	}
 	private void updateTupleInPage(Page page,Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws IOException, ClassNotFoundException {
 
 		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
@@ -614,13 +640,13 @@ public class Table implements java.io.Serializable{
 		return result;
 		// ----------------------------- HELPER ------------
 	}
-	private Index getIndexWithIndexName(String indexName) throws ClassNotFoundException
+	public Index getIndexWithIndexName(String indexName) throws ClassNotFoundException
 	{
 
 		return (Index) DBApp.deserializeData(this.filepath + "indices/" + indexName);
 	}
 
-	private Index getIndexWithColName (String colName) throws ClassNotFoundException, IOException
+	public Index getIndexWithColName (String colName) throws ClassNotFoundException, IOException
 	{
 		List<List<String>> tableInfo = DBApp.getColumnData(this.name);
 		for(int i = 0;i<tableInfo.size();i++)
