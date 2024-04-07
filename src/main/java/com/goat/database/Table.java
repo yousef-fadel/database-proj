@@ -295,8 +295,8 @@ public class Table implements java.io.Serializable{
 		Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
 		return page;
 	}
+	
 	private void updateTupleInPage(Page page,Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws IOException, ClassNotFoundException {
-
 		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
 		int left = 0;
 		int right =page.tuples.size()-1;
@@ -307,6 +307,7 @@ public class Table implements java.io.Serializable{
 			Datatype middleTuple = new Datatype(pageTuples.get(middle).Primary_key);
 			if(middleTuple.compareTo(clusteringKeyValueDatatype)==0)
 			{
+				// update index if it exists
 				if(!indexName.equals("null"))
 				{
 					Index indexedCol = getIndexWithIndexName(indexName);
@@ -330,17 +331,22 @@ public class Table implements java.io.Serializable{
 
 	// ----------------------------- DELETE --------------
 
-	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, IOException
+	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, IOException, DBAppException
 	{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		// iterate on deletion conditions and get page name + tuple position and intersect everytime
 		while(colNameValueIterator.hasNext())
 		{
 			Map.Entry<String,Object> deletionCondition = colNameValueIterator.next();
 			ArrayList<String> deletionConditionResult;
 			Index colIndex = getIndexWithColName(deletionCondition.getKey()); 
+			// checks if it has an index to use; if not checks if it the pk so we can binary search
+			// if not, linear search 3ala table 3ady
 			if(colIndex==null)
 				deletionConditionResult = findTuplesSatsifyingDeletion(deletionCondition);
+			else if(isClustering(deletionCondition.getKey())==true)
+				deletionConditionResult = findTuplesSatsifyingDeletionBinarySearch(deletionCondition);
 			else
 				deletionConditionResult = findTuplesSatsifyingDeletionIndex(deletionCondition,colIndex);
 			if(resultSoFar.isEmpty())
@@ -395,7 +401,40 @@ public class Table implements java.io.Serializable{
 		return result;
 
 	}
+	private ArrayList<String> findTuplesSatsifyingDeletionBinarySearch(Map.Entry<String, Object> deletionCondition) throws ClassNotFoundException, DBAppException
+	{
+		// even though only one result will show up, i will put it in arraylist for ease of use
+		ArrayList<String> result = new ArrayList<String>();
+		Page deletePage = findPageToUpdate(deletionCondition.getValue());
+		String tuplePostion = getTuplePositionFromPageUsingClusteringKey(deletionCondition.getValue(), deletePage);
+		if(tuplePostion==null) // if the tuple was not found in the page; return an empty arraylist
+			return result;
+		result.add(deletePage.name + "-" + tuplePostion);
+		return result;
+	}
+	// binary search for tuple position
+	private String getTuplePositionFromPageUsingClusteringKey(Object clusteringKeyValue, Page page)
+	{
+		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
+		int left = 0;
+		int right =page.tuples.size()-1;
+		Vector<Tuple> pageTuples =  page.tuples;
+		while(left<=right)
+		{
+			int middle = (left+right)/2;
+			Datatype middleTuple = new Datatype(pageTuples.get(middle).Primary_key);
+			if(middleTuple.compareTo(clusteringKeyValueDatatype)==0)
+				return middle + "";
+			else if(middleTuple.compareTo(clusteringKeyValueDatatype)>0)
+				right = middle-1;
+			else
+				left = middle+1;
 
+		}
+		return null;
+		
+	}
+	
 	private void deleteTuples(ArrayList<String> deletionTuples) throws ClassNotFoundException
 	{
 		for(int i = deletionTuples.size()-1 ;i>=0;i--)
@@ -659,7 +698,16 @@ public class Table implements java.io.Serializable{
 		return null;
 	}
 
+	private boolean isClustering(String colName) throws IOException
+	{
+		List<List<String>> tableInfo = DBApp.getColumnData(this.name);
+		for(int i =0;i<tableInfo.size();i++)
+			if(tableInfo.get(i).get(1).equals(colName))
+				return true;
+		return false;
 
+	}
+	
 	public void serializeTable()
 	{
 		try {

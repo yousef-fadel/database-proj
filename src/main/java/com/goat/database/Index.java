@@ -93,9 +93,7 @@ public class Index implements Serializable{
 	}
 
 	public static void main(String[]args)
-	{
-		Datatype x = new Datatype(1);
-		Datatype y = new Datatype(-4);
-		System.out.println(x.compareTo(y));
+	{	
+		Vector<String> x = new Vector<String>();
 	}
 }

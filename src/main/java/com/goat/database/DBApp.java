@@ -490,8 +490,11 @@ public class DBApp {
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();
-		dbApp.format();
-		dbApp.test5();
+//		dbApp.format();
+//		dbApp.test5();
+		Hashtable <String,Object> htbl =  new Hashtable<String, Object>();
+		htbl.put("id", new Integer(190));
+		dbApp.deleteFromTable("Vagabond", htbl);
 //		dbApp.createIndex("Vagabond", "id", "idIndex");
 //		Hashtable<String,Object> colData = new Hashtable<String,Object>();
 //		colData.put("id", new Integer(3));
@@ -501,7 +504,7 @@ public class DBApp {
 //		dbApp.insertIntoTable( "Vagabond" , colData );
 //		dbApp.deleteFromTable( "Vagabond" , colData );
 //		dbApp.updateTable("Vagabond", "18", colData);
-//		dbApp.saveVagabond();
+		dbApp.saveVagabond();
 //
 //		
 //		htbl.put("name", new String("Nourhan" ) );
@@ -509,8 +512,6 @@ public class DBApp {
 //		dbApp.updateTable("Vagabond", "1", htbl);
 //		dbApp.saveVagabond();
 
-
-//		
 //		SQLTerm[] arrSQLTerms;
 //		arrSQLTerms = new SQLTerm[2];
 //		arrSQLTerms[0]=new SQLTerm();
