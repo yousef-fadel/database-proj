@@ -53,7 +53,7 @@ public class Table implements java.io.Serializable{
 			if(indexName.equals("null"))
 				pageToInsertInto=findPageToInsert(tuple);
 			else 
-				pageToInsertInto=findPageToInsertIndex(tuple,indexName,this);
+				pageToInsertInto=findPageToInsertIndex(tuple,indexName);
 			insertIntoPage(tuple, pageToInsertInto);
 			this.serializeTable();
 		}
@@ -101,14 +101,15 @@ public class Table implements java.io.Serializable{
 		}
 	}
 	
-	private Page findPageToInsertIndex(Tuple tuple,String indexName,Table kamal) throws ClassNotFoundException, DBAppException{
-//		Index index=kamal.getIndexWithIndexName(indexName);
-//		
-//		String pageName=index.searchIndex(new Datatype(tuple.Primary_key)).get(0);//Primary key never duplicate
-//		String pageName=kamal.pageNames.getLast();
-//		Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);	
-		return findPageToInsert(tuple);
-		
+	private Page findPageToInsertIndex(Tuple tuple,String indexName) throws ClassNotFoundException, DBAppException{
+		Index clusteringIndex = getIndexWithIndexName(indexName);
+		Object clusteringValue = tuple.Primary_key;
+		String lastPage = (this.pageNames.lastElement());
+		ArrayList<Vector<String>> pageNames = clusteringIndex.searchGreaterThan(new Datatype(clusteringValue), true);
+		if (pageNames.isEmpty())
+			return (Page) DBApp.deserializeData(this.filepath + this.pageNames.lastElement() + ".ser");
+		else
+			return (Page) DBApp.deserializeData(this.filepath + pageNames.get(0).get(0));	
 	}
 	private void insertIntoPage(Tuple tuple, Page page) throws DBAppException, ClassNotFoundException
 	{

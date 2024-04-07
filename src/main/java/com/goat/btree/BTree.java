@@ -138,7 +138,7 @@ public class BTree<TKey extends Comparable<TKey>, TValue> implements Serializabl
 		b.insert("mohamed", "page1");
 		b.insert("yousef", "page2");
 		
-		System.out.println(b.searchGreaterThan("", true));
+		System.out.println(b.searchGreaterThan("z", true));
 //		BTreeInnerNode x = (BTreeInnerNode)b.root;
 //		String s = x.printTree();
 //		System.out.println(b.search(5));

@@ -490,18 +490,18 @@ public class DBApp {
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();
-//		dbApp.format();
-//		dbApp.test5();
+		dbApp.format();
+		dbApp.test5();
 //		dbApp.createIndex("Vagabond", "id", "idIndex");
-		Hashtable<String,Object> colData = new Hashtable<String,Object>();
-		colData.put("id", new Integer(3));
-		colData.put("age", new Integer(24));
-		colData.put("gpa", new Double(0.7));
-		colData.put("name", new String("Hamada"));
-		dbApp.insertIntoTable( "Vagabond" , colData );
+//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
+//		colData.put("id", new Integer(3));
+//		colData.put("age", new Integer(24));
+//		colData.put("gpa", new Double(0.7));
+//		colData.put("name", new String("Hamada"));
+//		dbApp.insertIntoTable( "Vagabond" , colData );
 //		dbApp.deleteFromTable( "Vagabond" , colData );
 //		dbApp.updateTable("Vagabond", "18", colData);
-		dbApp.saveVagabond();
+//		dbApp.saveVagabond();
 //
 //		
 //		htbl.put("name", new String("Nourhan" ) );
@@ -557,164 +557,6 @@ public class DBApp {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void test1(DBApp	dbApp) throws ClassNotFoundException, DBAppException, IOException
-	{
-
-		String strTableName = "Student";
-
-
-		Hashtable htblColNameType = new Hashtable( );
-		htblColNameType.put("id", "java.lang.Integer");
-		dbApp.createTable( strTableName, "id", htblColNameType );
-
-		Hashtable htblColNameValue = new Hashtable( );
-		htblColNameValue.put("id", new Integer( 5 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-
-		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 7 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 20 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 8 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-
-
-
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void test2(DBApp	dbApp ) throws ClassNotFoundException, DBAppException, IOException
-	{
-		String strTableName = "Student";
-		Hashtable htblColNameValue = new Hashtable( );
-		htblColNameValue.clear( );
-		htblColNameValue.put("id", new Integer( 25 ));
-		dbApp.insertIntoTable( strTableName , htblColNameValue );
-
-	}
-
-	private void test3() throws ClassNotFoundException, DBAppException, IOException
-	{
-
-		Hashtable<String,String> htbl = new Hashtable<String,String>();
-		htbl.put("id", "java.lang.Integer");
-		this.createTable("table", "id", htbl);
-		Hashtable<String,Object> colData = new Hashtable<String, Object>();
-
-		colData.put("id", new Integer(2));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 20 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 7 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 11 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 15 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 31 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 1 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 25 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 5 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 30 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 17 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 19 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 22 ));
-		this.insertIntoTable( "table" , colData );
-
-		Table table = this.getTable("table");
-		for(int i = 0;i<table.pageNames.size();i++)
-		{
-			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
-			System.out.println(page.tuples);
-		}
-
-	}
-
-	private void test4() throws ClassNotFoundException, DBAppException, IOException
-	{
-		Hashtable<String,String> htbl = new Hashtable<String,String>();
-		htbl.put("id", "java.lang.Integer");
-		htbl.put("age", "java.lang.Integer");		
-		this.createTable("table", "id", htbl);
-		Hashtable<String,Object> colData = new Hashtable<String, Object>();
-
-		colData.put("id", new Integer(2));
-		colData.put("age", 18);
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 20 ));
-		colData.put("age", new Integer( 16 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 7 ));
-		colData.put("age", new Integer( 16 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 11 ));
-		colData.put("age", new Integer( 18 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 15 ));
-		colData.put("age", new Integer( 16 ));
-		this.insertIntoTable( "table" , colData );
-
-		colData = new Hashtable<String, Object>();		
-		colData.put("id", new Integer( 31 ));
-		colData.put("age", new Integer( 11 ));
-		this.insertIntoTable( "table" , colData );
-
-		Table table = this.getTable("table");
-		for(int i = 0;i<table.pageNames.size();i++)
-		{
-			Page page = (Page) deserializeData(table.filepath + table.pageNames.get(i));
-			System.out.println(page);
-		}
-
-	}
-
 	private void test5() throws ClassNotFoundException, DBAppException, IOException
 	{
 		Random random = new Random();
@@ -727,18 +569,19 @@ public class DBApp {
 		createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 
-		this.createIndex("Vagabond", "age", "ageIndex");
-		int id = 1;
+		this.createIndex("Vagabond", "id", "ageIndex");
+		int uniqueID[] = random.ints(0,200).distinct().limit(100).toArray();
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
 		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
 				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
-		for(int i=0;i<18;i++) {
+		for(int i=0;i<50;i++) {
 			int age = possibleAge[random.nextInt(possibleAge.length)];
+			int id = uniqueID[i];
 			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 			String name = possibleName[random.nextInt(possibleName.length)];
-			colData.put("id", new Integer(id++));
+			colData.put("id", new Integer(id));
 			colData.put("age", new Integer(age));
 			colData.put("gpa", new Double(gpa));
 			colData.put("name", new String(name));
