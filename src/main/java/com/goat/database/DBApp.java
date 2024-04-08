@@ -328,6 +328,8 @@ public class DBApp {
 		// get the names of the columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
+		
+		
 
 		// check that all columns in the table have a value in the hashtable
 		for(String currCol:colTableNames)
@@ -370,6 +372,7 @@ public class DBApp {
 		}
 
 		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		
 		if(primaryKeyColName == null)
 			throw new DBAppException("An error occured while looking for primary key; please try again");
 	}
