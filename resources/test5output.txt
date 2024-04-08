@@ -1,93 +1,67 @@
 Vagabond0
-<<<<<<< HEAD
-Tuple 0: {id=1, age=20, gpa=0.7, name=Yousef}
-Tuple 1: {id=3, age=20, gpa=3.2, name=Musashi}
-Tuple 2: {id=8, age=19, gpa=2.0, name=Kojiro}
+Tuple 0: {id=10, age=24, gpa=2.3, name=Maryam}
+Tuple 1: {id=11, age=21, gpa=2.3, name=Maryam}
+Tuple 2: {id=14, age=23, gpa=2.0, name=Jana}
 Vagabond1
-Tuple 0: {id=10, age=18, gpa=2.3, name=01111146949}
-Tuple 1: {id=18, age=22, gpa=1.2, name=01111146949}
-Tuple 2: {id=20, age=24, gpa=1.8, name=01111146949}
+Tuple 0: {id=18, age=22, gpa=2.0, name=Musashi}
+Tuple 1: {id=20, age=20, gpa=2.0, name=Kiryu}
+Tuple 2: {id=24, age=23, gpa=0.7, name=Musashi}
 Vagabond2
-Tuple 0: {id=33, age=24, gpa=2.0, name=5ayen}
-Tuple 1: {id=39, age=22, gpa=1.2, name=Zoma}
-Tuple 2: {id=49, age=20, gpa=3.2, name=Kiryu}
+Tuple 0: {id=26, age=19, gpa=2.0, name=Kojiro}
+Tuple 1: {id=32, age=22, gpa=1.8, name=Yousef}
+Tuple 2: {id=34, age=22, gpa=3.2, name=Rana}
 Vagabond3
-Tuple 0: {id=56, age=19, gpa=1.8, name=Yousef}
-Tuple 1: {id=62, age=24, gpa=4.0, name=Kiryu}
-Tuple 2: {id=66, age=18, gpa=1.8, name=Kiryu}
+Tuple 0: {id=38, age=20, gpa=0.7, name=Farida}
+Tuple 1: {id=39, age=18, gpa=2.3, name=Zoma}
+Tuple 2: {id=41, age=23, gpa=2.0, name=Rana}
 Vagabond4
-Tuple 0: {id=68, age=19, gpa=4.0, name=Maryam}
-Tuple 1: {id=76, age=20, gpa=1.8, name=Musashi}
-Tuple 2: {id=77, age=24, gpa=0.7, name=Rana}
+Tuple 0: {id=45, age=22, gpa=4.0, name=5ayen}
+Tuple 1: {id=47, age=24, gpa=0.7, name=01111146949}
+Tuple 2: {id=50, age=22, gpa=4.0, name=Jana}
 Vagabond5
-Tuple 0: {id=81, age=18, gpa=2.3, name=Maryam}
-Tuple 1: {id=82, age=22, gpa=0.7, name=Kiryu}
-Tuple 2: {id=90, age=19, gpa=3.2, name=Eve}
+Tuple 0: {id=52, age=24, gpa=0.7, name=Yousef}
+Tuple 1: {id=60, age=18, gpa=1.8, name=5ayen}
+Tuple 2: {id=70, age=20, gpa=2.0, name=Jana}
 Vagabond6
-Tuple 0: {id=96, age=18, gpa=2.0, name=Popola}
-Tuple 1: {id=99, age=19, gpa=2.3, name=Rana}
-Tuple 2: {id=101, age=19, gpa=1.2, name=Zoma}
+Tuple 0: {id=71, age=24, gpa=2.3, name=Popola}
+Tuple 1: {id=83, age=22, gpa=1.8, name=Kiryu}
+Tuple 2: {id=90, age=20, gpa=2.0, name=Musashi}
 Vagabond7
-Tuple 0: {id=103, age=21, gpa=2.0, name=01111146949}
-Tuple 1: {id=104, age=22, gpa=1.2, name=Peter}
-Tuple 2: {id=106, age=18, gpa=2.3, name=Eve}
+Tuple 0: {id=92, age=21, gpa=0.7, name=Maryam}
+Tuple 1: {id=97, age=22, gpa=3.2, name=Peter}
+Tuple 2: {id=100, age=18, gpa=3.2, name=Kojiro}
 Vagabond8
-Tuple 0: {id=107, age=24, gpa=2.0, name=Peter}
-Tuple 1: {id=115, age=22, gpa=2.0, name=Emil}
-Tuple 2: {id=117, age=23, gpa=2.0, name=Kojiro}
+Tuple 0: {id=106, age=20, gpa=0.7, name=Rana}
+Tuple 1: {id=107, age=20, gpa=1.2, name=Rana}
+Tuple 2: {id=109, age=22, gpa=1.2, name=Zoma}
 Vagabond9
-Tuple 0: {id=120, age=22, gpa=3.2, name=Emil}
-Tuple 1: {id=123, age=24, gpa=0.7, name=Eve}
-Tuple 2: {id=125, age=19, gpa=2.0, name=Farida}
+Tuple 0: {id=122, age=20, gpa=3.2, name=01111146949}
+Tuple 1: {id=124, age=21, gpa=1.2, name=Maryam}
+Tuple 2: {id=126, age=18, gpa=1.8, name=Maryam}
 Vagabond10
-Tuple 0: {id=126, age=21, gpa=0.7, name=Kiryu}
-Tuple 1: {id=131, age=22, gpa=1.8, name=01111146949}
-Tuple 2: {id=133, age=24, gpa=3.2, name=Eve}
+Tuple 0: {id=127, age=23, gpa=2.0, name=5ayen}
+Tuple 1: {id=128, age=24, gpa=0.7, name=Jana}
+Tuple 2: {id=134, age=19, gpa=1.8, name=Maryam}
 Vagabond11
-Tuple 0: {id=137, age=24, gpa=4.0, name=Peter}
-Tuple 1: {id=139, age=24, gpa=3.2, name=Maryam}
-Tuple 2: {id=142, age=22, gpa=1.2, name=Zoma}
+Tuple 0: {id=136, age=24, gpa=0.7, name=Farida}
+Tuple 1: {id=150, age=24, gpa=1.8, name=Jana}
+Tuple 2: {id=153, age=18, gpa=0.7, name=Rana}
 Vagabond12
-Tuple 0: {id=144, age=18, gpa=2.0, name=5ayen}
-Tuple 1: {id=148, age=23, gpa=4.0, name=Kiryu}
-Tuple 2: {id=160, age=23, gpa=3.2, name=Yousef}
+Tuple 0: {id=157, age=22, gpa=3.2, name=Yousef}
+Tuple 1: {id=161, age=21, gpa=0.7, name=Zoma}
+Tuple 2: {id=162, age=20, gpa=1.2, name=Emil}
 Vagabond13
-Tuple 0: {id=161, age=21, gpa=0.7, name=Farida}
-Tuple 1: {id=164, age=20, gpa=2.0, name=Maryam}
-Tuple 2: {id=167, age=23, gpa=2.0, name=Kiryu}
+Tuple 0: {id=163, age=24, gpa=0.7, name=Eve}
+Tuple 1: {id=164, age=22, gpa=0.7, name=Zoma}
+Tuple 2: {id=172, age=19, gpa=2.3, name=Jana}
 Vagabond14
-Tuple 0: {id=169, age=20, gpa=2.3, name=5ayen}
-Tuple 1: {id=174, age=20, gpa=3.2, name=Maryam}
-Tuple 2: {id=177, age=18, gpa=2.3, name=Yousef}
+Tuple 0: {id=174, age=22, gpa=2.3, name=Zoma}
+Tuple 1: {id=175, age=20, gpa=1.8, name=Eve}
+Tuple 2: {id=181, age=23, gpa=1.2, name=Eve}
 Vagabond15
-Tuple 0: {id=181, age=19, gpa=1.8, name=Emil}
-Tuple 1: {id=182, age=21, gpa=4.0, name=Jana}
-Tuple 2: {id=184, age=20, gpa=4.0, name=Kojiro}
+Tuple 0: {id=182, age=18, gpa=1.8, name=5ayen}
+Tuple 1: {id=189, age=20, gpa=4.0, name=Jana}
+Tuple 2: {id=191, age=21, gpa=1.8, name=Peter}
 Vagabond16
-Tuple 0: {id=186, age=18, gpa=3.2, name=Rana}
-Tuple 1: {id=190, age=19, gpa=1.2, name=Jana}
-=======
-Tuple 0: {id=1, age=22, gpa=1.8, name=Yousef}
-Tuple 1: {id=2, age=24, gpa=0.7, name=Eve}
-Tuple 2: {id=3, age=24, gpa=3.2, name=Zoma}
-Vagabond1
-Tuple 0: {id=4, age=19, gpa=1.2, name=Emil}
-Tuple 1: {id=5, age=19, gpa=1.8, name=Emil}
-Tuple 2: {id=6, age=22, gpa=0.7, name=Jana}
-Vagabond2
-Tuple 0: {id=7, age=20, gpa=1.8, name=01111146949}
-Tuple 1: {id=8, age=20, gpa=1.8, name=Maryam}
-Tuple 2: {id=9, age=23, gpa=1.8, name=Zoma}
-Vagabond3
-Tuple 0: {id=10, age=21, gpa=4.0, name=Eve}
-Tuple 1: {id=11, age=20, gpa=3.2, name=Zoma}
-Tuple 2: {id=12, age=21, gpa=2.3, name=Yousef}
-Vagabond4
-Tuple 0: {id=13, age=22, gpa=0.7, name=Farida}
-Tuple 1: {id=14, age=18, gpa=3.2, name=Eve}
-Tuple 2: {id=15, age=21, gpa=0.7, name=Farida}
-Vagabond5
-Tuple 0: {id=16, age=24, gpa=1.8, name=Emil}
-Tuple 1: {id=17, age=24, gpa=3.2, name=01111146949}
-Tuple 2: {id=18, age=20, gpa=1.2, name=Popola}
->>>>>>> ccb88d9ca8c3ff09114542c1dfda500d3df0b882
+Tuple 0: {id=193, age=19, gpa=2.3, name=Kojiro}
+Tuple 1: {id=197, age=24, gpa=2.0, name=Peter}

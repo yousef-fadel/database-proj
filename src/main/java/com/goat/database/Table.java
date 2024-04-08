@@ -33,7 +33,7 @@ public class Table implements java.io.Serializable{
 	}
 
 
-	public void insertTupleIntoTable(Tuple tuple,String indexName) throws DBAppException, ClassNotFoundException
+	public void insertTupleIntoTable(Tuple tuple, String clusteringKeyColName) throws DBAppException, ClassNotFoundException, IOException
 	{
 		// check if this is the first tuple to be inserted in the table; if it is create a page and insert it
 		if(pageNames.isEmpty())
@@ -49,11 +49,12 @@ public class Table implements java.io.Serializable{
 		}
 		else
 		{
+			Index clusteringIndex = getIndexWithColName(clusteringKeyColName);
 			Page pageToInsertInto;
-			if(indexName.equals("null"))
+			if(clusteringIndex==null)
 				pageToInsertInto=findPageToInsert(tuple);
 			else 
-				pageToInsertInto=findPageToInsertIndex(tuple,indexName);
+				pageToInsertInto=findPageToInsertIndex(tuple,clusteringIndex);
 			insertIntoPage(tuple, pageToInsertInto);
 			this.serializeTable();
 		}
@@ -101,10 +102,8 @@ public class Table implements java.io.Serializable{
 		}
 	}
 	
-	private Page findPageToInsertIndex(Tuple tuple,String indexName) throws ClassNotFoundException, DBAppException{
-		Index clusteringIndex = getIndexWithIndexName(indexName);
+	private Page findPageToInsertIndex(Tuple tuple,Index clusteringIndex) throws ClassNotFoundException, DBAppException{
 		Object clusteringValue = tuple.Primary_key;
-		String lastPage = (this.pageNames.lastElement());
 		ArrayList<Vector<String>> pageNames = clusteringIndex.searchGreaterThan(new Datatype(clusteringValue), true);
 		if (pageNames.isEmpty())
 			return (Page) DBApp.deserializeData(this.filepath + this.pageNames.lastElement() + ".ser");

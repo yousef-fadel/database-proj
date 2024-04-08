@@ -79,8 +79,8 @@ public class DBApp {
 	// type as value
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
-		//TODO use index to insert if it exists; check marking scheme 11
 		checkCreateTable(strTableName,strClusteringKeyColumn,htblColNameType);
+		
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
 		// method also checks if the datatypes are valid and that the clustering key exists in the table
@@ -99,14 +99,12 @@ public class DBApp {
 		System.out.println("Successfully created table " + strTableName);
 	}
 
-	// TODO take fanout from config file
 	// following method creates a B+tree index
 	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException 
 	{
 		checkCreateIndex(strTableName, strColName, strIndexName);
 		
 		Table omar = getTable(strTableName);
-		List<List<String>> tableInfo = getColumnData(omar.name);
 		// update the metadata file and change the column's index type to b+Tree
 		updateMetadataIndex(strTableName,strColName,strIndexName);
 		Index index = new Index(strIndexName, strColName, omar.filepath);
@@ -125,12 +123,13 @@ public class DBApp {
 		checkInsert(strTableName,htblColNameValue);
 		Table omar = getTable(strTableName);
 		
-		// get the names of the columns in the table
+		// get the value of the pk so we can create the object tuple
 		List<List<String>> tableInfo = getColumnData(omar.name);
-		String indexName="null";
 		String primaryKeyColName = getPrimaryKeyName(tableInfo);
 		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
-		omar.insertTupleIntoTable(tuple,indexName);
+		
+		// i pass the column name to check if this column has an index later on
+		omar.insertTupleIntoTable(tuple, primaryKeyColName);
 		omar = omar.serializeAndDeleteTable();
 		System.out.println(" " + tuple.toString() + " into " + strTableName);
 	}
@@ -142,7 +141,7 @@ public class DBApp {
 	public void updateTable(String strTableName, String strClusteringKeyValue,
 			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException, ClassNotFoundException 
 	{
-//		checkUpdate(strTableName,strClusteringKeyValue,htblColNameValue);
+		checkUpdate(strTableName,strClusteringKeyValue,htblColNameValue);
 		Table omar = getTable(strTableName);
 		Map.Entry<String,Object> updateValueEntry = null;
 		for (Object o: htblColNameValue.entrySet()) 
@@ -319,62 +318,9 @@ public class DBApp {
 	}
 
 	public void checkUpdate(String strTableName, String strClusteringKeyValue,
-			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException{
-		Table omar = getTable(strTableName);
-		if (omar == null)
-			throw new DBAppException("Table does not exist");
+			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException
+	{
 
-
-		// get the names of the columns in the table
-		List<List<String>> tableInfo = getColumnData(omar.name);
-		ArrayList<String> colTableNames = getColumnNames(tableInfo);
-		
-		
-
-		// check that all columns in the table have a value in the hashtable
-		for(String currCol:colTableNames)
-			if (htblColNameValue.get(currCol) == null)
-				throw new DBAppException("The hashtable is missing data for one of the columns");
-
-		// check that the columns in the hashtable exist in the table
-		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
-		while(colNameValueIterator.hasNext())
-		{
-			Map.Entry<String,Object> currCol = colNameValueIterator.next();
-			String colName = currCol.getKey();
-			if(!colTableNames.contains(colName))
-				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
-		}
-		String indexName="null";
-		// check if all datatypes are correct
-		for (int i = 0; i < tableInfo.size(); i++) {
-			String colType = tableInfo.get(i).get(2);
-			String colName = tableInfo.get(i).get(1);
-			String tableName=tableInfo.get(i).get(0);
-			String isPrime=tableInfo.get(i).get(3);
-
-			if(tableName.equals(strTableName) && isPrime.equals("True"))
-				indexName=tableInfo.get(i).get(4);
-			if (colType.equals("java.lang.String")) {
-				if (!(htblColNameValue.get(colName) instanceof String))
-					throw new DBAppException("A column was inserted with the wrong datatype");
-			}
-			else if (colType.equals("java.lang.Integer")) {
-				if (!(htblColNameValue.get(colName) instanceof Integer))
-					throw new DBAppException("A column was inserted with the wrong datatype");
-			}
-			else if (colType.equals("java.lang.Double")) {
-				if (!(htblColNameValue.get(colName) instanceof Double))
-					throw new DBAppException("A column was inserted with the wrong datatype");
-			}
-			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
-				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
-		}
-
-		String primaryKeyColName = getPrimaryKeyName(tableInfo);
-		
-		if(primaryKeyColName == null)
-			throw new DBAppException("An error occured while looking for primary key; please try again");
 	}
 	
 	public void checkDelete(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException {
@@ -620,21 +566,22 @@ public class DBApp {
 
 	}
 
-
+	// ----------------------------------------------- MAIN -------------------------------------------------
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
-		DBApp dbApp =new DBApp();		//		dbApp.format();
-		//		dbApp.test5();
+		DBApp dbApp =new DBApp();		
+//		dbApp.format();
+//				dbApp.test5();
 		//		dbApp.createIndex("Vagabond", "id", "idIndex");
-		//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
+				Hashtable<String,Object> colData = new Hashtable<String,Object>();
 		//		colData.put("id", new Integer(3));
-		//		colData.put("age", new Integer(24));
+				colData.put("age", new Integer(24));
 		//		colData.put("gpa", new Double(0.7));
 		//		colData.put("name", new String("Hamada"));
 		//		dbApp.insertIntoTable( "Vagabond" , colData );
 		//		dbApp.deleteFromTable( "Vagabond" , colData );
-		//		dbApp.updateTable("Vagabond", "18", colData);
-		//		dbApp.saveVagabond();
+				dbApp.updateTable("Vagabond", "14", colData);
+//				dbApp.saveVagabond();
 		//
 		//		
 		//		htbl.put("name", new String("Nourhan" ) );
@@ -644,32 +591,32 @@ public class DBApp {
 
 
 		//		
-		SQLTerm[] arrSQLTerms;
-		arrSQLTerms = new SQLTerm[1];
-		arrSQLTerms[0]=new SQLTerm();
-		arrSQLTerms[0]._strTableName = "Vagabond";
-		arrSQLTerms[0]._strColumnName= "age";
-		arrSQLTerms[0]._strOperator = "!=";
-		arrSQLTerms[0]._objValue = new Integer(24);
-		//		arrSQLTerms[1]=new SQLTerm();
-		//		arrSQLTerms[1]._strTableName = "Vagabond";
-		//		arrSQLTerms[1]._strColumnName= "age";
-		//		arrSQLTerms[1]._strOperator = "=";
-		//		arrSQLTerms[1]._objValue = new Integer(24);
-		String[]strarrOperators = new String[0];
-		//		strarrOperators[0] = "OR"; 
-		try {
-			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-			while(resultSet.hasNext())
-			{
-				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
-				System.out.println(resultSet.next());
-			}
-
-		} catch (ClassNotFoundException | DBAppException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		SQLTerm[] arrSQLTerms;
+//		arrSQLTerms = new SQLTerm[1];
+//		arrSQLTerms[0]=new SQLTerm();
+//		arrSQLTerms[0]._strTableName = "Vagabond";
+//		arrSQLTerms[0]._strColumnName= "age";
+//		arrSQLTerms[0]._strOperator = "!=";
+//		arrSQLTerms[0]._objValue = new Integer(24);
+//		//		arrSQLTerms[1]=new SQLTerm();
+//		//		arrSQLTerms[1]._strTableName = "Vagabond";
+//		//		arrSQLTerms[1]._strColumnName= "age";
+//		//		arrSQLTerms[1]._strOperator = "=";
+//		//		arrSQLTerms[1]._objValue = new Integer(24);
+//		String[]strarrOperators = new String[0];
+//		//		strarrOperators[0] = "OR"; 
+//		try {
+//			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+//			while(resultSet.hasNext())
+//			{
+//				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
+//				System.out.println(resultSet.next());
+//			}
+//
+//		} catch (ClassNotFoundException | DBAppException | IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 
 
