@@ -84,7 +84,6 @@ public class DBApp {
 
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
-		// method also checks if the datatypes are valid and that the clustering key exists in the table
 		writeMetadata(strTableName, strClusteringKeyColumn, htblColNameType);
 
 		// create a directory to store pages of this table for later 
@@ -529,7 +528,7 @@ public class DBApp {
 
 	// given a 2d list containing the table info, it will return all the column names in that list
 	// run getColumnData on the metafile before running this
-	public ArrayList<String> getColumnNames(List<List<String>> tableInfo)
+	public static ArrayList<String> getColumnNames(List<List<String>> tableInfo)
 	{
 		ArrayList<String> colTableNames = new ArrayList<String>();
 		for (int i = 0; i < tableInfo.size(); i++)
@@ -561,24 +560,24 @@ public class DBApp {
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();		
-		//				dbApp.format();
-		//						dbApp.test5();
-		//		dbApp.createIndex("Vagabond", "id", "idIndex");
-		Hashtable<String,Object> colData = new Hashtable<String,Object>();
-		//		colData.put("id", new Integer(3));
-		//		colData.put("age", new Integer(24));
-		//		colData.put("gpa", new Double(0.7));
-		//		colData.put("name", new String("Hamada"));
-		//		dbApp.insertIntoTable( "Vagabond" , colData );
-		//		dbApp.deleteFromTable( "Vagabond" , colData );
-		//		dbApp.updateTable("Vagabond", "14", colData);
-		//				dbApp.saveVagabond();
+//		dbApp.format();
+		dbApp.test5();
+//		dbApp.createIndex("Vagabond", "id", "idIndex");
+//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
+//				colData.put("id", new Integer(200));
+//				colData.put("age", new Integer(2));
+//				colData.put("gpa", new Double(0.1));
+//				colData.put("name", new String("Bolla"));
+//				dbApp.insertIntoTable( "Vagabond" , colData );
+//		//		dbApp.deleteFromTable( "Vagabond" , colData );
+//		//		dbApp.updateTable("Vagabond", "14", colData);
+//						dbApp.saveVagabond();
 		//
 		//		
-		colData.put("name", new String("Nourhan" ) );
-		colData.put("gpa", new Double( 0.7 ) ); 
-		dbApp.deleteFromTable("Vagabond", colData);
-		dbApp.saveVagabond();
+//		colData.put("name", new String("Nourhan" ) );
+//		colData.put("gpa", new Double( 0.7 ) ); 
+//		dbApp.deleteFromTable("Vagabond", colData);
+//		dbApp.saveVagabond();
 
 
 		//		
@@ -649,7 +648,7 @@ public class DBApp {
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
 		for(int i=0;i<50;i++) {
 			int age = possibleAge[random.nextInt(possibleAge.length)];
-			int id = uniqueID[i];
+			int id = i;
 			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
 			String name = possibleName[random.nextInt(possibleName.length)];
 			colData.put("id", new Integer(id));

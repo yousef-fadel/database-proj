@@ -340,6 +340,7 @@ public class Table implements java.io.Serializable{
 	{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		boolean firstDeletion = true;
 		// iterate on deletion conditions and get page name + tuple position and intersect everytime
 		while(colNameValueIterator.hasNext())
 		{
@@ -354,10 +355,13 @@ public class Table implements java.io.Serializable{
 				deletionConditionResult = findTuplesSatsifyingDeletionBinarySearch(deletionCondition);
 			else
 				deletionConditionResult = findTuplesSatsifyingDeletionIndex(deletionCondition,colIndex);
-			if(resultSoFar.isEmpty())
+			if(firstDeletion)
+			{
 				resultSoFar = deletionConditionResult;
+				firstDeletion = false;
+			}
 			else
-				resultSoFar =intersect(resultSoFar,deletionConditionResult); 
+				resultSoFar = intersect(resultSoFar,deletionConditionResult); 
 		}
 
 		deleteTuples(resultSoFar);
@@ -469,7 +473,6 @@ public class Table implements java.io.Serializable{
 	//-------------------------------------SELECT-------------------------------------------------------
 	public Iterator selectTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws ClassNotFoundException, DBAppException, IOException 
 	{
-		DBApp dbapp=new DBApp();
 		ArrayList<String> strops = new ArrayList<String>();
 		for(int i=0;i<strarrOperators.length;i++) 
 			strops.add(strarrOperators[i]);
@@ -483,17 +486,17 @@ public class Table implements java.io.Serializable{
 		ArrayList<ArrayList<Tuple>> results=new ArrayList<ArrayList<Tuple>>();
 		for(int i=0;i<arrSQLTerms.length;i++) 
 		{
-			String table_Name=arrSQLTerms[i]._strTableName;
-			String col_Name=arrSQLTerms[i]._strColumnName;
-			String operator=arrSQLTerms[i]._strOperator;
-			Object obj=arrSQLTerms[i]._objValue;
+			String table_Name = arrSQLTerms[i]._strTableName;
+			String col_Name = arrSQLTerms[i]._strColumnName;
+			String operator = arrSQLTerms[i]._strOperator;
+			Object obj = arrSQLTerms[i]._objValue;
 
-			Table kamal = dbapp.getTable(table_Name);
+			Table kamal = this;
 			if (kamal == null)
 				throw new DBAppException("Table does not exist");
 
-			List<List<String>> tableInfo = dbapp.getColumnData(table_Name);//Gets data from csv file of table
-			ArrayList<String> colTableNames = dbapp.getColumnNames(tableInfo);
+			List<List<String>> tableInfo = DBApp.getColumnData(table_Name);//Gets data from csv file of table
+			ArrayList<String> colTableNames = DBApp.getColumnNames(tableInfo);
 			for(int j = 0;i<colTableNames.size();j++)
 			{
 				if(colTableNames.contains(col_Name))
@@ -521,24 +524,28 @@ public class Table implements java.io.Serializable{
 
 			//EXCEPTIONS-----------------------------------------------------------------------------------------
 		}
-		while(!strops.isEmpty()) {
+		while(!strops.isEmpty()) 
+		{
 			int indexAND=strops.indexOf("AND");
 			int indexOR=strops.indexOf("OR");
 			int indexXOR=strops.indexOf("XOR");
 
-			if(indexAND!=-1) {
+			if(indexAND!=-1) 
+			{
 				ArrayList<Tuple> andResult = intersectArray(results.get(indexAND),results.get(indexAND+1));
 				results.remove(indexAND);
 				results.add(indexAND,andResult);
 				results.remove(indexAND+1);
 				strops.remove(indexAND);
-			}else if(indexOR!=-1) {
+			}else if(indexOR!=-1) 
+			{	
 				ArrayList<Tuple> orResult = union(results.get(indexOR),results.get(indexOR+1));
 				results.remove(indexOR);
 				results.add(indexOR,orResult);
 				results.remove(indexOR+1);
 				strops.remove(indexOR);
-			}else if (indexXOR!=-1){
+			}else if (indexXOR!=-1)
+			{	
 				ArrayList<Tuple> xorResult = XOR(results.get(indexXOR),results.get(indexXOR+1));
 				results.remove(indexXOR);
 				results.add(indexXOR,xorResult);
@@ -548,10 +555,10 @@ public class Table implements java.io.Serializable{
 
 
 		}
-		ArrayList<Tuple> final_result=new ArrayList<Tuple>();
-		for(int i=0;i<results.size();i++) {
+		ArrayList<Tuple> final_result = new ArrayList<Tuple>();
+		for(int i=0;i<results.size();i++) 
 			final_result.addAll(results.get(i));
-		}
+		
 		//Remaining array list in first element after doing all operations 
 		return final_result.iterator();
 	}
@@ -602,8 +609,8 @@ public class Table implements java.io.Serializable{
 	{
 		ArrayList<Tuple> conditionIndex = new ArrayList<Tuple>();
 		Index colIndex = getIndexWithColName(col_Name);
-		Datatype obj2=new Datatype(obj);
-		Vector<String> searchPages=new Vector<String>();
+		Datatype obj2 = new Datatype(obj);
+		Vector<String> searchPages = new Vector<String>();
 		ArrayList<Vector<String>> searchPagesRange=new ArrayList<Vector<String>>();
 		switch(operator) 
 		{
