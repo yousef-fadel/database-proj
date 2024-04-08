@@ -287,8 +287,8 @@ public class Table implements java.io.Serializable{
 
 	}
 
-	
-	
+
+
 	private Page findPageToUpdateIndex(Object clusteringKeyValue,String indexName,Table kamal) throws ClassNotFoundException, DBAppException{
 		Index index=kamal.getIndexWithIndexName(indexName);
 		String pageName=index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
@@ -327,7 +327,7 @@ public class Table implements java.io.Serializable{
 		}
 		System.out.println("Did not find clustering key, aborting update");
 	}
- 
+
 
 	// ----------------------------- DELETE --------------
 
@@ -508,7 +508,7 @@ public class Table implements java.io.Serializable{
 					selectWithIndex(kamal,col_Name,operator,obj,results);
 					flag=false;
 				}
-					
+
 
 			}
 			if(flag==true)
@@ -550,7 +550,26 @@ public class Table implements java.io.Serializable{
 		//Remaining array list in first element after doing all operations 
 		return final_result.iterator();
 	}
-
+	
+	public Vector<String> linearSearch(Table kamal,Datatype target,String col_Name) throws ClassNotFoundException{
+		Vector<String> result=new Vector<String>();
+		for(String pageName:kamal.pageNames) {
+			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+			for(Tuple tuple:page.tuples) {
+				Object tuplevalue=tuple.entry.get(col_Name);
+				if(target.compareTo(new Datatype(tuplevalue))!=0)
+					result.add(pageName);
+			}
+		}
+		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(result);  
+		result.clear(); 
+		result.addAll(hashSet); 
+		return result;
+		
+	}
+	
+	
+	
 	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException 
 	{
 		ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
@@ -572,17 +591,43 @@ public class Table implements java.io.Serializable{
 
 
 	}
-	
+
 
 	public void selectWithIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException, IOException 
 	{
 		ArrayList<Tuple> conditionIndex = new ArrayList<Tuple>();
 		Index colIndex = getIndexWithColName(col_Name);
 		Datatype obj2=new Datatype(obj);
-		Vector<String> searchPages=colIndex.searchIndex(obj2);
-		
-	
-		
+		Vector<String> searchPages=new Vector<String>();
+		ArrayList<Vector<String>> searchPagesRange=new ArrayList<Vector<String>>();
+		switch(operator) 
+		{
+		case "=":searchPages=colIndex.searchIndex(obj2);break;
+
+		case "!=":searchPages=linearSearch(kamal,obj2,col_Name);break;//Linear search
+
+		case "<":searchPagesRange=colIndex.searchLessThan(obj2,false);break;
+
+		case "<=":searchPagesRange=colIndex.searchLessThan(obj2,true);break;
+
+		case ">":searchPagesRange=colIndex.searchGreaterThan(obj2,false);break;
+
+		case ">=":searchPagesRange=colIndex.searchGreaterThan(obj2,true);break;
+
+		default:System.out.println("Cannot find approprtaite operator");break;
+		}
+		if(!searchPagesRange.isEmpty()) {
+			for(int i=0;i<searchPagesRange.size();i++) {
+				Vector<String> temp=searchPagesRange.get(i);
+				for(int j=0;j<temp.size();j++) 
+					searchPages.add(temp.get(j));
+			}
+		}
+
+		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(searchPages);  
+		searchPages.clear(); 
+		searchPages.addAll(hashSet); 
+
 		for(String pageName:searchPages) {
 			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
 			for(int j = 0 ; j<page.tuples.size();j++) 
@@ -592,7 +637,7 @@ public class Table implements java.io.Serializable{
 				if(t!=null)
 					conditionIndex.add(t);
 			}
-			
+
 		}
 		if(!conditionIndex.isEmpty())
 			results.add(conditionIndex);
@@ -600,7 +645,7 @@ public class Table implements java.io.Serializable{
 
 	}
 
-	
+
 	public Tuple makeConditionList(Tuple tupleSearch,String col_Name,String operator,Object obj)
 	{
 		Tuple temp = null;

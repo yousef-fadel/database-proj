@@ -80,11 +80,7 @@ public class DBApp {
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws DBAppException, IOException, ClassNotFoundException {
 		//TODO use index to insert if it exists; check marking scheme 11
-		// check if this table already exists
-		for (int i = 0; i < tables.size(); i++)
-			if (tables.get(i).name.equals(strTableName))
-				throw new DBAppException("A table of this name already exists");
-
+		checkCreateTable(strTableName,strClusteringKeyColumn,htblColNameType);
 		// write onto the metadata file the following info:
 		// TableName,ColumnName, ColumnType, ClusteringKey, IndexName, IndexType
 		// method also checks if the datatypes are valid and that the clustering key exists in the table
@@ -105,8 +101,140 @@ public class DBApp {
 
 	// TODO take fanout from config file
 	// following method creates a B+tree index
-	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException {
-		// check that table exists
+	public void createIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException, ClassNotFoundException 
+	{
+		checkCreateIndex(strTableName, strColName, strIndexName);
+		
+		Table omar = getTable(strTableName);
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		// update the metadata file and change the column's index type to b+Tree
+		updateMetadataIndex(strTableName,strColName,strIndexName);
+		Index index = new Index(strIndexName, strColName, omar.filepath);
+		omar.insertRowsIntoIndex(strColName,index);
+		omar.indexNames.add(strIndexName);
+		index = null;
+		omar = omar.serializeAndDeleteTable();
+		System.out.println("Successfully created B+tree for " + strColName);
+	}
+
+	// following method inserts one row only.
+	// htblColNameValue must include a value for the primary key
+	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
+			throws DBAppException, IOException, ClassNotFoundException {
+		
+		checkInsert(strTableName,htblColNameValue);
+		Table omar = getTable(strTableName);
+		
+		// get the names of the columns in the table
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		String indexName="null";
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
+		omar.insertTupleIntoTable(tuple,indexName);
+		omar = omar.serializeAndDeleteTable();
+		System.out.println(" " + tuple.toString() + " into " + strTableName);
+	}
+
+	// following method updates one row only
+	// htblColNameValue holds the key and new value
+	// htblColNameValue will not include clustering key as column name
+	// strClusteringKeyValue is the value to look for to find the row to update.	
+	public void updateTable(String strTableName, String strClusteringKeyValue,
+			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException, ClassNotFoundException 
+	{
+//		checkUpdate(strTableName,strClusteringKeyValue,htblColNameValue);
+		Table omar = getTable(strTableName);
+		Map.Entry<String,Object> updateValueEntry = null;
+		for (Object o: htblColNameValue.entrySet()) 
+		{ 
+			updateValueEntry = (Map.Entry) o;
+			String columnName = (String) updateValueEntry.getKey();
+			Object datatype = updateValueEntry.getValue();
+			String indexName = "null";
+			List<List<String>> tableInfo = getColumnData(omar.name);
+			// check if column name is in table and datatype is correct
+			for(int i = 0;i<tableInfo.size();i++)
+			{
+				if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(3).equals("True") && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
+				{
+					if(!tableInfo.get(i).get(4).equals("null"))
+						indexName  = tableInfo.get(i).get(4);
+					break;
+				}
+			}
+
+			Object clusteringKeyValue = null;
+			for(int i = 0 ;i<tableInfo.size();i++)
+				if(tableInfo.get(i).get(3).equals("True"))
+				{
+					try {
+						String strColType = tableInfo.get(i).get(2);
+						Class<?> clazz = Class.forName(strColType);
+						Constructor<?> constructor = clazz.getConstructor(String.class);
+						clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
+						break;
+					} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
+							IllegalAccessException | InvocationTargetException e) {
+						e.printStackTrace();
+					}
+				}
+
+			omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
+		}	
+
+
+
+	}
+
+	// following method could be used to delete one or more rows.
+	// htblColNameValue holds the key and value. This will be used in search
+	// to identify which rows/tuples to delete.
+	// htblColNameValue enteries are ANDED together
+	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException, IOException {
+		checkDelete(strTableName,htblColNameValue);
+		Table basyo = getTable(strTableName);
+		basyo.deleteFromTable(htblColNameValue);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
+	{
+		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
+		Table basyo = getTable(table_Name);
+
+		return (basyo.selectTable(arrSQLTerms,strarrOperators));
+	}
+	// ------------------------------------------CHECK-----------------------------------------------------
+
+	public void checkCreateTable(String strTableName, String strClusteringKeyColumn,
+			Hashtable<String, String> htblColNameType) throws DBAppException {
+		// check if this table already exists
+		for (int i = 0; i < tables.size(); i++)
+			if (tables.get(i).name.equals(strTableName)) 
+				throw new DBAppException("A table of this name already exists");
+		
+		
+		File file = new File("./resources/metadata.csv"); 
+		String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
+		Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
+		// the reason for two loops is because we want to check the data before starting to write onto
+		// the csv file; we cant do both at the same time
+		boolean clusteringKeyExists = false;
+		while(colData.hasNext())
+		{
+			Map.Entry<String,String> currCol = colData.next();
+			String colName = currCol.getKey();
+			String colDataType = currCol.getValue();
+			if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
+				throw new DBAppException("Column has invalid datatype");
+			if(colName.equals(strClusteringKeyColumn))
+				clusteringKeyExists = true;
+		}
+		if(!clusteringKeyExists)
+			throw new DBAppException("Clustering key does not exist in columns");
+	}
+
+	public void checkCreateIndex(String strTableName, String strColName, String strIndexName) throws DBAppException, IOException {
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
@@ -132,21 +260,9 @@ public class DBApp {
 				throw new DBAppException("Column name not found");
 		}
 
-		// update the metadata file and change the column's index type to b+Tree
-		updateMetadataIndex(strTableName,strColName,strIndexName);
-
-		Index index = new Index(strIndexName, strColName, omar.filepath);
-		omar.insertRowsIntoIndex(strColName,index);
-		omar.indexNames.add(strIndexName);
-		index = null;
-		omar = omar.serializeAndDeleteTable();
-		System.out.println("Successfully created B+tree for " + strColName);
 	}
-
-	// following method inserts one row only.
-	// htblColNameValue must include a value for the primary key
-	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
-			throws DBAppException, IOException, ClassNotFoundException {		
+	
+	public void checkInsert(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException {
 		// check if the table exists
 		Table omar = getTable(strTableName);
 		if (omar == null)
@@ -178,7 +294,7 @@ public class DBApp {
 			String colName = tableInfo.get(i).get(1);
 			String tableName=tableInfo.get(i).get(0);
 			String isPrime=tableInfo.get(i).get(3);
-			
+
 			if(tableName.equals(strTableName) && isPrime.equals("True"))
 				indexName=tableInfo.get(i).get(4);
 			if (colType.equals("java.lang.String")) {
@@ -200,91 +316,126 @@ public class DBApp {
 		String primaryKeyColName = getPrimaryKeyName(tableInfo);
 		if(primaryKeyColName == null)
 			throw new DBAppException("An error occured while looking for primary key; please try again");
-		Tuple tuple = new Tuple(htblColNameValue.get(primaryKeyColName), htblColNameValue);
-		
-		
-		
-		omar.insertTupleIntoTable(tuple,indexName);
-		omar = omar.serializeAndDeleteTable();
-
-		System.out.println(" " + tuple.toString() + " into " + strTableName);
 	}
 
-	// following method updates one row only
-	// htblColNameValue holds the key and new value
-	// htblColNameValue will not include clustering key as column name
-	// strClusteringKeyValue is the value to look for to find the row to update.	
-	public void updateTable(String strTableName, String strClusteringKeyValue,
-			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException, ClassNotFoundException 
-	{
+	public void checkUpdate(String strTableName, String strClusteringKeyValue,
+			Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException{
+		Table omar = getTable(strTableName);
+		if (omar == null)
+			throw new DBAppException("Table does not exist");
+
+
+		// get the names of the columns in the table
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		ArrayList<String> colTableNames = getColumnNames(tableInfo);
+		
+		
+
+		// check that all columns in the table have a value in the hashtable
+		for(String currCol:colTableNames)
+			if (htblColNameValue.get(currCol) == null)
+				throw new DBAppException("The hashtable is missing data for one of the columns");
+
+		// check that the columns in the hashtable exist in the table
+		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		while(colNameValueIterator.hasNext())
+		{
+			Map.Entry<String,Object> currCol = colNameValueIterator.next();
+			String colName = currCol.getKey();
+			if(!colTableNames.contains(colName))
+				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
+		}
+		String indexName="null";
+		// check if all datatypes are correct
+		for (int i = 0; i < tableInfo.size(); i++) {
+			String colType = tableInfo.get(i).get(2);
+			String colName = tableInfo.get(i).get(1);
+			String tableName=tableInfo.get(i).get(0);
+			String isPrime=tableInfo.get(i).get(3);
+
+			if(tableName.equals(strTableName) && isPrime.equals("True"))
+				indexName=tableInfo.get(i).get(4);
+			if (colType.equals("java.lang.String")) {
+				if (!(htblColNameValue.get(colName) instanceof String))
+					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else if (colType.equals("java.lang.Integer")) {
+				if (!(htblColNameValue.get(colName) instanceof Integer))
+					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else if (colType.equals("java.lang.Double")) {
+				if (!(htblColNameValue.get(colName) instanceof Double))
+					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
+				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
+		}
+
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		
+		if(primaryKeyColName == null)
+			throw new DBAppException("An error occured while looking for primary key; please try again");
+	}
+	
+	public void checkDelete(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException {
 		// check if the table exists
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
-		Map.Entry<String,Object> updateValueEntry = null;
-		for (Object o: htblColNameValue.entrySet()) 
-		{ 
-			updateValueEntry = (Map.Entry) o;
-			String columnName = (String) updateValueEntry.getKey();
-			Object datatype = updateValueEntry.getValue();
-			String indexName = "null";
-			List<List<String>> tableInfo = getColumnData(omar.name);
-			// check if column name is in table and datatype is correct
-			for(int i = 0;i<tableInfo.size();i++)
-			{
-				if(tableInfo.get(i).get(1).equals(columnName) && tableInfo.get(i).get(3).equals("True") && tableInfo.get(i).get(2).equals(datatype.getClass().getName()))
-				{
-					if(!tableInfo.get(i).get(4).equals("null"))
-						indexName  = tableInfo.get(i).get(4);
-					break;
-				}
+
+
+		// get the names of the columns in the table
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		ArrayList<String> colTableNames = getColumnNames(tableInfo);
+
+		// check that all columns in the table have a value in the hashtable
+		for(String currCol:colTableNames)
+			if (htblColNameValue.get(currCol) == null)
+				throw new DBAppException("The hashtable is missing data for one of the columns");
+
+		// check that the columns in the hashtable exist in the table
+		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
+		while(colNameValueIterator.hasNext())
+		{
+			Map.Entry<String,Object> currCol = colNameValueIterator.next();
+			String colName = currCol.getKey();
+			if(!colTableNames.contains(colName))
+				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
+		}
+		String indexName="null";
+		// check if all datatypes are correct
+		for (int i = 0; i < tableInfo.size(); i++) {
+			String colType = tableInfo.get(i).get(2);
+			String colName = tableInfo.get(i).get(1);
+			String tableName=tableInfo.get(i).get(0);
+			String isPrime=tableInfo.get(i).get(3);
+
+			if(tableName.equals(strTableName) && isPrime.equals("True"))
+				indexName=tableInfo.get(i).get(4);
+			if (colType.equals("java.lang.String")) {
+				if (!(htblColNameValue.get(colName) instanceof String))
+					throw new DBAppException("A column was inserted with the wrong datatype");
 			}
-			//check colomn changing is not primary key
-			if(columnName.equals(getPrimaryKeyName(tableInfo)))
-				throw new DBAppException("Cannot change primary key");
+			else if (colType.equals("java.lang.Integer")) {
+				if (!(htblColNameValue.get(colName) instanceof Integer))
+					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else if (colType.equals("java.lang.Double")) {
+				if (!(htblColNameValue.get(colName) instanceof Double))
+					throw new DBAppException("A column was inserted with the wrong datatype");
+			}
+			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
+				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
+		}
 
-			Object clusteringKeyValue = null;
-			for(int i = 0 ;i<tableInfo.size();i++)
-				if(tableInfo.get(i).get(3).equals("True"))
-				{
-					try {
-						String strColType = tableInfo.get(i).get(2);
-						Class<?> clazz = Class.forName(strColType);
-						Constructor<?> constructor = clazz.getConstructor(String.class);
-						clusteringKeyValue = constructor.newInstance(strClusteringKeyValue);
-						break;
-					} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-							IllegalAccessException | InvocationTargetException e) {
-						e.printStackTrace();
-					}
-				}
-
-			omar.updateTuple(clusteringKeyValue,updateValueEntry,indexName);
-		}	
-
-
-
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
+		if(primaryKeyColName == null)
+			throw new DBAppException("An error occured while looking for primary key; please try again");
 	}
 
-	// following method could be used to delete one or more rows.
-	// htblColNameValue holds the key and value. This will be used in search
-	// to identify which rows/tuples to delete.
-	// htblColNameValue enteries are ANDED together
-	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, ClassNotFoundException, IOException {
-
-		Table basyo = getTable(strTableName);
-		basyo.deleteFromTable(htblColNameValue);
+	public void checkSelect(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
+		
 	}
-
-	@SuppressWarnings("rawtypes")
-	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
-	{
-		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
-		Table basyo = getTable(table_Name);
-
-		return (basyo.selectTable(arrSQLTerms,strarrOperators));
-	}
-	// ------------------------------------------CHECK-----------------------------------------------------
 
 	// ------------------------------------------HELPER--------------------------------------------------------
 
@@ -330,8 +481,8 @@ public class DBApp {
 			return false;
 		else
 			return true;
-		
-		
+
+
 	}
 
 	private String getPrimaryKeyName(List<List<String>> tableInfo)
@@ -395,51 +546,34 @@ public class DBApp {
 	public void writeMetadata(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
-		try { 	
-			String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
-			Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
-			// the reason for two loops is because we want to check the data before starting to write onto
-			// the csv file; we cant do both at the same time
-			boolean clusteringKeyExists = false;
-			while(colData.hasNext())
+
+		String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
+		Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
+
+
+
+		FileWriter outputfile = new FileWriter(file,true); 
+		CSVWriter writer = new CSVWriter(outputfile);
+		colData = htblColNameType.entrySet().iterator();	  
+		while(colData.hasNext())
+		{
+			Map.Entry<String,String> currCol = colData.next();
+			String colName = currCol.getKey();
+			String colDataType = currCol.getValue();
+			if(strClusteringKeyColumn.equals(colName))
 			{
-				Map.Entry<String,String> currCol = colData.next();
-				String colName = currCol.getKey();
-				String colDataType = currCol.getValue();
-				if(!Arrays.stream(possibleDataTypes).anyMatch(colDataType::equals))
-					throw new DBAppException("Column has invalid datatype");
-				if(colName.equals(strClusteringKeyColumn))
-					clusteringKeyExists = true;
-
+				String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
+				writer.writeNext(header);
 			}
-			if(!clusteringKeyExists)
-				throw new DBAppException("Clustering key does not exist in columns");
-
-
-			FileWriter outputfile = new FileWriter(file,true); 
-			CSVWriter writer = new CSVWriter(outputfile);
-			colData = htblColNameType.entrySet().iterator();	  
-			while(colData.hasNext())
+			else
 			{
-				Map.Entry<String,String> currCol = colData.next();
-				String colName = currCol.getKey();
-				String colDataType = currCol.getValue();
-				if(strClusteringKeyColumn.equals(colName))
-				{
-					String[] header = {strTableName, colName, colDataType, "True", "null", "null"};
-					writer.writeNext(header);
-				}
-				else
-				{
-					String[] header = {strTableName, colName, colDataType, "False", "null", "null"};
-					writer.writeNext(header);
-				}
+				String[] header = {strTableName, colName, colDataType, "False", "null", "null"};
+				writer.writeNext(header);
 			}
-			writer.close();
-		} 
-		catch (IOException e) { 
-			e.printStackTrace(); 
-		}	
+		}
+		writer.close();
+
+
 	}
 
 	//given a table name, returns a 2D list containing all information about its columns
@@ -489,55 +623,53 @@ public class DBApp {
 
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
-		DBApp dbApp =new DBApp();
-//		dbApp.format();
-//		dbApp.test5();
-		Hashtable <String,Object> htbl =  new Hashtable<String, Object>();
-		htbl.put("id", new Integer(190));
-		dbApp.deleteFromTable("Vagabond", htbl);
-//		dbApp.createIndex("Vagabond", "id", "idIndex");
-//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
-//		colData.put("id", new Integer(3));
-//		colData.put("age", new Integer(24));
-//		colData.put("gpa", new Double(0.7));
-//		colData.put("name", new String("Hamada"));
-//		dbApp.insertIntoTable( "Vagabond" , colData );
-//		dbApp.deleteFromTable( "Vagabond" , colData );
-//		dbApp.updateTable("Vagabond", "18", colData);
-		dbApp.saveVagabond();
-//
-//		
-//		htbl.put("name", new String("Nourhan" ) );
-//		htbl.put("gpa", new Double( 0.7 ) ); 
-//		dbApp.updateTable("Vagabond", "1", htbl);
-//		dbApp.saveVagabond();
+		DBApp dbApp =new DBApp();		//		dbApp.format();
+		//		dbApp.test5();
+		//		dbApp.createIndex("Vagabond", "id", "idIndex");
+		//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
+		//		colData.put("id", new Integer(3));
+		//		colData.put("age", new Integer(24));
+		//		colData.put("gpa", new Double(0.7));
+		//		colData.put("name", new String("Hamada"));
+		//		dbApp.insertIntoTable( "Vagabond" , colData );
+		//		dbApp.deleteFromTable( "Vagabond" , colData );
+		//		dbApp.updateTable("Vagabond", "18", colData);
+		//		dbApp.saveVagabond();
+		//
+		//		
+		//		htbl.put("name", new String("Nourhan" ) );
+		//		htbl.put("gpa", new Double( 0.7 ) ); 
+		//		dbApp.updateTable("Vagabond", "1", htbl);
+		//		dbApp.saveVagabond();
 
-//		SQLTerm[] arrSQLTerms;
-//		arrSQLTerms = new SQLTerm[2];
-//		arrSQLTerms[0]=new SQLTerm();
-//		arrSQLTerms[0]._strTableName = "Vagabond";
-//		arrSQLTerms[0]._strColumnName= "name";
-//		arrSQLTerms[0]._strOperator = "=";
-//		arrSQLTerms[0]._objValue = "5ayen";
-//		arrSQLTerms[1]=new SQLTerm();
-//		arrSQLTerms[1]._strTableName = "Vagabond";
-//		arrSQLTerms[1]._strColumnName= "age";
-//		arrSQLTerms[1]._strOperator = "=";
-//		arrSQLTerms[1]._objValue = new Integer(24);
-//		String[]strarrOperators = new String[1];
-//		strarrOperators[0] = "OR"; 
-//		try {
-//			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-//			while(resultSet.hasNext())
-//			{
-//				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
-//				System.out.println(resultSet.next());
-//			}
-//
-//		} catch (ClassNotFoundException | DBAppException | IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+
+		//		
+		SQLTerm[] arrSQLTerms;
+		arrSQLTerms = new SQLTerm[1];
+		arrSQLTerms[0]=new SQLTerm();
+		arrSQLTerms[0]._strTableName = "Vagabond";
+		arrSQLTerms[0]._strColumnName= "age";
+		arrSQLTerms[0]._strOperator = "!=";
+		arrSQLTerms[0]._objValue = new Integer(24);
+		//		arrSQLTerms[1]=new SQLTerm();
+		//		arrSQLTerms[1]._strTableName = "Vagabond";
+		//		arrSQLTerms[1]._strColumnName= "age";
+		//		arrSQLTerms[1]._strOperator = "=";
+		//		arrSQLTerms[1]._objValue = new Integer(24);
+		String[]strarrOperators = new String[0];
+		//		strarrOperators[0] = "OR"; 
+		try {
+			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+			while(resultSet.hasNext())
+			{
+				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
+				System.out.println(resultSet.next());
+			}
+
+		} catch (ClassNotFoundException | DBAppException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 
 
@@ -648,7 +780,7 @@ public class DBApp {
 		}
 		out.close();
 	}
-	
+
 
 	private void insertx() throws ClassNotFoundException, DBAppException, IOException
 	{
@@ -668,78 +800,78 @@ public class DBApp {
 
 		String x = 
 
-				  " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into banadyMethod\r\n"
-				+ " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into result\r\n"
-				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into banadyMethod\r\n"
-				+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into result\r\n"
-				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into banadyMethod\r\n"
-				+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into result\r\n"
-				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into banadyMethod\r\n"
-				+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into result\r\n"
-				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into banadyMethod\r\n"
-				+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into result\r\n"
-				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into banadyMethod\r\n"
-				+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into result\r\n"
-				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into banadyMethod\r\n"
-				+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into result\r\n"
-				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into banadyMethod\r\n"
-				+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into result\r\n"
-				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into banadyMethod\r\n"
-				+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into result\r\n"
-				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into banadyMethod\r\n"
-				+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into result\r\n" 
-				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into banadyMethod\r\n"
-				+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into result\r\n"
-				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into banadyMethod\r\n"
-				+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into result\r\n"
-				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into banadyMethod\r\n"
-				+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into result\r\n"
-				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into banadyMethod\r\n"
-				+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into result\r\n" //
-				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into banadyMethod\r\n"
-				+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into result\r\n"
-				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into banadyMethod\r\n"
-				+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into result\r\n" //
-				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into banadyMethod\r\n"
-				+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into result\r\n"
-				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into banadyMethod\r\n"
-				+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into result\r\n"
-				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into banadyMethod\r\n"
-				+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into result\r\n";//HONE EL DENYA BETBOOZ
-//				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into banadyMethod\r\n"
-//				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into result\r\n";
-//				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into banadyMethod\r\n"
-//				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into result\r\n";
-//				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into banadyMethod\r\n"
-//				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into result\r\n"
-//				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into banadyMethod\r\n"
-//				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into result\r\n"
-//				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into banadyMethod\r\n"
-//				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into result\r\n"
-//				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into banadyMethod\r\n"
-//				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into result\r\n"
-//				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into banadyMethod\r\n"
-//				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into result\r\n"
-//				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into banadyMethod\r\n"
-//				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into result\r\n"
-//				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into banadyMethod\r\n"
-//				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into result\r\n"
-//				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into banadyMethod\r\n"
-//				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into result\r\n"
-//				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into banadyMethod\r\n"
-//				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into result\r\n";
-//				+ " {gpa=6.935, age=2112, name=Aya, id=2400} into banadyMethod\r\n"
-//				+ " {gpa=8.153, age=3475, name=Aya, id=2977} into banadyMethod\r\n"
-//				+ " {gpa=6.202, age=4834, name=Aya, id=156} into banadyMethod\r\n"
-//				+ " {gpa=7.978, age=4925, name=Aya, id=962} into banadyMethod\r\n"
-//				+ " {gpa=6.622, age=2304, name=Aya, id=480} into banadyMethod\r\n"
-//				+ " {gpa=5.225, age=965, name=Aya, id=3699} into banadyMethod\r\n"
-//				+ " {gpa=6.94, age=3373, name=Aya, id=1622} into banadyMethod\r\n"
-//				+ " {gpa=7.024, age=2557, name=Aya, id=1466} into banadyMethod\r\n"
-//				+ " {gpa=5.839, age=2226, name=Aya, id=4843} into banadyMethod\r\n";
-		
-    			
-  	String lines[] = x.split("\\r?\\n");
+				" {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into banadyMethod\r\n"
+						+ " {gpa=2.094, age=2112, name=yckmdWaAzP, id=2112} into result\r\n"
+						+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into banadyMethod\r\n"
+						+ " {gpa=1.781, age=3475, name=MEClZzblQf, id=3475} into result\r\n"
+						+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into banadyMethod\r\n"
+						+ " {gpa=2.405, age=4834, name=laMmwHeXHE, id=4834} into result\r\n"
+						+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into banadyMethod\r\n"
+						+ " {gpa=3.274, age=4925, name=YJqJdycVRU, id=4925} into result\r\n"
+						+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into banadyMethod\r\n"
+						+ " {gpa=4.56, age=2304, name=UFkDrKHyAy, id=2304} into result\r\n"
+						+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into banadyMethod\r\n"
+						+ " {gpa=0.07, age=965, name=CowEAnJadT, id=965} into result\r\n"
+						+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into banadyMethod\r\n"
+						+ " {gpa=1.825, age=3373, name=GnWloLMcsG, id=3373} into result\r\n"
+						+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into banadyMethod\r\n"
+						+ " {gpa=0.611, age=2557, name=XOayaNyUVU, id=2557} into result\r\n"
+						+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into banadyMethod\r\n"
+						+ " {gpa=3.697, age=2226, name=tqTYTwmkoR, id=2226} into result\r\n"
+						+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into banadyMethod\r\n"
+						+ " {gpa=4.327, age=1901, name=LYFWXzuNYg, id=1901} into result\r\n" 
+						+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into banadyMethod\r\n"
+						+ " {gpa=1.634, age=3248, name=iIBnvQreHp, id=3248} into result\r\n"
+						+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into banadyMethod\r\n"
+						+ " {gpa=2.221, age=2860, name=tGoovpVolt, id=2860} into result\r\n"
+						+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into banadyMethod\r\n"
+						+ " {gpa=2.961, age=2398, name=ZgieRuaPWA, id=2398} into result\r\n"
+						+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into banadyMethod\r\n"
+						+ " {gpa=4.417, age=1105, name=ZitfbnkNZu, id=1105} into result\r\n" //
+						+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into banadyMethod\r\n"
+						+ " {gpa=0.965, age=1180, name=bgMsreepyo, id=1180} into result\r\n"
+						+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into banadyMethod\r\n"
+						+ " {gpa=3.244, age=3689, name=eHwrduaFHX, id=3689} into result\r\n" //
+						+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into banadyMethod\r\n"
+						+ " {gpa=3.932, age=4728, name=pUDiSnFEGa, id=4728} into result\r\n"
+						+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into banadyMethod\r\n"
+						+ " {gpa=2.382, age=2699, name=iNxqhJLaEq, id=2699} into result\r\n"
+						+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into banadyMethod\r\n"
+						+ " {gpa=3.505, age=586, name=fyReYlpieZ, id=586} into result\r\n";//HONE EL DENYA BETBOOZ
+		//				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into banadyMethod\r\n"
+		//				+ " {gpa=2.886, age=4417, name=IeUhDhoZaR, id=4417} into result\r\n";
+		//				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into banadyMethod\r\n"
+		//				+ " {gpa=0.953, age=3413, name=LiwYlFSKRA, id=3413} into result\r\n";
+		//				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into banadyMethod\r\n"
+		//				+ " {gpa=2.074, age=1567, name=iDzMyBrnkL, id=1567} into result\r\n"
+		//				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into banadyMethod\r\n"
+		//				+ " {gpa=0.95, age=2840, name=rmrCdjbRvU, id=2840} into result\r\n"
+		//				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into banadyMethod\r\n"
+		//				+ " {gpa=3.412, age=365, name=vEggFhYngO, id=365} into result\r\n"
+		//				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into banadyMethod\r\n"
+		//				+ " {gpa=4.697, age=1175, name=jqWHGhMJLN, id=1175} into result\r\n"
+		//				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into banadyMethod\r\n"
+		//				+ " {gpa=3.367, age=2523, name=DRhmADtFRH, id=2523} into result\r\n"
+		//				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into banadyMethod\r\n"
+		//				+ " {gpa=3.251, age=745, name=UYjtMnARdY, id=745} into result\r\n"
+		//				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into banadyMethod\r\n"
+		//				+ " {gpa=1.259, age=2622, name=TuKGSotKTd, id=2622} into result\r\n"
+		//				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into banadyMethod\r\n"
+		//				+ " {gpa=1.894, age=2039, name=GSfdbXFuMB, id=2039} into result\r\n"
+		//				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into banadyMethod\r\n"
+		//				+ " {gpa=1.231, age=578, name=kjaCrpFEyF, id=578} into result\r\n";
+		//				+ " {gpa=6.935, age=2112, name=Aya, id=2400} into banadyMethod\r\n"
+		//				+ " {gpa=8.153, age=3475, name=Aya, id=2977} into banadyMethod\r\n"
+		//				+ " {gpa=6.202, age=4834, name=Aya, id=156} into banadyMethod\r\n"
+		//				+ " {gpa=7.978, age=4925, name=Aya, id=962} into banadyMethod\r\n"
+		//				+ " {gpa=6.622, age=2304, name=Aya, id=480} into banadyMethod\r\n"
+		//				+ " {gpa=5.225, age=965, name=Aya, id=3699} into banadyMethod\r\n"
+		//				+ " {gpa=6.94, age=3373, name=Aya, id=1622} into banadyMethod\r\n"
+		//				+ " {gpa=7.024, age=2557, name=Aya, id=1466} into banadyMethod\r\n"
+		//				+ " {gpa=5.839, age=2226, name=Aya, id=4843} into banadyMethod\r\n";
+
+
+		String lines[] = x.split("\\r?\\n");
 		for(String s : lines)
 		{
 			String attributes[] = s.split(",");
