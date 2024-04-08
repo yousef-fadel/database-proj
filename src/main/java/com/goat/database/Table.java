@@ -234,14 +234,15 @@ public class Table implements java.io.Serializable{
 	}
 
 	// ------------------------------------------------------------------UPDATE---------------------------------------------------
-	public void updateTuple(Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws ClassNotFoundException, DBAppException, IOException
+	public void updateTuple(Object clusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, DBAppException, IOException
 	{
 		Page pageToUpdate;
+		String indexName = "null";
 		if(indexName.equals("null"))
 			pageToUpdate = findPageToUpdate(clusteringKeyValue);
 		else
-			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,indexName,this);
-		updateTupleInPage(pageToUpdate,clusteringKeyValue,updateValueEntry,indexName);
+			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,indexName);
+		updateTupleInPage(pageToUpdate,clusteringKeyValue,htblColNameValue);
 	}
 
 	private Page findPageToUpdate(Object clusteringKeyValue) throws ClassNotFoundException, DBAppException
@@ -286,16 +287,14 @@ public class Table implements java.io.Serializable{
 
 	}
 
-
-
-	private Page findPageToUpdateIndex(Object clusteringKeyValue,String indexName,Table kamal) throws ClassNotFoundException, DBAppException{
-		Index index=kamal.getIndexWithIndexName(indexName);
-		String pageName=index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
-		Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+	private Page findPageToUpdateIndex(Object clusteringKeyValue,String indexName) throws ClassNotFoundException, DBAppException{
+		Index index = this.getIndexWithIndexName(indexName);
+		String pageName = index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
+		Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
 		return page;
 	}
 	
-	private void updateTupleInPage(Page page,Object clusteringKeyValue, Map.Entry<String,Object> updateValueEntry, String indexName) throws IOException, ClassNotFoundException {
+	private void updateTupleInPage(Page page,Object clusteringKeyValue, Hashtable<String, Object>htblColNameValue) throws IOException, ClassNotFoundException {
 		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
 		int left = 0;
 		int right =page.tuples.size()-1;
@@ -303,22 +302,29 @@ public class Table implements java.io.Serializable{
 		while(left<=right)
 		{
 			int middle = (left+right)/2;
-			Datatype middleTuple = new Datatype(pageTuples.get(middle).Primary_key);
-			if(middleTuple.compareTo(clusteringKeyValueDatatype)==0)
-			{
-				// update index if it exists
-				if(!indexName.equals("null"))
+			Tuple middleTuple = pageTuples.get(middle);
+			Datatype middleTupleDatatype = new Datatype(middleTuple.Primary_key);
+			if(middleTupleDatatype.compareTo(clusteringKeyValueDatatype)==0)
+			{// 1) update index
+				// 2) update row
+				for(Map.Entry<String, Object> updateEntry : htblColNameValue.entrySet())
 				{
-					Index indexedCol = getIndexWithIndexName(indexName);
-					indexedCol.deleteFromIndex(new Datatype(pageTuples.get(middle).entry.get(updateValueEntry.getKey())), page.name);
-					indexedCol.insertIntoIndex(new Datatype(updateValueEntry.getValue()), page.name);
-					indexedCol = indexedCol.serializeAndDeleteIndex();
+					String colName = updateEntry.getKey();
+					Object updatedColValue = updateEntry.getValue();
+					Index colIndex = getIndexWithColName(colName);
+					// update index if exists
+					if(colIndex!=null)
+					{
+						Object oldColValue = middleTuple.entry.get(colName);
+						colIndex.deleteFromIndex(new Datatype(oldColValue), page.name);
+						colIndex.insertIntoIndex(new Datatype(updatedColValue), page.name);
+					}
+					middleTuple.entry.put(colName, updatedColValue);
 				}
-				pageTuples.get(middle).entry.put(updateValueEntry.getKey(), updateValueEntry.getValue());
 				page = page.serializeAndDeletePage();
 				return;
 			}
-			else if(middleTuple.compareTo(clusteringKeyValueDatatype)>0)
+			else if(middleTupleDatatype.compareTo(clusteringKeyValueDatatype)>0)
 				right = middle-1;
 			else
 				left = middle+1;
