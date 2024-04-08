@@ -148,6 +148,8 @@ public class DBApp {
 		// turn the string clustering key value into a generic object we can use
 		Object clusteringKeyValue = loadDataTypeOfClusteringKey(strClusteringKeyValue,omar);
 		omar.updateTuple(clusteringKeyValue,htblColNameValue);
+		omar = omar.serializeAndDeleteTable();
+
 	}
 
 	// following method could be used to delete one or more rows.
@@ -251,16 +253,11 @@ public class DBApp {
 			if(!colTableNames.contains(colName))
 				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
 		}
-		String indexName="null";
+
 		// check if all datatypes are correct
 		for (int i = 0; i < tableInfo.size(); i++) {
 			String colType = tableInfo.get(i).get(2);
-			String colName = tableInfo.get(i).get(1);
-			String tableName=tableInfo.get(i).get(0);
-			String isPrime=tableInfo.get(i).get(3);
-
-			if(tableName.equals(strTableName) && isPrime.equals("True"))
-				indexName=tableInfo.get(i).get(4);
+			String colName = tableInfo.get(i).get(1);	
 			if (colType.equals("java.lang.String")) {
 				if (!(htblColNameValue.get(colName) instanceof String))
 					throw new DBAppException("A column was inserted with the wrong datatype");
@@ -328,11 +325,6 @@ public class DBApp {
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 
-		// check that all columns in the table have a value in the hashtable
-		for(String currCol:colTableNames)
-			if (htblColNameValue.get(currCol) == null)
-				throw new DBAppException("The hashtable is missing data for one of the columns");
-
 		// check that the columns in the hashtable exist in the table
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		while(colNameValueIterator.hasNext())
@@ -342,35 +334,20 @@ public class DBApp {
 			if(!colTableNames.contains(colName))
 				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
 		}
-		String indexName="null";
-		// check if all datatypes are correct
-		for (int i = 0; i < tableInfo.size(); i++) {
-			String colType = tableInfo.get(i).get(2);
-			String colName = tableInfo.get(i).get(1);
-			String tableName=tableInfo.get(i).get(0);
-			String isPrime=tableInfo.get(i).get(3);
 
-			if(tableName.equals(strTableName) && isPrime.equals("True"))
-				indexName=tableInfo.get(i).get(4);
-			if (colType.equals("java.lang.String")) {
-				if (!(htblColNameValue.get(colName) instanceof String))
-					throw new DBAppException("A column was inserted with the wrong datatype");
+		// all datatypes in the hashtable correct (ex: attempting to delete a integer column with a string)
+		for(Map.Entry<String, Object> updateEntry : htblColNameValue.entrySet())
+		{
+			for (int i = 0; i < tableInfo.size(); i++) 
+			{
+				String colName = tableInfo.get(i).get(1);
+				String colType = tableInfo.get(i).get(2);
+				if(colName.equals(updateEntry.getKey()))
+					if(!updateEntry.getValue().getClass().getCanonicalName().equals(colType))
+						throw new DBAppException("Unexpected datatype for one of the deletion conditions");
 			}
-			else if (colType.equals("java.lang.Integer")) {
-				if (!(htblColNameValue.get(colName) instanceof Integer))
-					throw new DBAppException("A column was inserted with the wrong datatype");
-			}
-			else if (colType.equals("java.lang.Double")) {
-				if (!(htblColNameValue.get(colName) instanceof Double))
-					throw new DBAppException("A column was inserted with the wrong datatype");
-			}
-			else // this exception should not be thrown at all; if it has then something has gone wrong in createTable()
-				throw new DBAppException("The created table has an error in it's datatypes; please delete the table and try again");
 		}
 
-		String primaryKeyColName = getPrimaryKeyName(tableInfo);
-		if(primaryKeyColName == null)
-			throw new DBAppException("An error occured while looking for primary key; please try again");
 	}
 
 	public void checkSelect(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
@@ -491,7 +468,7 @@ public class DBApp {
 					Class<?> classType = Class.forName(strColType);
 					Constructor<?> constructor = classType.getConstructor(String.class);
 					return constructor.newInstance(strKeyValue);
-					
+
 				} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
 						IllegalAccessException | InvocationTargetException e) {
 					e.printStackTrace();
@@ -584,24 +561,24 @@ public class DBApp {
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
 		DBApp dbApp =new DBApp();		
-//				dbApp.format();
-//						dbApp.test5();
+		//				dbApp.format();
+		//						dbApp.test5();
 		//		dbApp.createIndex("Vagabond", "id", "idIndex");
 		Hashtable<String,Object> colData = new Hashtable<String,Object>();
 		//		colData.put("id", new Integer(3));
-//		colData.put("age", new Integer(24));
+		//		colData.put("age", new Integer(24));
 		//		colData.put("gpa", new Double(0.7));
 		//		colData.put("name", new String("Hamada"));
 		//		dbApp.insertIntoTable( "Vagabond" , colData );
 		//		dbApp.deleteFromTable( "Vagabond" , colData );
-//		dbApp.updateTable("Vagabond", "14", colData);
+		//		dbApp.updateTable("Vagabond", "14", colData);
 		//				dbApp.saveVagabond();
 		//
 		//		
 		colData.put("name", new String("Nourhan" ) );
 		colData.put("gpa", new Double( 0.7 ) ); 
-				dbApp.updateTable("Vagabond", "8", colData);
-				dbApp.saveVagabond();
+		dbApp.deleteFromTable("Vagabond", colData);
+		dbApp.saveVagabond();
 
 
 		//		
