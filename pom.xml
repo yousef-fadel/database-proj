@@ -13,12 +13,31 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  <repositories>
-	<repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-	</repository>
-  </repositories>
+  <build>
+	  <plugins>
+        <plugin>
+	    <groupId>org.antlr</groupId>
+   	 <artifactId>antlr4-maven-plugin</artifactId>
+   	 <version>4.7.1</version>
+   	 <executions>
+        <execution>
+            <goals>
+                <goal>antlr4</goal>
+            </goals>
+        </execution>
+    </executions>
+		</plugin>
+		<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
+    </plugins>
+  
+  </build>
 
   <dependencies>
 	<dependency> 
@@ -27,6 +46,12 @@
     <version>4.1</version> 
   </dependency>
   
+  <dependency>
+    <groupId>org.antlr</groupId>
+    <artifactId>antlr4-runtime</artifactId>
+    <version>4.13.1</version>
+  </dependency>
+
   <dependency>
 	  <groupId>org.junit.jupiter</groupId>
 	  <artifactId>junit-jupiter</artifactId>
@@ -39,11 +64,6 @@
     <version>2.15.1</version>
   </dependency>
 
-  <dependency>
-    <groupId>com.github.jiaguofang</groupId>
-    <artifactId>b-plus-tree</artifactId>
-    <version>master</version>
-</dependency>
 
   </dependencies>
 

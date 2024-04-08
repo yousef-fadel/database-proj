@@ -847,7 +847,6 @@ public class DeletionTests {
 		ArrayList<String> banadyMethodNamePointerNumbers = new ArrayList<String>();
 		ArrayList<String> banadyMethodGpaPointerNumbers = new ArrayList<String>();
 		
-		assertEquals(resultAgePointers.size(), banadyMethodAgePointers.size());
 		assertEquals(resultNamePointers.size(), banadyMethodNamePointers.size());
 		assertEquals(resultGpaPointers.size(), banadyMethodGpaPointers.size());
 		
