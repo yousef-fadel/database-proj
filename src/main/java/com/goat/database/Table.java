@@ -101,7 +101,7 @@ public class Table implements java.io.Serializable{
 
 		}
 	}
-	
+
 	private Page findPageToInsertIndex(Tuple tuple,Index clusteringIndex) throws ClassNotFoundException, DBAppException{
 		Object clusteringValue = tuple.Primary_key;
 		ArrayList<Vector<String>> pageNames = clusteringIndex.searchGreaterThan(new Datatype(clusteringValue), true);
@@ -239,13 +239,13 @@ public class Table implements java.io.Serializable{
 		Page pageToUpdate;
 		String indexName = "null";
 		if(indexName.equals("null"))
-			pageToUpdate = findPageToUpdate(clusteringKeyValue);
+			pageToUpdate = findPageBinarySearch(clusteringKeyValue);
 		else
 			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,indexName);
 		updateTupleInPage(pageToUpdate,clusteringKeyValue,htblColNameValue);
 	}
 
-	private Page findPageToUpdate(Object clusteringKeyValue) throws ClassNotFoundException, DBAppException
+	private Page findPageBinarySearch(Object clusteringKeyValue) throws ClassNotFoundException, DBAppException
 	{
 		int leftPage = 0;
 		int rightPage = this.pageNames.size()-1;
@@ -293,7 +293,7 @@ public class Table implements java.io.Serializable{
 		Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
 		return page;
 	}
-	
+
 	private void updateTupleInPage(Page page,Object clusteringKeyValue, Hashtable<String, Object>htblColNameValue) throws IOException, ClassNotFoundException {
 		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
 		int left = 0;
@@ -414,7 +414,7 @@ public class Table implements java.io.Serializable{
 	{
 		// even though only one result will show up, i will put it in arraylist for ease of use
 		ArrayList<String> result = new ArrayList<String>();
-		Page deletePage = findPageToUpdate(deletionCondition.getValue());
+		Page deletePage = findPageBinarySearch(deletionCondition.getValue());
 		String tuplePostion = getTuplePositionFromPageUsingClusteringKey(deletionCondition.getValue(), deletePage);
 		if(tuplePostion==null) // if the tuple was not found in the page; return an empty arraylist
 			return result;
@@ -441,9 +441,9 @@ public class Table implements java.io.Serializable{
 
 		}
 		return null;
-		
+
 	}
-	
+
 	private void deleteTuples(ArrayList<String> deletionTuples) throws ClassNotFoundException
 	{
 		for(int i = deletionTuples.size()-1 ;i>=0;i--)
@@ -558,11 +558,11 @@ public class Table implements java.io.Serializable{
 		ArrayList<Tuple> final_result = new ArrayList<Tuple>();
 		for(int i=0;i<results.size();i++) 
 			final_result.addAll(results.get(i));
-		
+
 		//Remaining array list in first element after doing all operations 
 		return final_result.iterator();
 	}
-	
+
 	public Vector<String> linearSearch(Table kamal,Datatype target,String col_Name) throws ClassNotFoundException{
 		Vector<String> result=new Vector<String>();
 		for(String pageName:kamal.pageNames) {
@@ -577,30 +577,173 @@ public class Table implements java.io.Serializable{
 		result.clear(); 
 		result.addAll(hashSet); 
 		return result;
-		
-	}
-	
-	
-	
-	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException 
-	{
-		ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
 
-		for(String pageName:kamal.pageNames)
-		{
-			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
-			for(int j = 0 ; j<page.tuples.size();j++) 
+	}
+
+
+
+	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException, IOException, DBAppException 
+	{
+		List<List<String>> tableInfo = DBApp.getColumnData(kamal.name);//Gets data from csv file of table
+
+		//		ArrayList<String> colTableNames = DBApp.getColumnNames(tableInfo);
+		String primKey=DBApp.getPrimaryKeyName(tableInfo);
+
+		ArrayList<Tuple> conditionSatisfied = new ArrayList<Tuple>();
+		if(!col_Name.equals(primKey)) 
+		{ //First check if colomn is not primary key do linear search
+			for(String pageName:kamal.pageNames)
 			{
-				Tuple tupleSearch=page.tuples.get(j);
-				Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
-				if(t!=null)
-					conditionSatisfied.add(t);
+				Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+				for(int j = 0 ; j<page.tuples.size();j++) 
+				{
+					Tuple tupleSearch=page.tuples.get(j);
+					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+					if(t!=null)
+						conditionSatisfied.add(t);
+				}
+
+			}
+		}
+		else //Colomn is primary key so must use binary search
+		{
+			Page pageToSelect=null;
+			Tuple targetTuple=null;
+			int startPagenum=0;
+			int tuplenum=0;
+			switch(operator) 
+			{
+			case "=":
+				pageToSelect=findPageBinarySearch(obj);
+				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				if(targetTuple!=null)
+					conditionSatisfied.add(targetTuple);break;
+			case "!=":
+				for(String pageName:kamal.pageNames)
+				{
+					Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+					for(int j = 0 ; j<page.tuples.size();j++) 
+					{
+						Tuple tupleSearch=page.tuples.get(j);
+						Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+						if(t!=null)
+							conditionSatisfied.add(t);
+					}
+
+				}break;
+			case "<":
+				pageToSelect=findPageBinarySearch(obj);
+				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				startPagenum=pageToSelect.num;
+				tuplenum=(int)obj%3;
+				int size=pageToSelect.tuples.size()-1;
+				for(int j = tuplenum ; j>=0;j--) 
+				{
+					Tuple tupleSearch=pageToSelect.tuples.get(j);
+					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+					if(t!=null)
+						conditionSatisfied.add(t);
+				}
+
+				for(int i=startPagenum-1;i>=0;i--) 
+				{
+					String pageName=pageNames.get(i);
+					Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+					for(int j = page.tuples.size()-1 ; j>=0;j--) 
+					{
+						Tuple tupleSearch=page.tuples.get(j);
+						Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+						if(t!=null)
+							conditionSatisfied.add(t);
+					}
+				}break;
+			case "<=":
+				pageToSelect=findPageBinarySearch(obj);
+				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				startPagenum=pageToSelect.num;
+				tuplenum=(int)obj%3;
+				if(targetTuple!=null)
+					conditionSatisfied.add(targetTuple);
+				for(int j = tuplenum-1 ; j>=0;j--) 
+				{
+					Tuple tupleSearch=pageToSelect.tuples.get(j);
+					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+					if(t!=null)
+						conditionSatisfied.add(t);
+				}
+
+				for(int i=startPagenum-1;i>=0;i--) 
+				{
+					String pageName=pageNames.get(i);
+					Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+					for(int j = page.tuples.size()-1 ; j>=0;j--) 
+					{
+						Tuple tupleSearch=page.tuples.get(j);
+						Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+						if(t!=null)
+							conditionSatisfied.add(t);
+					}
+				}break;
+			case ">":
+				pageToSelect=findPageBinarySearch(obj);
+				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				startPagenum=pageToSelect.num;
+				tuplenum=(int)obj%3;
+
+				for(int j = tuplenum ; j<pageToSelect.tuples.size();j++) 
+				{
+					Tuple tupleSearch=pageToSelect.tuples.get(j);
+					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+					if(t!=null)
+						conditionSatisfied.add(t);
+				}
+
+				for(int i=startPagenum+1;i<kamal.pageNames.size();i++) 
+				{
+					String pageName=pageNames.get(i);
+					Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+					for(int j = 0 ; j<page.tuples.size();j++) 
+					{
+						Tuple tupleSearch=page.tuples.get(j);
+						Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+						if(t!=null)
+							conditionSatisfied.add(t);
+					}
+				}break;
+			case ">=":
+				pageToSelect=findPageBinarySearch(obj);
+				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				startPagenum=pageToSelect.num;
+				tuplenum=(int)obj%3;
+				if(targetTuple!=null)
+					conditionSatisfied.add(targetTuple);
+
+				for(int j = tuplenum+1 ; j<pageToSelect.tuples.size();j++) 
+				{
+					Tuple tupleSearch=pageToSelect.tuples.get(j);
+					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+					if(t!=null)
+						conditionSatisfied.add(t);
+				}
+
+				for(int i=startPagenum+1;i<kamal.pageNames.size();i++) 
+				{
+					String pageName=pageNames.get(i);
+					Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
+					for(int j = 0 ; j<page.tuples.size();j++) 
+					{
+						Tuple tupleSearch=page.tuples.get(j);
+						Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
+						if(t!=null)
+							conditionSatisfied.add(t);
+					}
+				}break;
+			default:System.out.println("NOT approprtaite operator");break;
 			}
 
+			if(!conditionSatisfied.isEmpty())
+				results.add(conditionSatisfied);
 		}
-		if(!conditionSatisfied.isEmpty())
-			results.add(conditionSatisfied);
-
 
 	}
 
@@ -657,6 +800,27 @@ public class Table implements java.io.Serializable{
 
 	}
 
+	private Tuple getTupleFromPageUsingClusteringKey(Object clusteringKeyValue, Page page)
+	{
+		Datatype clusteringKeyValueDatatype = new Datatype(clusteringKeyValue);
+		int left = 0;
+		int right =page.tuples.size()-1;
+		Vector<Tuple> pageTuples =  page.tuples;
+		while(left<=right)
+		{
+			int middle = (left+right)/2;
+			Datatype middleTuple = new Datatype(pageTuples.get(middle).Primary_key);
+			if(middleTuple.compareTo(clusteringKeyValueDatatype)==0)
+				return page.tuples.get(middle);
+			else if(middleTuple.compareTo(clusteringKeyValueDatatype)>0)
+				right = middle-1;
+			else
+				left = middle+1;
+
+		}
+		return null;
+
+	}
 
 	public Tuple makeConditionList(Tuple tupleSearch,String col_Name,String operator,Object obj)
 	{
@@ -764,7 +928,7 @@ public class Table implements java.io.Serializable{
 		return false;
 
 	}
-	
+
 	public void serializeTable()
 	{
 		try {

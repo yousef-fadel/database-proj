@@ -1,31 +1,13 @@
 /** * @author Wael Abouelsaadat */
 package com.goat.database;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -401,7 +383,7 @@ public class DBApp {
 
 	}
 
-	private String getPrimaryKeyName(List<List<String>> tableInfo)
+	public static String getPrimaryKeyName(List<List<String>> tableInfo)
 	{
 		for (int i = 0; i < tableInfo.size(); i++)
 			if (tableInfo.get(i).get(3).equals("True"))
@@ -409,6 +391,7 @@ public class DBApp {
 
 		return null;		
 	}
+	
 	public static void serializedata(Object o, String filename) {
 		try {
 			FileOutputStream file;
@@ -423,6 +406,7 @@ public class DBApp {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 
 	}
 
@@ -559,18 +543,18 @@ public class DBApp {
 	// ----------------------------------------------- MAIN -------------------------------------------------
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
-		DBApp dbApp =new DBApp();		
+		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-		dbApp.test5();
+//		dbApp.test5();
 //		dbApp.createIndex("Vagabond", "id", "idIndex");
 //		Hashtable<String,Object> colData = new Hashtable<String,Object>();
-//				colData.put("id", new Integer(200));
+//				colData.put("id", new Integer(20));
 //				colData.put("age", new Integer(2));
 //				colData.put("gpa", new Double(0.1));
 //				colData.put("name", new String("Bolla"));
 //				dbApp.insertIntoTable( "Vagabond" , colData );
-//		//		dbApp.deleteFromTable( "Vagabond" , colData );
-//		//		dbApp.updateTable("Vagabond", "14", colData);
+//				dbApp.deleteFromTable( "Vagabond" , colData );
+//				dbApp.updateTable("Vagabond", "19", colData);
 //						dbApp.saveVagabond();
 		//
 		//		
@@ -581,32 +565,32 @@ public class DBApp {
 
 
 		//		
-		//		SQLTerm[] arrSQLTerms;
-		//		arrSQLTerms = new SQLTerm[1];
-		//		arrSQLTerms[0]=new SQLTerm();
-		//		arrSQLTerms[0]._strTableName = "Vagabond";
-		//		arrSQLTerms[0]._strColumnName= "age";
-		//		arrSQLTerms[0]._strOperator = "!=";
-		//		arrSQLTerms[0]._objValue = new Integer(24);
-		//		//		arrSQLTerms[1]=new SQLTerm();
-		//		//		arrSQLTerms[1]._strTableName = "Vagabond";
-		//		//		arrSQLTerms[1]._strColumnName= "age";
-		//		//		arrSQLTerms[1]._strOperator = "=";
-		//		//		arrSQLTerms[1]._objValue = new Integer(24);
-		//		String[]strarrOperators = new String[0];
-		//		//		strarrOperators[0] = "OR"; 
-		//		try {
-		//			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-		//			while(resultSet.hasNext())
-		//			{
-		//				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
-		//				System.out.println(resultSet.next());
-		//			}
-		//
-		//		} catch (ClassNotFoundException | DBAppException | IOException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
+				SQLTerm[] arrSQLTerms;
+				arrSQLTerms = new SQLTerm[1];
+				arrSQLTerms[0]=new SQLTerm();
+				arrSQLTerms[0]._strTableName = "Vagabond";
+				arrSQLTerms[0]._strColumnName= "id";
+				arrSQLTerms[0]._strOperator = "!=";
+				arrSQLTerms[0]._objValue = new Integer(5);
+				//		arrSQLTerms[1]=new SQLTerm();
+				//		arrSQLTerms[1]._strTableName = "Vagabond";
+				//		arrSQLTerms[1]._strColumnName= "age";
+				//		arrSQLTerms[1]._strOperator = "=";
+				//		arrSQLTerms[1]._objValue = new Integer(24);
+				String[]strarrOperators = new String[0];
+				//		strarrOperators[0] = "OR"; 
+				try {
+					Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+					while(resultSet.hasNext())
+					{
+						//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
+						System.out.println(resultSet.next());
+					}
+		
+				} catch (ClassNotFoundException | DBAppException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 
 
@@ -639,14 +623,14 @@ public class DBApp {
 		createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 
-		this.createIndex("Vagabond", "id", "ageIndex");
+		this.createIndex("Vagabond", "age", "ageIndex");
 		int uniqueID[] = random.ints(0,200).distinct().limit(100).toArray();
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
 		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
 				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
-		for(int i=0;i<50;i++) {
+		for(int i=0;i<20;i++) {
 			int age = possibleAge[random.nextInt(possibleAge.length)];
 			int id = i;
 			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];
