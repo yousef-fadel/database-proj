@@ -16,6 +16,8 @@ import com.goat.bonus.MySqlLexer;
 import com.goat.bonus.MySqlParser;
 import com.goat.bonus.MySqlParser.CreateDefinitionContext;
 import com.goat.bonus.MySqlParser.ExpressionsWithDefaultsContext;
+import com.goat.bonus.MySqlParser.SingleUpdateStatementContext;
+import com.goat.bonus.MySqlParser.UpdatedElementContext;
 import com.goat.bonus.MySqlParserBaseListener;
 
 
@@ -110,7 +112,49 @@ public class MySQListener extends MySqlParserBaseListener
 		}
 	}
 
-
+	public void enterUpdateStatement(MySqlParser.UpdateStatementContext ctx) 
+	{
+		// ma3ndeesh fekra ya3ni eh multipleupdatestatment; el mohem e7na mesh bensupport it
+		if(ctx.multipleUpdateStatement()!=null)
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		
+		SingleUpdateStatementContext ctxUpdate = ctx.singleUpdateStatement();
+		// makes sure the update is supported by us
+		checkUpdateIsSupported(ctxUpdate);
+		
+		String tableName = ctxUpdate.tableName().getText();
+		String clusteringNameValue []= ctxUpdate.expression().getText().split("=");//contains {primarykeyname, primarykeyValue}
+		String strClusteringKeyValue = clusteringNameValue[1];
+		
+		Hashtable<String,Object> htblColNameValue = new Hashtable<String, Object>();
+		for(UpdatedElementContext updatedColumn : ctxUpdate.updatedElement())
+		{
+			String nameValue[] = updatedColumn.getText().split("="); // array contains {name, value}
+			htblColNameValue.put(nameValue[0], parseValue(nameValue[1]));
+		}
+		try {
+			database.updateTable(tableName, strClusteringKeyValue, htblColNameValue);
+		} catch (ClassNotFoundException | DBAppException | IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	private void checkUpdateIsSupported(SingleUpdateStatementContext ctx)
+	{
+		if(ctx.expression() == null) //mafeesh where aslan
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		String primaryColumnName = getPrimaryKeyColumn(ctx.tableName().getText());
+		
+		// where should contain one condition only and that condition should be the primary key
+		if(ctx.expression().children.size()>1 || !ctx.expression().getText().contains(primaryColumnName))
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+			
+		// set should not contain primary key
+		for(UpdatedElementContext updatedColumn : ctx.updatedElement())
+			if(updatedColumn.getText().contains(primaryColumnName))
+				throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+	}
 	// turns datatype entered to the one we use in the project
 	// ex: integer becomes java.lang.Integer
 	private String getDataType(String datatypeName)
@@ -142,6 +186,14 @@ public class MySQListener extends MySqlParserBaseListener
 			return new Integer(Integer.parseInt(value));
 	}
 	
+	private String getPrimaryKeyColumn(String tableName)
+	{
+		try {
+			return database.getPrimaryKeyName(DBApp.getColumnData(tableName));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 	public void visitErrorNode(ErrorNode node)
 	{
 		throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
