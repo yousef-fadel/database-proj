@@ -1,14 +1,39 @@
 /** * @author Wael Abouelsaadat */
 package com.goat.database;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Vector;
 
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+
+import com.goat.bonus.MySqlLexer;
+import com.goat.bonus.MySqlParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
@@ -151,6 +176,13 @@ public class DBApp {
 
 		return (basyo.selectTable(arrSQLTerms,strarrOperators));
 	}
+	
+	public Iterator parseSQL(StringBuffer strBufferSQL) throws DBAppException, ClassNotFoundException
+	{
+		MySQListener listener = new MySQListener();
+		Iterator result = listener.parse(strBufferSQL);
+		return result;
+	}
 	// ------------------------------------------CHECK-----------------------------------------------------
 
 	public void checkCreateTable(String strTableName, String strClusteringKeyColumn,
@@ -160,8 +192,6 @@ public class DBApp {
 			if (tables.get(i).name.equals(strTableName)) 
 				throw new DBAppException("A table of this name already exists");
 
-
-		File file = new File("./resources/metadata.csv"); 
 		String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
 		Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
 		// the reason for two loops is because we want to check the data before starting to write onto
@@ -466,8 +496,6 @@ public class DBApp {
 	public void writeMetadata(String strTableName, String strClusteringKeyColumn,Hashtable<String,String> htblColNameType) throws IOException, DBAppException
 	{
 		File file = new File("./resources/metadata.csv"); 
-
-		String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
 		Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
 
 
@@ -545,56 +573,13 @@ public class DBApp {
 	{
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-//		dbApp.test5();
-//		dbApp.createIndex("Vagabond", "id", "idIndex");
-//		Hashtable<String,Object> colData = new Hashtable<String,Object>();
-//				colData.put("id", new Integer(20));
-//				colData.put("age", new Integer(2));
-//				colData.put("gpa", new Double(0.1));
-//				colData.put("name", new String("Bolla"));
-//				dbApp.insertIntoTable( "Vagabond" , colData );
-//				dbApp.deleteFromTable( "Vagabond" , colData );
-//				dbApp.updateTable("Vagabond", "19", colData);
-//						dbApp.saveVagabond();
-		//
-		//		
-//		colData.put("name", new String("Nourhan" ) );
-//		colData.put("gpa", new Double( 0.7 ) ); 
-//		dbApp.deleteFromTable("Vagabond", colData);
-//		dbApp.saveVagabond();
-
-
-		//		
-				SQLTerm[] arrSQLTerms;
-				arrSQLTerms = new SQLTerm[1];
-				arrSQLTerms[0]=new SQLTerm();
-				arrSQLTerms[0]._strTableName = "Vagabond";
-				arrSQLTerms[0]._strColumnName= "id";
-				arrSQLTerms[0]._strOperator = "!=";
-				arrSQLTerms[0]._objValue = new Integer(5);
-				//		arrSQLTerms[1]=new SQLTerm();
-				//		arrSQLTerms[1]._strTableName = "Vagabond";
-				//		arrSQLTerms[1]._strColumnName= "age";
-				//		arrSQLTerms[1]._strOperator = "=";
-				//		arrSQLTerms[1]._objValue = new Integer(24);
-				String[]strarrOperators = new String[0];
-				//		strarrOperators[0] = "OR"; 
-				try {
-					Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
-					while(resultSet.hasNext())
-					{
-						//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
-						System.out.println(resultSet.next());
-					}
-		
-				} catch (ClassNotFoundException | DBAppException | IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-
-
-
+		dbApp.parseSQL(new StringBuffer("CREATE TABLE products (\r\n"
+				+ "    product_id INT AUTO_INCREMENT PRIMARY KEY,\r\n"
+				+ "    product_name VARCHAR(100) NOT NULL,\r\n"
+				+ "    price DOUBLE(8,2) NOT NULL,\r\n"
+				+ "    quantity INT NOT NULL\r\n"
+				+ ");\r\n"
+				+ ""));
 	}
 
 	// completely delete everything: meta file, tables, all pages
