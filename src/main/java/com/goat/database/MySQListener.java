@@ -67,8 +67,20 @@ public class MySQListener extends MySqlParserBaseListener
 		}
 	}
 	
+	public void enterCreateIndex(MySqlParser.CreateIndexContext ctx) 
+	{
+		String tableName = ctx.tableName().getText();
+		String indexName = ctx.children.get(2).getText(); //TODO there has to be a better way to get index name
+		if(ctx.indexColumnNames().indexColumnName().size()>1)
+			throw new RuntimeException(new DBAppException("Unsupported SQL statement"));
+		String colName = ctx.indexColumnNames().getChild(0).getText();
+		try {
+			database.createIndex(tableName, colName, indexName);
+		} catch (ClassNotFoundException | DBAppException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}		
 	
-		
 	
 	// turns datatype entered to the one we use in the project
 	// ex: integer becomes java.lang.Integer

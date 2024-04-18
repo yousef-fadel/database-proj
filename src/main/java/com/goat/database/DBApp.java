@@ -573,13 +573,7 @@ public class DBApp {
 	{
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-		dbApp.parseSQL(new StringBuffer("CREATE TABLE products (\r\n"
-				+ "    product_id INT AUTO_INCREMENT PRIMARY KEY,\r\n"
-				+ "    product_name VARCHAR(100) NOT NULL,\r\n"
-				+ "    price DOUBLE(8,2) NOT NULL,\r\n"
-				+ "    quantity INT NOT NULL\r\n"
-				+ ");\r\n"
-				+ ""));
+		dbApp.parseSQL(new StringBuffer(""));
 	}
 
 	// completely delete everything: meta file, tables, all pages
