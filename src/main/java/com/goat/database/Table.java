@@ -341,6 +341,8 @@ public class Table implements java.io.Serializable{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		boolean firstDeletion = true;
+		if(!colNameValueIterator.hasNext())
+			deleteAllTuples();
 		// iterate on deletion conditions and get page name + tuple position and intersect everytime
 		while(colNameValueIterator.hasNext())
 		{
@@ -470,6 +472,16 @@ public class Table implements java.io.Serializable{
 		}
 	}
 
+	private void deleteAllTuples() throws ClassNotFoundException {
+		for(int i = 0;i<this.pageNames.size();i++)
+		{
+			String currentPageName = this.pageNames.get(i);
+			File pageFilePath = new File(this.filepath + currentPageName + ".ser");
+			pageFilePath.delete();
+		}
+		this.pageNames.clear();
+		this.serializeTable();
+	}
 	//-------------------------------------SELECT-------------------------------------------------------
 	public Iterator selectTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws ClassNotFoundException, DBAppException, IOException 
 	{
