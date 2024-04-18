@@ -573,7 +573,11 @@ public class DBApp {
 	{
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-		dbApp.parseSQL(new StringBuffer(""));
+		dbApp.parseSQL(new StringBuffer("INSERT INTO products (product_name, price, quantity, product_id) VALUES\r\n"
+				+ "('Product B', 29.99, 150,1),\r\n"
+				+ "('Product C', 39.99, 200,2),\r\n"
+				+ "('Product D', 49.99, 250,3);\r\n"
+				+ ""));
 	}
 
 	// completely delete everything: meta file, tables, all pages
