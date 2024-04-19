@@ -754,9 +754,9 @@ public class Table implements java.io.Serializable{
 			default:System.out.println("NOT approprtaite operator");break;
 			}
 
-			if(!conditionSatisfied.isEmpty())
-				results.add(conditionSatisfied);
+				
 		}
+		results.add(conditionSatisfied);
 
 	}
 
@@ -807,7 +807,6 @@ public class Table implements java.io.Serializable{
 			}
 
 		}
-		if(!conditionIndex.isEmpty())
 			results.add(conditionIndex);
 
 

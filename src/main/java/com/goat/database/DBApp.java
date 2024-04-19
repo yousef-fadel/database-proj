@@ -581,12 +581,12 @@ public class DBApp {
 		arrSQLTerms[0]._strTableName = "Vagabond";
 		arrSQLTerms[0]._strColumnName= "age";
 		arrSQLTerms[0]._strOperator = ">=";
-		arrSQLTerms[0]._objValue = new Integer(18);
+		arrSQLTerms[0]._objValue = new Integer(1857485);
 		arrSQLTerms[1]=new SQLTerm();
 		arrSQLTerms[1]._strTableName = "Vagabond";
 		arrSQLTerms[1]._strColumnName= "name";
 		arrSQLTerms[1]._strOperator = "=";
-		arrSQLTerms[1]._objValue = new String("Farida");
+		arrSQLTerms[1]._objValue = new String("Netnyaho");
 		String[]strarrOperators = new String[1];
 		strarrOperators[0] = "AND"; 
 		try {
