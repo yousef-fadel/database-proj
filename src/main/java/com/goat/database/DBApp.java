@@ -573,7 +573,34 @@ public class DBApp {
 	{
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-		dbApp.parseSQL(new StringBuffer("DELETE FROM products WHERE product_id = 100"));
+//		dbApp.test5();
+//		dbApp.saveVagabond();
+		SQLTerm[] arrSQLTerms;
+		arrSQLTerms = new SQLTerm[2];
+		arrSQLTerms[0]=new SQLTerm();
+		arrSQLTerms[0]._strTableName = "Vagabond";
+		arrSQLTerms[0]._strColumnName= "age";
+		arrSQLTerms[0]._strOperator = ">=";
+		arrSQLTerms[0]._objValue = new Integer(18);
+		arrSQLTerms[1]=new SQLTerm();
+		arrSQLTerms[1]._strTableName = "Vagabond";
+		arrSQLTerms[1]._strColumnName= "name";
+		arrSQLTerms[1]._strOperator = "=";
+		arrSQLTerms[1]._objValue = new String("Farida");
+		String[]strarrOperators = new String[1];
+		strarrOperators[0] = "AND"; 
+		try {
+			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
+			while(resultSet.hasNext())
+			{
+				//				ArrayList<Tuple> currCol = (ArrayList<Tuple>) resultSet.next();
+				System.out.println(resultSet.next());
+			}
+		}catch (ClassNotFoundException | DBAppException | IOException e) {
+			e.printStackTrace();
+		}
+		
+//		dbApp.parseSQL(new StringBuffer("SELECT * FROM Vagabond WHERE age >= 18 OR name='Farida';\r\n"));
 		
 	}
 

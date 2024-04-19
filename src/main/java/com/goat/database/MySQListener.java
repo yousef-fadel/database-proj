@@ -1,6 +1,7 @@
 package com.goat.database;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +18,8 @@ import com.goat.bonus.MySqlParser;
 import com.goat.bonus.MySqlParser.CreateDefinitionContext;
 import com.goat.bonus.MySqlParser.ExpressionContext;
 import com.goat.bonus.MySqlParser.ExpressionsWithDefaultsContext;
+import com.goat.bonus.MySqlParser.FromClauseContext;
+import com.goat.bonus.MySqlParser.QuerySpecificationContext;
 import com.goat.bonus.MySqlParser.SingleDeleteStatementContext;
 import com.goat.bonus.MySqlParser.SingleUpdateStatementContext;
 import com.goat.bonus.MySqlParser.UpdatedElementContext;
@@ -119,15 +122,15 @@ public class MySQListener extends MySqlParserBaseListener
 		// ma3ndeesh fekra ya3ni eh multipleupdatestatment; el mohem e7na mesh bensupport it
 		if(ctx.multipleUpdateStatement()!=null)
 			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
-		
+
 		SingleUpdateStatementContext ctxUpdate = ctx.singleUpdateStatement();
 		// makes sure the update is supported by us
 		checkUpdateIsSupported(ctxUpdate);
-		
+
 		String tableName = ctxUpdate.tableName().getText();
 		String clusteringNameValue []= ctxUpdate.expression().getText().split("=");//contains {primarykeyname, primarykeyValue}
 		String strClusteringKeyValue = clusteringNameValue[1];
-		
+
 		Hashtable<String,Object> htblColNameValue = new Hashtable<String, Object>();
 		for(UpdatedElementContext updatedColumn : ctxUpdate.updatedElement())
 		{
@@ -139,25 +142,25 @@ public class MySQListener extends MySqlParserBaseListener
 		} catch (ClassNotFoundException | DBAppException | IOException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 	}
-	
+
 	private void checkUpdateIsSupported(SingleUpdateStatementContext ctx)
 	{
 		if(ctx.expression() == null) //mafeesh where aslan
 			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
 		String primaryColumnName = getPrimaryKeyColumn(ctx.tableName().getText());
-		
+
 		// where should contain one condition only and that condition should be the primary key
 		if(ctx.expression().children.size()>1 || !ctx.expression().getText().contains(primaryColumnName))
 			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
-			
+
 		// set should not contain primary key
 		for(UpdatedElementContext updatedColumn : ctx.updatedElement())
 			if(updatedColumn.getText().contains(primaryColumnName))
 				throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
 	}
-	
+
 	public void enterDeleteStatement(MySqlParser.DeleteStatementContext ctx) 
 	{
 		// bardo no idea what multiple delete statement is; unsupported w 5alas
@@ -174,7 +177,7 @@ public class MySQListener extends MySqlParserBaseListener
 		} catch (ClassNotFoundException | DBAppException | IOException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 	}
 	private void checkDeleteIsSupported(ExpressionContext ctx)
 	{
@@ -183,7 +186,7 @@ public class MySQListener extends MySqlParserBaseListener
 		// each can be reached by using getChild(i)
 		ParseTree whereClause = ctx.getChild(0).getParent();
 		String test2 = ctx.getText();
-		
+
 		// if one condition we handle it seperately as the way the parser counts the children is weird 
 		if(whereClause.getChildCount()==1)
 			checkOperator(whereClause);
@@ -209,7 +212,7 @@ public class MySQListener extends MySqlParserBaseListener
 		if(!whereClause.getChild(0).getChild(1).getText().contains("="))
 			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
 	}
- 	private void addValuesToDeleteHashTable(Hashtable<String,Object> htblColNameValue, ParseTree expression)
+	private void addValuesToDeleteHashTable(Hashtable<String,Object> htblColNameValue, ParseTree expression)
 	{
 		String[] nameValue = new String[2];
 		if(expression.getChildCount()==1)
@@ -222,7 +225,88 @@ public class MySQListener extends MySqlParserBaseListener
 		htblColNameValue.put(nameValue[0], parseValue(nameValue[1]));
 		addValuesToDeleteHashTable(htblColNameValue, expression.getChild(0));
 	}
+
+	public void enterSimpleSelect(MySqlParser.SimpleSelectContext ctx) 
+	{
+		QuerySpecificationContext queryctx = ctx.querySpecification();
+		checkSelectHasOnlyOneTable(ctx.querySpecification().fromClause());
+		String tableName = ctx.querySpecification().fromClause().tableSources().tableSource(0).getText();
+		ArrayList<SQLTerm> arrListSQLTerms = new ArrayList<SQLTerm>();
+		ArrayList<String> strarrListOperators = new ArrayList<String>();
+		fillOperatorsAndTerms(arrListSQLTerms,strarrListOperators,queryctx.fromClause().whereExpr.getChild(0).getParent(), tableName);
+
+
+
+
+		SQLTerm[] arrSQLTerms = arrListSQLTerms.toArray(SQLTerm[]::new);
+		String[] strarrOperators = strarrListOperators.toArray(String[]::new);
+		try {
+			database.selectFromTable(arrSQLTerms, strarrOperators);
+		} catch (ClassNotFoundException | DBAppException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	private void fillOperatorsAndTerms(ArrayList<SQLTerm> arrListSQLTerms, ArrayList<String> strarrListOperators, 
+			ParseTree whereExpression, String tableName)
+	{
+		if(whereExpression.getChildCount()!=1)
+		{
+			fillOperators(strarrListOperators,whereExpression);
+			fillSQLterms(arrListSQLTerms, whereExpression, tableName);
+		}
+		else
+		{
+			SQLTerm term = new SQLTerm();
+			ParseTree condition = whereExpression.getChild(0); 
+			term._strTableName = tableName;
+			term._strColumnName = condition.getChild(0).getText();
+			term._strOperator = condition.getChild(1).getText();
+			term._objValue = parseValue(condition.getChild(2).getText());
+			
+			arrListSQLTerms.add(term);
+		}
+	}
+	private void fillOperators( ArrayList<String> strarrListOperators, ParseTree whereExpression)
+	{
+		if(whereExpression.getChildCount()==1)
+			return;
+		String operator = whereExpression.getChild(1).getText().toUpperCase();
+		strarrListOperators.add(0, operator);
+		fillOperators(strarrListOperators, whereExpression.getChild(0));
+	}
+	private void fillSQLterms(ArrayList<SQLTerm> arrListSQLTerms, ParseTree whereExpression, String tableName)
+	{
+		SQLTerm term = new SQLTerm();
+		ParseTree condition;
+		
+		// takes the last condition on the right, and splits it into 3 pieces:
+		// column name, operator, and object value
+		if(whereExpression.getChildCount()==1)
+			condition = whereExpression.getChild(0); 
+		else
+			condition = whereExpression.getChild(2).getChild(0); 
+		System.out.println(condition.getText());
+		term._strTableName = tableName;
+		term._strColumnName = condition.getChild(0).getText();
+		term._strOperator = condition.getChild(1).getText();
+		term._objValue = parseValue(condition.getChild(2).getText());
+		
+		arrListSQLTerms.add(0, term);
+		if(whereExpression.getChildCount()==1)
+			return;
+		fillSQLterms(arrListSQLTerms, whereExpression.getChild(0), tableName);
+	}
 	
+	private void checkSelectHasOnlyOneTable(FromClauseContext fromctx)
+	{
+		if(fromctx.tableSources().tableSource().size()>1) // ie select * from x,y where x=y
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		// TODO there has to be better way to see if a join is made
+		if(fromctx.tableSources().tableSource().get(0).getText().toLowerCase().contains("join")) // ie select* from x join y on x=y
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+
+	}
+
 	// turns datatype entered to the one we use in the project
 	// ex: integer becomes java.lang.Integer
 	private String getDataType(String datatypeName)
@@ -237,7 +321,7 @@ public class MySQListener extends MySqlParserBaseListener
 		return "i am an unsupported datatype"; // will throw exception when creating table; da asdy
 
 	}
-	
+
 	// given a string value, turns it into what it seems to be 
 	// if the value is between '', then a string is returned, if it has a . then a double is returned
 	// o.w return integer
@@ -253,7 +337,7 @@ public class MySQListener extends MySqlParserBaseListener
 		else
 			return new Integer(Integer.parseInt(value));
 	}
-	
+
 	private String getPrimaryKeyColumn(String tableName)
 	{
 		try {

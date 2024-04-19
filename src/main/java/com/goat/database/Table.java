@@ -517,7 +517,8 @@ public class Table implements java.io.Serializable{
 					throw new DBAppException("Column name not found");
 			}
 			//>, >=, <, <=, != or = 
-			if(!(operator==">" || operator==">=" || operator=="<" || operator=="<=" || operator=="!=" || operator=="="))
+			if(!(operator.equals(">") || operator.equals(">=") || operator.equals("<")
+					|| operator.equals("<=") || operator.equals("!=") || operator.equals("=")))
 				throw new DBAppException("Invalid operator");
 			String obj_class=obj.getClass().getName();
 			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
@@ -780,7 +781,7 @@ public class Table implements java.io.Serializable{
 		case ">":searchPagesRange=colIndex.searchGreaterThan(obj2,false);break;
 
 		case ">=":searchPagesRange=colIndex.searchGreaterThan(obj2,true);break;
-
+		// TODO enta kamn mesh 3aref tespell
 		default:System.out.println("Cannot find approprtaite operator");break;
 		}
 		if(!searchPagesRange.isEmpty()) {
