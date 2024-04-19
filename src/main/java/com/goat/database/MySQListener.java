@@ -15,7 +15,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import com.goat.bonus.MySqlLexer;
 import com.goat.bonus.MySqlParser;
 import com.goat.bonus.MySqlParser.CreateDefinitionContext;
+import com.goat.bonus.MySqlParser.ExpressionContext;
 import com.goat.bonus.MySqlParser.ExpressionsWithDefaultsContext;
+import com.goat.bonus.MySqlParser.SingleDeleteStatementContext;
 import com.goat.bonus.MySqlParser.SingleUpdateStatementContext;
 import com.goat.bonus.MySqlParser.UpdatedElementContext;
 import com.goat.bonus.MySqlParserBaseListener;
@@ -155,6 +157,72 @@ public class MySQListener extends MySqlParserBaseListener
 			if(updatedColumn.getText().contains(primaryColumnName))
 				throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
 	}
+	
+	public void enterDeleteStatement(MySqlParser.DeleteStatementContext ctx) 
+	{
+		// bardo no idea what multiple delete statement is; unsupported w 5alas
+		if(ctx.multipleDeleteStatement()!=null)
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+
+		SingleDeleteStatementContext ctxDelete = ctx.singleDeleteStatement();
+		checkDeleteIsSupported(ctxDelete.expression());
+		String tableName = ctxDelete.tableName().getText();
+		Hashtable<String,Object> htblColNameValue = new Hashtable<String, Object>();
+		addValuesToDeleteHashTable(htblColNameValue, ctxDelete.expression().getChild(0).getParent());
+		try {
+			database.deleteFromTable(tableName, htblColNameValue);
+		} catch (ClassNotFoundException | DBAppException | IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	private void checkDeleteIsSupported(ExpressionContext ctx)
+	{
+		// turns expressioncontext to parsetree
+		// here tree can be split into {entire where except last condition, operator, last condition}
+		// each can be reached by using getChild(i)
+		ParseTree whereClause = ctx.getChild(0).getParent();
+		String test2 = ctx.getText();
+		
+		// if one condition we handle it seperately as the way the parser counts the children is weird 
+		if(whereClause.getChildCount()==1)
+			checkOperator(whereClause);
+		else // this checks that all conditions are anded together and we only use = not < or >
+			checkOperatorAndConditions(whereClause);
+	}
+	private void checkOperatorAndConditions(ParseTree whereClause)
+	{
+		if(whereClause.getChildCount()==1)
+		{
+			if(!whereClause.getChild(0).getText().contains("="))
+				throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+			return;
+		}
+		if(!whereClause.getChild(1).getText().equalsIgnoreCase("and")) // conditions aren't anded together
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		if(!whereClause.getChild(2).getText().contains("=")) // condition uses something other than = (ex: > or <)
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		checkOperatorAndConditions(whereClause.getChild(0)); // check the rest of conditions recursively
+	}
+	private void checkOperator(ParseTree whereClause)
+	{
+		if(!whereClause.getChild(0).getChild(1).getText().contains("="))
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+	}
+ 	private void addValuesToDeleteHashTable(Hashtable<String,Object> htblColNameValue, ParseTree expression)
+	{
+		String[] nameValue = new String[2];
+		if(expression.getChildCount()==1)
+		{
+			nameValue = expression.getChild(0).getText().split("=");
+			htblColNameValue.put(nameValue[0], parseValue(nameValue[1]));
+			return;
+		}
+		nameValue = expression.getChild(2).getText().split("=");
+		htblColNameValue.put(nameValue[0], parseValue(nameValue[1]));
+		addValuesToDeleteHashTable(htblColNameValue, expression.getChild(0));
+	}
+	
 	// turns datatype entered to the one we use in the project
 	// ex: integer becomes java.lang.Integer
 	private String getDataType(String datatypeName)

@@ -573,7 +573,8 @@ public class DBApp {
 	{
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
-		dbApp.parseSQL(new StringBuffer("UPDATE products SET price = 29.99 WHERE product_id=2"));
+		dbApp.parseSQL(new StringBuffer("DELETE FROM products WHERE product_id = 100"));
+		
 	}
 
 	// completely delete everything: meta file, tables, all pages
