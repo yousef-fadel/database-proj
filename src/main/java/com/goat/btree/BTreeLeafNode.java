@@ -61,7 +61,7 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 		//test this
 		while(index<this.values.length)
 		{
-			if(!inclusive && (this.getKey(index).compareTo(value)==0))
+			if(!inclusive && (this.getKey(index)!=null))
 			{
 				index++;
 				break;
