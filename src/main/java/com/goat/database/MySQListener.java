@@ -36,7 +36,14 @@ public class MySQListener extends MySqlParserBaseListener
 	{
 		database = new DBApp();
 	}
+	public void exitCopyCreateTable(MySqlParser.CopyCreateTableContext ctx) {
+		System.out.println(ctx);
+	}
+	
+	@Override public void enterQueryCreateTable(MySqlParser.QueryCreateTableContext ctx) { 
+		System.out.println(ctx);
 
+	}
 	public Iterator parse(StringBuffer strBufferSQL)
 	{
 		// charstream howa hay5od el input; kol el ta7t estanba
@@ -241,7 +248,7 @@ public class MySQListener extends MySqlParserBaseListener
 		SQLTerm[] arrSQLTerms = arrListSQLTerms.toArray(SQLTerm[]::new);
 		String[] strarrOperators = strarrListOperators.toArray(String[]::new);
 		try {
-			database.selectFromTable(arrSQLTerms, strarrOperators);
+			result = database.selectFromTable(arrSQLTerms, strarrOperators);
 		} catch (ClassNotFoundException | DBAppException | IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -285,7 +292,6 @@ public class MySQListener extends MySqlParserBaseListener
 			condition = whereExpression.getChild(0); 
 		else
 			condition = whereExpression.getChild(2).getChild(0); 
-		System.out.println(condition.getText());
 		term._strTableName = tableName;
 		term._strColumnName = condition.getChild(0).getText();
 		term._strOperator = condition.getChild(1).getText();
@@ -312,7 +318,7 @@ public class MySQListener extends MySqlParserBaseListener
 	private String getDataType(String datatypeName)
 	{
 		datatypeName = datatypeName.toLowerCase();
-		if(datatypeName.equals("int"))
+		if(datatypeName.contains("int"))
 			return "java.lang.Integer";
 		if(datatypeName.contains("char"))
 			return "java.lang.String";
@@ -329,7 +335,7 @@ public class MySQListener extends MySqlParserBaseListener
 	{
 		if(value.charAt(0)=='\'')
 		{
-			value.replaceAll("'", "");
+			value = value.replaceAll("'", "");
 			return new String(value);
 		}
 		else if(value.contains("."))

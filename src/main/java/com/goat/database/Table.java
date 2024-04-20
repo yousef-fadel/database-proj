@@ -32,6 +32,24 @@ public class Table implements java.io.Serializable{
 		numberForPage = 0;
 	}
 
+	//------------------------------------------------------CREATE INDEX------------------------------------------------------------------
+	public void insertRowsIntoIndex(String strColName, Index index) throws ClassNotFoundException
+	{
+		for(int i =0;i<this.pageNames.size();i++)
+		{
+			Page currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(i));
+			for(Tuple tuple:currPage.tuples)
+			{
+				Object tupleValue = tuple.entry.get(strColName);
+				Datatype dataTypeValue = new Datatype(tupleValue);
+				index.insertIntoIndex(dataTypeValue, currPage.name);
+			}
+		}
+		index = index.serializeAndDeleteIndex();
+
+	}
+	
+	//------------------------------------------------------INSERT------------------------------------------------------------------
 
 	public void insertTupleIntoTable(Tuple tuple, String clusteringKeyColName) throws DBAppException, ClassNotFoundException, IOException
 	{
@@ -51,6 +69,7 @@ public class Table implements java.io.Serializable{
 		{
 			Index clusteringIndex = getIndexWithColName(clusteringKeyColName);
 			Page pageToInsertInto;
+			// if an index exists, use it to find the page to insert to
 			if(clusteringIndex==null)
 				pageToInsertInto=findPageToInsert(tuple);
 			else 
@@ -104,6 +123,8 @@ public class Table implements java.io.Serializable{
 
 	private Page findPageToInsertIndex(Tuple tuple,Index clusteringIndex) throws ClassNotFoundException, DBAppException{
 		Object clusteringValue = tuple.Primary_key;
+		// search for all tuples >= my primary key, and take the first result's page
+		// if it is empty then I am to be inserted at the very last page
 		ArrayList<Vector<String>> pageNames = clusteringIndex.searchGreaterThan(new Datatype(clusteringValue), true);
 		if (pageNames.isEmpty())
 			return (Page) DBApp.deserializeData(this.filepath + this.pageNames.lastElement() + ".ser");
@@ -116,14 +137,14 @@ public class Table implements java.io.Serializable{
 		// gives us two (or one) possible locations we can insert into 
 		int left = 0;
 		int right = 0;
-		if(!page.tuples.isEmpty())
+//		if(!page.tuples.isEmpty()) // ??
 			right = page.tuples.size()-1;
 		int middle;
 		while(right-left>1) 
 		{
 			middle = (right + left)/2;
 			if(tuple.compareTo(page.tuples.get(middle))<0)
-				right = middle - 1; // maybe remove this -1 idk anymore
+				right = middle - 1; 
 			else if (tuple.compareTo(page.tuples.get(middle))>0)
 				left = middle + 1;
 			else 
@@ -163,6 +184,7 @@ public class Table implements java.io.Serializable{
 			// take the last element of the page, store it, and remove it from the end of the page
 			Tuple tmp = currPage.tuples.lastElement();
 			currPage.tuples.remove(currPage.tuples.size()-1);
+			// delete old page information from all indices for this table
 			deleteFromIndex(tmp,currPage.name);
 			// if we reach the end of our pages, create a new page and store the last element in it
 			// otherwise, save our current page and move onto the next page and insert the tmp at the top
@@ -180,6 +202,7 @@ public class Table implements java.io.Serializable{
 			int nextPage = this.pageNames.indexOf(currPage.name) + 1;
 			currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(nextPage));
 			currPage.tuples.insertElementAt(tmp, 0);	
+			// insert new page information for all indices in this table
 			insertIntoIndex(tmp, currPage.name);
 		}
 		currPage = currPage.serializeAndDeletePage();
@@ -190,7 +213,7 @@ public class Table implements java.io.Serializable{
 	{
 		if(this.indexNames.isEmpty())
 			return;
-
+		// get all indices and delete the tuple's page from the indices
 		for(String indexName : this.indexNames)
 		{
 			Index index = getIndexWithIndexName(indexName);
@@ -201,21 +224,7 @@ public class Table implements java.io.Serializable{
 
 	}
 
-	public void insertRowsIntoIndex(String strColName, Index index) throws ClassNotFoundException
-	{
-		for(int i =0;i<this.pageNames.size();i++)
-		{
-			Page currPage = (Page) DBApp.deserializeData(this.filepath + this.pageNames.get(i));
-			for(Tuple tuple:currPage.tuples)
-			{
-				Object tupleValue = tuple.entry.get(strColName);
-				Datatype dataTypeValue = new Datatype(tupleValue);
-				index.insertIntoIndex(dataTypeValue, currPage.name);
-			}
-		}
-		index = index.serializeAndDeleteIndex();
 
-	}
 
 
 	// checks the table for any existing index to insert into
@@ -234,14 +243,19 @@ public class Table implements java.io.Serializable{
 	}
 
 	// ------------------------------------------------------------------UPDATE---------------------------------------------------
-	public void updateTuple(Object clusteringKeyValue, Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, DBAppException, IOException
+	public void updateTuple(Object clusteringKeyValue, Hashtable<String, Object> htblColNameValue, String primaryKeyColName) throws ClassNotFoundException, DBAppException, IOException
 	{
+		if(this.pageNames.isEmpty()) //empty table aslan; nothing to update
+		{
+			System.out.println("No tuple found with clustering key value, did not update anything");
+			return;
+		}
 		Page pageToUpdate;
-		String indexName = "null";
-		if(indexName.equals("null"))
+		Index index = getIndexWithColName(primaryKeyColName);
+		if(index == null)
 			pageToUpdate = findPageBinarySearch(clusteringKeyValue);
 		else
-			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,indexName);
+			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,index);
 		updateTupleInPage(pageToUpdate,clusteringKeyValue,htblColNameValue);
 	}
 
@@ -287,8 +301,7 @@ public class Table implements java.io.Serializable{
 
 	}
 
-	private Page findPageToUpdateIndex(Object clusteringKeyValue,String indexName) throws ClassNotFoundException, DBAppException{
-		Index index = this.getIndexWithIndexName(indexName);
+	private Page findPageToUpdateIndex(Object clusteringKeyValue,Index index) throws ClassNotFoundException, DBAppException{
 		String pageName = index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
 		Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
 		return page;
