@@ -171,6 +171,7 @@ public class DBApp {
 	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
 	{
+		checkSelect(arrSQLTerms, strarrOperators);
 		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
 		Table basyo = getTable(table_Name);
 
@@ -361,8 +362,19 @@ public class DBApp {
 
 	}
 
-	public void checkSelect(SQLTerm[] arrSQLTerms, String[] strarrOperators) {
-
+	public void checkSelect(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException {
+		for(int i=0;i<arrSQLTerms.length;i++) {
+			if(arrSQLTerms[i]==null) 
+				throw new DBAppException("Statement array has null values");
+		}
+		
+		for(int i=0;i<strarrOperators.length;i++) {
+			if(strarrOperators[i]==null) 
+				throw new DBAppException("Operator array has null values");
+		}
+		if(!(arrSQLTerms.length-1==strarrOperators.length)) 
+			throw new DBAppException("Number of operators incorrect");
+		
 	}
 
 	// ------------------------------------------HELPER--------------------------------------------------------
@@ -589,6 +601,8 @@ public class DBApp {
 		arrSQLTerms[1]._objValue = new String("Netnyaho");
 		String[]strarrOperators = new String[1];
 		strarrOperators[0] = "AND"; 
+//		strarrOperators[1] = "XOR";
+//		strarrOperators[2] = "OR";
 		try {
 			Iterator resultSet = dbApp.selectFromTable(arrSQLTerms , strarrOperators);
 			while(resultSet.hasNext())
