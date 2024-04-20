@@ -114,6 +114,7 @@ public class DBApp {
 		Table omar = getTable(strTableName);
 		// update the metadata file and change the column's index type to b+Tree
 		updateMetadataIndex(strTableName,strColName,strIndexName);
+		// create the index and store all values in the table inside of the index
 		Index index = new Index(strIndexName, strColName, omar.filepath);
 		omar.insertRowsIntoIndex(strColName,index);
 		omar.indexNames.add(strIndexName);
@@ -152,8 +153,11 @@ public class DBApp {
 
 		Table omar = getTable(strTableName);
 		// turn the string clustering key value into a generic object we can use
+		
+		List<List<String>> tableInfo = getColumnData(omar.name);
+		String primaryKeyColName = getPrimaryKeyName(tableInfo);
 		Object clusteringKeyValue = loadDataTypeOfClusteringKey(strClusteringKeyValue,omar);
-		omar.updateTuple(clusteringKeyValue,htblColNameValue);
+		omar.updateTuple(clusteringKeyValue,htblColNameValue,primaryKeyColName);
 		omar = omar.serializeAndDeleteTable();
 
 	}
@@ -174,6 +178,8 @@ public class DBApp {
 		checkSelect(arrSQLTerms, strarrOperators);
 		String table_Name=arrSQLTerms[0]._strTableName;
 		Table basyo = getTable(table_Name);
+		if(basyo==null)
+			throw new DBAppException("Table name does not exist");
 
 		return (basyo.selectTable(arrSQLTerms,strarrOperators));
 	}
@@ -192,7 +198,10 @@ public class DBApp {
 		for (int i = 0; i < tables.size(); i++)
 			if (tables.get(i).name.equals(strTableName)) 
 				throw new DBAppException("A table of this name already exists");
-
+		
+		if(strTableName == null || strClusteringKeyColumn == null || htblColNameType == null || htblColNameType.isEmpty() ||
+				strTableName.isBlank() || strTableName.isEmpty() || strClusteringKeyColumn.isBlank() || strClusteringKeyColumn.isEmpty())
+			throw new DBAppException("One of the inputs is null or empty");
 		String [] possibleDataTypes = {"java.lang.Integer","java.lang.String","java.lang.Double"};
 		Iterator<Map.Entry <String,String>> colData = htblColNameType.entrySet().iterator();
 		// the reason for two loops is because we want to check the data before starting to write onto
@@ -216,6 +225,9 @@ public class DBApp {
 		Table omar = getTable(strTableName);
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
+		
+		if(strColName==null || strIndexName==null || strIndexName.isBlank() || strIndexName.isEmpty() || strColName.isBlank() )
+			throw new DBAppException("One of the inputs was null or empty");
 
 		// check that there is no index for this column specifcally
 		List<List<String>> tableInfo = getColumnData(omar.name);
@@ -239,7 +251,7 @@ public class DBApp {
 		}
 
 	}
-
+	
 	public void checkInsert(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, IOException {
 		// check if the table exists
 		Table omar = getTable(strTableName);
@@ -250,7 +262,9 @@ public class DBApp {
 		// get the names of the columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
-
+		
+		if(htblColNameValue==null)
+			throw new DBAppException("One of the inputs is null");
 		// check that all columns in the table have a value in the hashtable
 		for(String currCol:colTableNames)
 			if (htblColNameValue.get(currCol) == null)
@@ -298,8 +312,24 @@ public class DBApp {
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
 
+		if(htblColNameValue==null || htblColNameValue.isEmpty() || strClusteringKeyValue == null 
+				|| strClusteringKeyValue.isBlank() || strClusteringKeyValue.isEmpty())
+			throw new DBAppException("One of the inputs was null or empty");
+		
 		// all strings in the hashtable are columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
+		
+		String primaryKeyColumn = "";
+		// get the primary key column name for later use
+		for(int i = 0;i<tableInfo.size();i++)
+		{
+			if(tableInfo.get(i).get(3).equals("True"))
+			{
+				primaryKeyColumn = tableInfo.get(i).get(1);
+				break;
+			}
+		}
+		
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		while(colNameValueIterator.hasNext())
@@ -308,6 +338,8 @@ public class DBApp {
 			String colName = currCol.getKey();
 			if(!colTableNames.contains(colName))
 				throw new DBAppException("The hashtable has an extra column that does not exist in the table");
+			if(colName.equals(primaryKeyColumn))
+				throw new DBAppException("The hashtable contains the primary key, which cannot be updated");
 		}
 
 		// all datatypes in the hashtable correct (ex: attempting to update a integer column with a string)
@@ -322,6 +354,8 @@ public class DBApp {
 						throw new DBAppException("Unexpected datatype for one of the updated columns");
 			}
 		}
+		
+		
 
 
 	}
@@ -332,7 +366,8 @@ public class DBApp {
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
 
-
+		if(htblColNameValue == null)
+			throw new DBAppException("One of the inputs was null");
 		// get the names of the columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
@@ -482,7 +517,7 @@ public class DBApp {
 		return null;
 	}
 
-	private Object loadDataTypeOfClusteringKey(String strKeyValue, Table table) throws IOException
+	private Object loadDataTypeOfClusteringKey(String strKeyValue, Table table) throws IOException, DBAppException
 	{
 		List<List<String>> tableInfo = getColumnData(table.name);
 		for(int i = 0 ;i<tableInfo.size();i++)
@@ -496,7 +531,7 @@ public class DBApp {
 
 				} catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
 						IllegalAccessException | InvocationTargetException e) {
-					e.printStackTrace();
+					throw new DBAppException("There was a problem when parsing the clustering key");
 				}
 			}
 		return null;
@@ -586,6 +621,7 @@ public class DBApp {
 		DBApp dbApp =new DBApp();	
 //		dbApp.format();
 //		dbApp.test5();
+
 //		dbApp.saveVagabond();
 		SQLTerm[] arrSQLTerms;
 		arrSQLTerms = new SQLTerm[2];
@@ -616,6 +652,21 @@ public class DBApp {
 		
 //		dbApp.parseSQL(new StringBuffer("SELECT * FROM Vagabond WHERE age >= 18 OR name='Farida';\r\n"));
 		
+
+//		htbl.put("id", new Integer(52));
+//		htbl.put("y", new String("monkey"));
+//		htbl.put("", new Double(5.2));
+//		htbl.put("pa", new Double(5.2));
+//		dbApp.selectFromTable(null, args);
+//		Iterator iterator = dbApp.parseSQL(new StringBuffer("INSERT INTO test (x, y) VALUES\r\n"
+//				+ "(1, 'Value4');\r\n"));
+//				+ "(2, 'Value2'),\r\n"
+//				+ "(3, 'Value3');\r\n"
+//				+ ""));
+//		while(iterator.hasNext())
+//		{
+//			System.out.println(iterator.next());
+//		}
 	}
 
 	// completely delete everything: meta file, tables, all pages

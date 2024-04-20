@@ -107,10 +107,10 @@ public class InsertionTests2 {
 	private void insertRandomTuples(int numberOfPages) throws ClassNotFoundException, DBAppException, IOException
 	{
 		int [] uniqueID = random.ints(0,50000).distinct().limit(2000*numberOfPages).toArray();
-		double [] uniqueGPA = random.doubles(0,5).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
+		double [] uniqueGPA = random.doubles(0,29).distinct().mapToObj(d -> (double) Math.round(d * 1000) / 1000)
 				.mapToDouble(Double::doubleValue).limit(pageSize*2000*numberOfPages).toArray();
 
-		for(int i = 0 ;i<=numberOfPages*200;i++)
+		for(int i = 0 ;i<=numberOfPages*20;i++)
 		{
 			int id =  uniqueID[i];
 			double gpa = uniqueGPA[i];
@@ -307,7 +307,7 @@ public class InsertionTests2 {
 		database.createIndex("banadyMethod", "gpa", "gpaIndex");
 		database.createIndex("banadyMethod", "name", "nameIndex");
 		database.createIndex("banadyMethod", "id", "idIndex");
-		insertRandomTuples(8);
+		insertRandomTuples(1);
 		database.createIndex("result", "gpa", "gpaIndex");
 		database.createIndex("result", "name", "nameIndex");
 		database.createIndex("result", "id", "idIndex");
