@@ -397,10 +397,14 @@ public class Table implements java.io.Serializable{
 		ArrayList<String> result = new ArrayList<String>();
 		// get page locations from index
 		Vector<String> pageResult = colIndex.searchIndex(new Datatype(deletionCondition.getValue()));
+		if(pageResult==null) // no tuples satisfy the condition; return empty result
+			return result;
+		
 		// sheel duplicates from pageResult
 		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(pageResult);  
 		pageResult.clear(); 
-		pageResult.addAll(hashSet); 
+		pageResult.addAll(hashSet);
+		
 		// add tuple pos to each page
 		for(String pageName:pageResult)
 		{
@@ -946,7 +950,7 @@ public class Table implements java.io.Serializable{
 	{
 		List<List<String>> tableInfo = DBApp.getColumnData(this.name);
 		for(int i =0;i<tableInfo.size();i++)
-			if(tableInfo.get(i).get(1).equals(colName))
+			if(tableInfo.get(i).get(1).equals(colName) && tableInfo.get(i).get(4).equals("True"))
 				return true;
 		return false;
 

@@ -610,12 +610,14 @@ public class DBApp {
 //		dbApp.format();
 //		dbApp.test5();
 		Hashtable<String,Object> htbl = new Hashtable<String, Object>();
-		htbl.put("x", new Integer(1));
+		htbl.put("age", new Integer(2));
+		dbApp.deleteFromTable("Vagabond", htbl);
+		dbApp.saveVagabond();
 //		htbl.put("id", new Integer(52));
 //		htbl.put("y", new String("monkey"));
 //		htbl.put("", new Double(5.2));
 //		htbl.put("pa", new Double(5.2));
-		dbApp.selectFromTable(null, args);
+//		dbApp.selectFromTable(null, args);
 //		Iterator iterator = dbApp.parseSQL(new StringBuffer("INSERT INTO test (x, y) VALUES\r\n"
 //				+ "(1, 'Value4');\r\n"));
 //				+ "(2, 'Value2'),\r\n"
