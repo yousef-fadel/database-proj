@@ -611,7 +611,11 @@ public class DBApp {
 	// ----------------------------------------------- MAIN -------------------------------------------------
 	public static void main(String[] args) throws ClassNotFoundException, DBAppException, IOException
 	{
-		DBApp dbApp =new DBApp();	
+		DBApp dbApp =new DBApp();
+//		dbApp.format();
+//		dbApp.test5();
+		dbApp.takeIinputFromConsole();
+		
 	}
 
 
@@ -641,14 +645,14 @@ public class DBApp {
 		createTable("Vagabond", "id", htbl);
 		Hashtable<String,Object> colData = new Hashtable<String, Object>();
 
-		this.createIndex("Vagabond", "age", "ageIndex");
+		this.createIndex("Vagabond", "id", "idnex");
 		int uniqueID[] = random.ints(0,2000).distinct().limit(1000).toArray();
 		int possibleAge[] = {18,19,20,21,22,23,24};
 		double possibleGPA[] = {1.2,0.7,3.2,4,2,2.3,1.8};
 		String possibleName[] = {"Yousef","Jana","Kiryu","Popola","Rana","Maryam","Farida","Emil",
 				"Eve","5ayen","Zoma","Musashi","Peter","01111146949","Kojiro"};
 		//		String possibleName[] = {"01-203","582-495","2985-2223","2-39"};
-		for(int i=0;i<50;i++) {
+		for(int i=0;i<300;i++) {
 			int age = possibleAge[random.nextInt(possibleAge.length)];
 			int id = i;
 			double gpa = possibleGPA[random.nextInt(possibleGPA.length)];

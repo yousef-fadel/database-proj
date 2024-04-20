@@ -76,7 +76,7 @@ public class Page implements java.io.Serializable
 //	}
 	public String toString()
 	{
-		String res = "";
+		String res = "{";
 		for(int i =0;i<tuples.size();i++)
 		{
 			if(i!=tuples.size()-1)
@@ -84,6 +84,6 @@ public class Page implements java.io.Serializable
 			else
 				res+=tuples.get(i);
 		}
-		return res;
+		return res + "}";
 	}
 }

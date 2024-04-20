@@ -22,7 +22,6 @@ public class Tuple implements Serializable, Comparable {
 
 
 		return stringBuilder.toString();
-
 	}
 	public static void main(String[]args)
 	{

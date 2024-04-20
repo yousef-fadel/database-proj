@@ -20,6 +20,7 @@ import java.util.Vector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -772,7 +773,7 @@ public class DeletionTests {
 		
 	}
 	
-	@Test
+	@RepeatedTest(value = 5)
 	@DisplayName("DeleteFromTable_WithIndexOnIntegerAndDoubleAndString_ShouldDeleteFromAllThreeIndices")
 	void DeleteFromAllIndices() throws ClassNotFoundException, DBAppException, IOException
 	{
