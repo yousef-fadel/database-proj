@@ -74,6 +74,8 @@ public class MySQListener extends MySqlParserBaseListener
 			String colExtraData = column.getChild(1).getText(); //da ay 7aga zeyad, zay not null w primary key
 			if(colExtraData.toLowerCase().contains("primarykey"))
 				clusteringKey = colName;
+			if(colExtraData.toLowerCase().contains("auto_increment"))
+				throw new RuntimeException(new DBAppException("Unsupported SQL statement"));
 		}
 		try {
 			database.createTable(tableName, clusteringKey, htblColNameType);
@@ -137,6 +139,8 @@ public class MySQListener extends MySqlParserBaseListener
 		String tableName = ctxUpdate.tableName().getText();
 		String clusteringNameValue []= ctxUpdate.expression().getText().split("=");//contains {primarykeyname, primarykeyValue}
 		String strClusteringKeyValue = clusteringNameValue[1];
+		if(strClusteringKeyValue.charAt(0)=='\'')
+			strClusteringKeyValue = strClusteringKeyValue.replaceAll("'", ""); //this removes ' from strings
 
 		Hashtable<String,Object> htblColNameValue = new Hashtable<String, Object>();
 		for(UpdatedElementContext updatedColumn : ctxUpdate.updatedElement())
@@ -178,7 +182,8 @@ public class MySQListener extends MySqlParserBaseListener
 		checkDeleteIsSupported(ctxDelete.expression());
 		String tableName = ctxDelete.tableName().getText();
 		Hashtable<String,Object> htblColNameValue = new Hashtable<String, Object>();
-		addValuesToDeleteHashTable(htblColNameValue, ctxDelete.expression().getChild(0).getParent());
+		if(ctxDelete.expression()!=null)
+			addValuesToDeleteHashTable(htblColNameValue, ctxDelete.expression().getChild(0).getParent());
 		try {
 			database.deleteFromTable(tableName, htblColNameValue);
 		} catch (ClassNotFoundException | DBAppException | IOException e) {
@@ -188,11 +193,13 @@ public class MySQListener extends MySqlParserBaseListener
 	}
 	private void checkDeleteIsSupported(ExpressionContext ctx)
 	{
+		if(ctx==null) //means there is no where condition aslan; 3ady delete all
+			return;
+
 		// turns expressioncontext to parsetree
 		// here tree can be split into {entire where except last condition, operator, last condition}
 		// each can be reached by using getChild(i)
 		ParseTree whereClause = ctx.getChild(0).getParent();
-		String test2 = ctx.getText();
 
 		// if one condition we handle it seperately as the way the parser counts the children is weird 
 		if(whereClause.getChildCount()==1)
@@ -240,6 +247,11 @@ public class MySQListener extends MySqlParserBaseListener
 		String tableName = ctx.querySpecification().fromClause().tableSources().tableSource(0).getText();
 		ArrayList<SQLTerm> arrListSQLTerms = new ArrayList<SQLTerm>();
 		ArrayList<String> strarrListOperators = new ArrayList<String>();
+		if(queryctx.fromClause().whereExpr==null || queryctx.groupByClause() !=null || queryctx.groupByClause() !=null 
+				|| queryctx.limitClause() != null || queryctx.orderByClause() !=null || queryctx.windowClause() !=null 
+				|| !queryctx.getText().contains("*"))
+			throw new RuntimeException(new DBAppException("Unsupported/Wrong SQL statement"));
+		
 		fillOperatorsAndTerms(arrListSQLTerms,strarrListOperators,queryctx.fromClause().whereExpr.getChild(0).getParent(), tableName);
 
 

@@ -48,7 +48,7 @@ public class Table implements java.io.Serializable{
 		index = index.serializeAndDeleteIndex();
 
 	}
-	
+
 	//------------------------------------------------------INSERT------------------------------------------------------------------
 
 	public void insertTupleIntoTable(Tuple tuple, String clusteringKeyColName) throws DBAppException, ClassNotFoundException, IOException
@@ -137,8 +137,8 @@ public class Table implements java.io.Serializable{
 		// gives us two (or one) possible locations we can insert into 
 		int left = 0;
 		int right = 0;
-//		if(!page.tuples.isEmpty()) // ??
-			right = page.tuples.size()-1;
+		//		if(!page.tuples.isEmpty()) // ??
+		right = page.tuples.size()-1;
 		int middle;
 		while(right-left>1) 
 		{
@@ -253,6 +253,8 @@ public class Table implements java.io.Serializable{
 			pageToUpdate = findPageBinarySearch(clusteringKeyValue);
 		else
 			pageToUpdate = findPageToUpdateIndex(clusteringKeyValue,index);
+		if(pageToUpdate==null) // Page will be null for only one reason: I did not find it in the index, meaning this value does not exist
+			return;
 		updateTupleInPage(pageToUpdate,clusteringKeyValue,htblColNameValue);
 	}
 
@@ -299,7 +301,10 @@ public class Table implements java.io.Serializable{
 	}
 
 	private Page findPageToUpdateIndex(Object clusteringKeyValue,Index index) throws ClassNotFoundException, DBAppException{
-		String pageName = index.searchIndex(new Datatype(clusteringKeyValue)).get(0);
+		Vector <String> resultPages= index.searchIndex(new Datatype(clusteringKeyValue));
+		if(resultPages==null)
+			return null;
+		String pageName = resultPages.get(0);
 		Page page = (Page) DBApp.deserializeData(this.filepath + pageName);
 		return page;
 	}
@@ -351,9 +356,12 @@ public class Table implements java.io.Serializable{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		boolean firstDeletion = true;
-		
+
 		if(!colNameValueIterator.hasNext())// in other words, there is no where in this SQL statement, so delete everything
+		{
 			deleteAllTuples();
+			return;
+		}
 		// iterate on deletion conditions and get page name + tuple position and intersect everytime
 		while(colNameValueIterator.hasNext())
 		{
@@ -399,12 +407,12 @@ public class Table implements java.io.Serializable{
 		Vector<String> pageResult = colIndex.searchIndex(new Datatype(deletionCondition.getValue()));
 		if(pageResult==null) // no tuples satisfy the condition; return empty result
 			return result;
-		
+
 		// sheel duplicates from pageResult
 		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(pageResult);  
 		pageResult.clear(); 
 		pageResult.addAll(hashSet);
-		
+
 		// add tuple pos to each page
 		for(String pageName:pageResult)
 		{
@@ -536,12 +544,12 @@ public class Table implements java.io.Serializable{
 			String obj_class=obj.getClass().getName();
 			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
 				throw new DBAppException("Invalid datatype");
-			
+
 			//Exceptionssssss
-			
-			
+
+
 			boolean flag=true;
-			
+
 			for(int k=0;k<tableInfo.size();k++) {
 				if(tableInfo.get(k).get(0).equals(table_Name) && tableInfo.get(k).get(1).equals(col_Name) && tableInfo.get(k).get(5).equals("B+tree")) { 
 					selectWithIndex(kamal,col_Name,operator,obj,results);
@@ -651,7 +659,7 @@ public class Table implements java.io.Serializable{
 			case "=":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
-				
+
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);break;
 			case "!=":
@@ -672,7 +680,7 @@ public class Table implements java.io.Serializable{
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				
+
 				pageSize=pageToSelect.maxNoEnteries;
 				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
 				for(int j = tuplenum ; j>=0;j--) 
@@ -683,7 +691,7 @@ public class Table implements java.io.Serializable{
 						conditionSatisfied.add(t);
 				}//First get page and tuple to start searching from by binary search
 				//Then by linear search on the rest of the tuples in that page find satisfying tuples 
-				
+
 
 				for(int i=startPagenum-1;i>=0;i--) 
 				{
@@ -702,10 +710,10 @@ public class Table implements java.io.Serializable{
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				
+
 				pageSize=pageToSelect.maxNoEnteries;
 				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
-				
+
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);
 				for(int j = tuplenum-1 ; j>=0;j--) 
@@ -734,7 +742,7 @@ public class Table implements java.io.Serializable{
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				
+
 				pageSize=pageToSelect.maxNoEnteries;
 				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
 
@@ -765,10 +773,10 @@ public class Table implements java.io.Serializable{
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				
+
 				pageSize=pageToSelect.maxNoEnteries;
 				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
-				
+
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);
 
@@ -798,7 +806,7 @@ public class Table implements java.io.Serializable{
 			default:System.out.println("NOT approprtaite operator");break;
 			}
 
-				
+
 		}
 		results.add(conditionSatisfied);
 		//add arraylist of tuples satisfying condition to result
@@ -813,7 +821,7 @@ public class Table implements java.io.Serializable{
 		Vector<String> searchPages = new Vector<String>();
 		ArrayList<Vector<String>> searchPagesRange=new ArrayList<Vector<String>>();
 		//Must use searchPagesRange because the output of using greaterthan,smallerthan,etc
-		
+
 		switch(operator) 
 		{
 		case "=":searchPages=colIndex.searchIndex(obj2);break;
@@ -841,9 +849,14 @@ public class Table implements java.io.Serializable{
 		//Makes searchPagesRange a vactor of strings showing pages to where values have been found
 		//Alot of duplicates
 
-		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(searchPages);  
-		searchPages.clear(); 
-		searchPages.addAll(hashSet); 
+		if(searchPages!=null)
+		{
+			LinkedHashSet<String> hashSet = new LinkedHashSet<String>(searchPages);  
+			searchPages.clear(); 
+			searchPages.addAll(hashSet); 
+		}
+		else 
+			searchPages = new Vector<String>();
 		//Remove all duplicates from searchPages
 
 		for(String pageName:searchPages) {
@@ -859,8 +872,8 @@ public class Table implements java.io.Serializable{
 		}
 		//gets each page from searchPages then each tuple in that page
 		//Check if condition satisfied add to arraylist of tuples conditionIndex
-		
-			results.add(conditionIndex);
+
+		results.add(conditionIndex);
 		//Then add conditionIndex to result which is arraylist of arraylists of tuples.
 	}
 

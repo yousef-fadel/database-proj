@@ -10,20 +10,19 @@ public class Tuple implements Serializable, Comparable {
 		this.entry=entry;
 		this.Primary_key=Primary_key;
 	}
-	// TODO DO NOT FORGET TO CHANGE THIS BACK THANKS
 	public String toString() {
-//		StringBuilder stringBuilder = new StringBuilder();
-//		for (String key : entry.keySet()) {
-//			stringBuilder.append(entry.get(key));
-//			stringBuilder.append(",");
-//		}
-//		if (stringBuilder.length() > 0) {
-//			stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-//		}
-//
-//
-//		return stringBuilder.toString();
-		return entry.toString();
+		StringBuilder stringBuilder = new StringBuilder();
+		for (String key : entry.keySet()) {
+			stringBuilder.append(entry.get(key));
+			stringBuilder.append(",");
+		}
+		if (stringBuilder.length() > 0) {
+			stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+		}
+
+
+		return stringBuilder.toString();
+
 	}
 	public static void main(String[]args)
 	{

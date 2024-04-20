@@ -63,16 +63,27 @@ public class Page implements java.io.Serializable
 		return null;
 	}
 	
+//	public String toString()
+//	{
+//		String res = this.name + "\n";
+//		for(int i = 0;i<tuples.size();i++)
+//		{
+//			res = res + "Tuple " + i + ": " + tuples.get(i);
+//			if(i<tuples.size()-1)
+//				res+= "\n";
+//		}
+//		return res;
+//	}
 	public String toString()
 	{
-		String res = this.name + "\n";
-		for(int i = 0;i<tuples.size();i++)
+		String res = "";
+		for(int i =0;i<tuples.size();i++)
 		{
-			res = res + "Tuple " + i + ": " + tuples.get(i);
-			if(i<tuples.size()-1)
-				res+= "\n";
+			if(i!=tuples.size()-1)
+				res += tuples.get(i) + ", ";
+			else
+				res+=tuples.get(i);
 		}
 		return res;
 	}
-	
 }

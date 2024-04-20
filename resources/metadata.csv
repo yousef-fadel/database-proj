@@ -1,4 +1,0 @@
-"Vagabond","gpa","java.lang.Double","False","null","null"
-"Vagabond","age","java.lang.Integer","False","ageIndex","B+tree"
-"Vagabond","name","java.lang.String","False","null","null"
-"Vagabond","id","java.lang.Integer","True","null","null"
