@@ -3,91 +3,52 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * A B+ tree
- * Since the structures and behaviors between internal node and external node are different, 
- * so there are two different classes for each kind of node.
- * @param <TKey> the data type of the key
- * @param <TValue> the data type of the value
+ * A B+ tree Since the structures and behaviors between internal node and
+ * external node are different, so there are two different classes for each kind
+ * of node.
+ *
+ * @param < TKey > the data type of the key
+ * @param < TValue > the data type of the value
  */
 public class BTree<TKey extends Comparable<TKey>, TValue> implements Serializable{
-	private BTreeNode<TKey> root;
-	
-	
-	public BTree() {
-		this.root = new BTreeLeafNode<TKey, TValue>();
-	}
+    /**
+     * @uml.property name="root"
+     * @uml.associationEnd multiplicity="(1 1)"
+     */
+    private BTreeNode<TKey> root;
+    /**
+     * @uml.property name="tableName"
+     */
+    private String tableName;
 
-	/**
-	 * Insert a new key and its associated value into the B+ tree.
-	 */
-	public void insert(TKey key, TValue value) {
-		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
-		leaf.insertKey(key, value);
-		
-		if (leaf.isOverflow()) {
-			BTreeNode<TKey> n = leaf.dealOverflow();
-			if (n != null)
-				this.root = n; 
-		}
-	}
-	
-	/**
-	 * Search a key value on the tree and return its associated value.
-	 */
-	public TValue search(TKey key) {
-		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
-		
-		int index = leaf.search(key);
-		return (index == -1) ? null : leaf.getValue(index);
-	}
-	
-	//Code abdo---------------------------------------------------------------------------
-	public int getPageNumberForInsert(TKey primaryKey){
-		BTreeLeafNode<TKey, TValue> currentNode = getLeafNodeBeforeKey(primaryKey);
-		int pageNumber = 0;
-		if(currentNode != null && currentNode.getRightSibling() == null && currentNode.getKey(currentNode.getKeyCount()-1).compareTo(primaryKey)<0){
-			return Integer.parseInt(((String)currentNode.getValue(currentNode.getKeyCount()-1)).split("-")[0]);
-		}
-		while (currentNode!=null){
-			for (int i = 0; i < currentNode.getKeyCount(); i++) {
-				if(currentNode.getKey(i).compareTo(primaryKey) < 0){
-					pageNumber = Integer.parseInt(((String)currentNode.getValue(i)).split("-")[0]);
-				} else if(currentNode.getKey(i).compareTo(primaryKey) == 0){
-					return -1;
-				}else {
-					return pageNumber;
-				}
-			}
-			currentNode = (BTreeLeafNode<TKey, TValue>) currentNode.getRightSibling();
-		}
-		return 1;
-	}
+    public BTree() {
+        this.root = new BTreeLeafNode<TKey, TValue>();
+    }
 
-	private BTreeLeafNode<TKey, TValue> getLeafNodeBeforeKey(TKey key) {
-		BTreeNode<TKey> currentNode = this.root;
-		BTreeLeafNode<TKey, TValue> prevLeafNode = null;
+    /**
+     * Insert a new key and its associated value into the B+ tree.
+     */
+    public void insert(TKey key, TValue value) {
+        BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
+        leaf.insertKey(key, value);
 
-		while (currentNode instanceof BTreeInnerNode<?>) {
-			BTreeInnerNode<TKey> innerNode = (BTreeInnerNode<TKey>) currentNode;
-			int childIndex=0;
-//			int childIndex = innerNode.getChildIndex(key);
-			if (childIndex == -1) {
-				// Key is smaller than all children, follow the leftmost child
-				currentNode = innerNode.getChild(0);
-			} else {
-				// Key is greater than or equal to the child at the specified index
-				currentNode = innerNode.getChild(childIndex+1);
-				if (!(currentNode instanceof BTreeInnerNode)) {
-					prevLeafNode = (BTreeLeafNode<TKey, TValue>) currentNode;
-				}
-			}
-		}
-		return prevLeafNode;
-	}
-	
-	//Code abdo---------------------------------------------------------------------------
+        if (leaf.isOverflow()) {
+            BTreeNode<TKey> n = leaf.dealOverflow();
+            if (n != null)
+                this.root = n;
+        }
+    }
 
-	public ArrayList<TValue> searchGreaterThan(TKey start,boolean inclusive)
+    /**
+     * Search a key value on the tree and return its associated value.
+     */
+    public TValue search(TKey key) {
+        BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
+
+        int index = leaf.search(key);
+        return (index == -1) ? null : leaf.getValue(index);
+    }
+    public ArrayList<TValue> searchGreaterThan(TKey start,boolean inclusive)
 	{
 		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(start);
 		return leaf.searchGreaterThan(0, start,inclusive);
@@ -98,50 +59,62 @@ public class BTree<TKey extends Comparable<TKey>, TValue> implements Serializabl
 		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(start);
 		return leaf.searchLessThan(leaf.values.length-1,start, inclusive);	
 	}
-	
-	/**
-	 * Delete a key and its associated value from the tree.
-	 */
-	public void delete(TKey key) {
-		BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
-		
-		if (leaf.delete(key) && leaf.isUnderflow()) {
-			BTreeNode<TKey> n = leaf.dealUnderflow();
-			if (n != null)
-				this.root = n; 
-		}
-	}
-	
-	/**
-	 * Search the leaf node which should contain the specified key
-	 */
-	@SuppressWarnings("unchecked")
-	private BTreeLeafNode<TKey, TValue> findLeafNodeShouldContainKey(TKey key) {
-		BTreeNode<TKey> node = this.root;
-		while (node.getNodeType() == TreeNodeType.InnerNode) {
-			node = ((BTreeInnerNode<TKey>)node).getChild( node.search(key) );
-		}
-		
-		return (BTreeLeafNode<TKey, TValue>)node;
-	}
-	
-	// simple; but does not support range searches or duplicates 
-	
-	public static void main(String[]args) throws ClassNotFoundException
-	{
-		BTree<String, String> b = new BTree<String, String>();
+    /**
+     * Delete a key and its associated value from the tree.
+     */
+    public void delete(TKey key) {
+        BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
 
-//		for(int i = 0;i<=30;i++)
-//		{
-//			b.insert(i, "page" + i);
-//		}
-		b.insert("mohamed", "page1");
-		b.insert("yousef", "page2");
-		
-		System.out.println(b.searchGreaterThan("z", true));
-//		BTreeInnerNode x = (BTreeInnerNode)b.root;
-//		String s = x.printTree();
-//		System.out.println(b.search(5));
-		
-	}
+        if (leaf.delete(key) && leaf.isUnderflow()) {
+            BTreeNode<TKey> n = leaf.dealUnderflow();
+            if (n != null)
+                this.root = n;
+        }
+    }
+
+    /**
+     * Search the leaf node which should contain the specified key
+     */
+    @SuppressWarnings("unchecked")
+    private BTreeLeafNode<TKey, TValue> findLeafNodeShouldContainKey(TKey key) {
+        BTreeNode<TKey> node = this.root;
+        while (node.getNodeType() == TreeNodeType.InnerNode) {
+            node = ((BTreeInnerNode<TKey>) node).getChild(node.search(key));
+        }
+
+        return (BTreeLeafNode<TKey, TValue>) node;
+    }
+
+    public void print() {
+        ArrayList<BTreeNode> upper = new ArrayList<>();
+        ArrayList<BTreeNode> lower = new ArrayList<>();
+
+        upper.add(root);
+        while (!upper.isEmpty()) {
+            BTreeNode cur = upper.get(0);
+            if (cur instanceof BTreeInnerNode) {
+                ArrayList<BTreeNode> children = ((BTreeInnerNode) cur).getChildren();
+                for (int i = 0; i < children.size(); i++) {
+                    BTreeNode child = children.get(i);
+                    if (child != null)
+                        lower.add(child);
+                }
+            }
+            System.out.println(cur.toString() + " ");
+            upper.remove(0);
+            if (upper.isEmpty()) {
+                System.out.println("\n");
+                upper = lower;
+                lower = new ArrayList<>();
+            }
+        }
+    }
+
+    public BTreeLeafNode getSmallest() {
+        return this.root.getSmallest();
+    }
+
+    public String commit() {
+        return this.root.commit();
+    }
 }
