@@ -311,6 +311,10 @@ public class DBApp {
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
 
+		if(htblColNameValue==null || htblColNameValue.isEmpty() || strClusteringKeyValue == null 
+				|| strClusteringKeyValue.isBlank() || strClusteringKeyValue.isEmpty())
+			throw new DBAppException("One of the inputs was null or empty");
+		
 		// all strings in the hashtable are columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		
@@ -361,7 +365,8 @@ public class DBApp {
 		if (omar == null)
 			throw new DBAppException("Table does not exist");
 
-
+		if(htblColNameValue == null)
+			throw new DBAppException("One of the inputs was null");
 		// get the names of the columns in the table
 		List<List<String>> tableInfo = getColumnData(omar.name);
 		ArrayList<String> colTableNames = getColumnNames(tableInfo);
@@ -605,12 +610,12 @@ public class DBApp {
 //		dbApp.format();
 //		dbApp.test5();
 		Hashtable<String,Object> htbl = new Hashtable<String, Object>();
-		htbl.put("x", new Integer(5));
+		htbl.put("x", new Integer(1));
 //		htbl.put("id", new Integer(52));
 //		htbl.put("y", new String("monkey"));
 //		htbl.put("", new Double(5.2));
 //		htbl.put("pa", new Double(5.2));
-		dbApp.updateTable("test","'Value1'", htbl);
+		dbApp.selectFromTable(null, args);
 //		Iterator iterator = dbApp.parseSQL(new StringBuffer("INSERT INTO test (x, y) VALUES\r\n"
 //				+ "(1, 'Value4');\r\n"));
 //				+ "(2, 'Value2'),\r\n"

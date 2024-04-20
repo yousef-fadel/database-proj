@@ -246,10 +246,7 @@ public class Table implements java.io.Serializable{
 	public void updateTuple(Object clusteringKeyValue, Hashtable<String, Object> htblColNameValue, String primaryKeyColName) throws ClassNotFoundException, DBAppException, IOException
 	{
 		if(this.pageNames.isEmpty()) //empty table aslan; nothing to update
-		{
-			System.out.println("No tuple found with clustering key value, did not update anything");
 			return;
-		}
 		Page pageToUpdate;
 		Index index = getIndexWithColName(primaryKeyColName);
 		if(index == null)
@@ -325,7 +322,7 @@ public class Table implements java.io.Serializable{
 					String colName = updateEntry.getKey();
 					Object updatedColValue = updateEntry.getValue();
 					Index colIndex = getIndexWithColName(colName);
-					// update index if exists
+					// update index if exists for this specific column
 					if(colIndex!=null)
 					{
 						Object oldColValue = middleTuple.entry.get(colName);
@@ -334,6 +331,7 @@ public class Table implements java.io.Serializable{
 					}
 					middleTuple.entry.put(colName, updatedColValue);
 				}
+				System.out.println("Successfully updated tuple with primary key " + clusteringKeyValue);
 				page = page.serializeAndDeletePage();
 				return;
 			}
@@ -343,7 +341,6 @@ public class Table implements java.io.Serializable{
 				left = middle+1;
 
 		}
-		System.out.println("Did not find clustering key, aborting update");
 	}
 
 
@@ -354,7 +351,8 @@ public class Table implements java.io.Serializable{
 		ArrayList<String> resultSoFar = new ArrayList<String>();
 		Iterator<Map.Entry <String,Object>> colNameValueIterator = htblColNameValue.entrySet().iterator();
 		boolean firstDeletion = true;
-		if(!colNameValueIterator.hasNext())
+		
+		if(!colNameValueIterator.hasNext())// in other words, there is no where in this SQL statement, so delete everything
 			deleteAllTuples();
 		// iterate on deletion conditions and get page name + tuple position and intersect everytime
 		while(colNameValueIterator.hasNext())
@@ -480,9 +478,8 @@ public class Table implements java.io.Serializable{
 			}
 			else
 				currPage = currPage.serializeAndDeletePage();
-
-
 		}
+		System.out.println("Deleted " + deletionTuples.size() + " tuples");
 	}
 
 	private void deleteAllTuples() throws ClassNotFoundException {
@@ -494,6 +491,7 @@ public class Table implements java.io.Serializable{
 		}
 		this.pageNames.clear();
 		this.serializeTable();
+		System.out.println("All tuples were deleted");
 	}
 	//-------------------------------------SELECT-------------------------------------------------------
 	public Iterator selectTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws ClassNotFoundException, DBAppException, IOException 
