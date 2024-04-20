@@ -334,7 +334,7 @@ public class Table implements java.io.Serializable{
 	}
 
 
-	// ----------------------------- DELETE --------------
+	// ----------------------------- DELETE --------------------------------------------
 
 	public void deleteFromTable(Hashtable<String, Object> htblColNameValue) throws ClassNotFoundException, IOException, DBAppException
 	{
@@ -487,7 +487,7 @@ public class Table implements java.io.Serializable{
 	{
 		ArrayList<String> strops = new ArrayList<String>();
 		for(int i=0;i<strarrOperators.length;i++) 
-			strops.add(strarrOperators[i]);
+			strops.add(strarrOperators[i]);//Arraylist storing operators instead of array(easier for code)
 
 		for(int i=0;i<strarrOperators.length;i++) 
 		{
@@ -504,8 +504,6 @@ public class Table implements java.io.Serializable{
 			Object obj = arrSQLTerms[i]._objValue;
 
 			Table kamal = this;
-			if (kamal == null)
-				throw new DBAppException("Table does not exist");
 
 			List<List<String>> tableInfo = DBApp.getColumnData(table_Name);//Gets data from csv file of table
 			ArrayList<String> colTableNames = DBApp.getColumnNames(tableInfo);
@@ -523,12 +521,18 @@ public class Table implements java.io.Serializable{
 			String obj_class=obj.getClass().getName();
 			if(!(obj_class=="java.lang.String" ||obj_class=="java.lang.Integer" ||obj_class=="java.lang.Double") )
 				throw new DBAppException("Invalid datatype");
+			
+			//Exceptionssssss
+			
+			
 			boolean flag=true;
+			
 			for(int k=0;k<tableInfo.size();k++) {
 				if(tableInfo.get(k).get(0).equals(table_Name) && tableInfo.get(k).get(1).equals(col_Name) && tableInfo.get(k).get(5).equals("B+tree")) { 
 					selectWithIndex(kamal,col_Name,operator,obj,results);
 					flag=false;
 				}
+				//Checks if current coloumn in statement used has index or not to use which method
 
 
 			}
@@ -537,6 +541,7 @@ public class Table implements java.io.Serializable{
 
 			//EXCEPTIONS-----------------------------------------------------------------------------------------
 		}
+		//After getting the result we make following operations according to certain order AND,OR,XOR
 		while(!strops.isEmpty()) 
 		{
 			int indexAND=strops.indexOf("AND");
@@ -568,6 +573,8 @@ public class Table implements java.io.Serializable{
 
 
 		}
+		//Logic better explained on paper
+		//Imp note that now only 1 arraylist left in result which is after doing all required operations
 		ArrayList<Tuple> final_result = new ArrayList<Tuple>();
 		for(int i=0;i<results.size();i++) 
 			final_result.addAll(results.get(i));
@@ -593,8 +600,6 @@ public class Table implements java.io.Serializable{
 
 	}
 
-
-
 	public void selectWithNoIndex (Table kamal,String col_Name,String operator,Object obj,ArrayList<ArrayList<Tuple>> results) throws ClassNotFoundException, IOException, DBAppException 
 	{
 		List<List<String>> tableInfo = DBApp.getColumnData(kamal.name);//Gets data from csv file of table
@@ -616,7 +621,8 @@ public class Table implements java.io.Serializable{
 						conditionSatisfied.add(t);
 				}
 
-			}
+			}//gets each page from searchPages then each tuple in that page
+			//Check if condition satisfied add to arraylist of tuples conditionIndex
 		}
 		else //Colomn is primary key so must use binary search
 		{
@@ -624,11 +630,13 @@ public class Table implements java.io.Serializable{
 			Tuple targetTuple=null;
 			int startPagenum=0;
 			int tuplenum=0;
+			int pageSize=0;
 			switch(operator) 
 			{
 			case "=":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
+				
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);break;
 			case "!=":
@@ -644,19 +652,23 @@ public class Table implements java.io.Serializable{
 					}
 
 				}break;
+				//Linear search on tuples to find which satisfy condition
 			case "<":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				tuplenum=(int)obj%3;
-				int size=pageToSelect.tuples.size()-1;
+				
+				pageSize=pageToSelect.maxNoEnteries;
+				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
 				for(int j = tuplenum ; j>=0;j--) 
 				{
 					Tuple tupleSearch=pageToSelect.tuples.get(j);
 					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
 					if(t!=null)
 						conditionSatisfied.add(t);
-				}
+				}//First get page and tuple to start searching from by binary search
+				//Then by linear search on the rest of the tuples in that page find satisfying tuples 
+				
 
 				for(int i=startPagenum-1;i>=0;i--) 
 				{
@@ -670,11 +682,15 @@ public class Table implements java.io.Serializable{
 							conditionSatisfied.add(t);
 					}
 				}break;
+				//Then complete remaining pages and tuples to find all satisfying conditions
 			case "<=":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				tuplenum=(int)obj%3;
+				
+				pageSize=pageToSelect.maxNoEnteries;
+				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
+				
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);
 				for(int j = tuplenum-1 ; j>=0;j--) 
@@ -683,7 +699,8 @@ public class Table implements java.io.Serializable{
 					Tuple t = makeConditionList(tupleSearch,col_Name,operator,obj);
 					if(t!=null)
 						conditionSatisfied.add(t);
-				}
+				}//First get page and tuple to start searching from by binary search
+				//Then by linear search on the rest of the tuples in that page find satisfying tuples 
 
 				for(int i=startPagenum-1;i>=0;i--) 
 				{
@@ -697,11 +714,14 @@ public class Table implements java.io.Serializable{
 							conditionSatisfied.add(t);
 					}
 				}break;
+				//Complete remaining pages and tuples linear
 			case ">":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				tuplenum=(int)obj%3;
+				
+				pageSize=pageToSelect.maxNoEnteries;
+				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
 
 				for(int j = tuplenum ; j<pageToSelect.tuples.size();j++) 
 				{
@@ -710,6 +730,8 @@ public class Table implements java.io.Serializable{
 					if(t!=null)
 						conditionSatisfied.add(t);
 				}
+				//First get page and tuple to start searching from by binary search
+				//Then by linear search on the rest of the tuples in that page find satisfying tuples 
 
 				for(int i=startPagenum+1;i<kamal.pageNames.size();i++) 
 				{
@@ -723,11 +745,15 @@ public class Table implements java.io.Serializable{
 							conditionSatisfied.add(t);
 					}
 				}break;
+				//Complete remaining pages and tuples linear
 			case ">=":
 				pageToSelect=findPageBinarySearch(obj);
 				targetTuple=getTupleFromPageUsingClusteringKey(obj,pageToSelect);
 				startPagenum=pageToSelect.num;
-				tuplenum=(int)obj%3;
+				
+				pageSize=pageToSelect.maxNoEnteries;
+				tuplenum=(int)obj%pageSize;//To get number of which tuple in page
+				
 				if(targetTuple!=null)
 					conditionSatisfied.add(targetTuple);
 
@@ -738,6 +764,8 @@ public class Table implements java.io.Serializable{
 					if(t!=null)
 						conditionSatisfied.add(t);
 				}
+				//First get page and tuple to start searching from by binary search
+				//Then by linear search on the rest of the tuples in that page find satisfying tuples 
 
 				for(int i=startPagenum+1;i<kamal.pageNames.size();i++) 
 				{
@@ -751,13 +779,14 @@ public class Table implements java.io.Serializable{
 							conditionSatisfied.add(t);
 					}
 				}break;
+				//Complete remaining pages and tuples linear
 			default:System.out.println("NOT approprtaite operator");break;
 			}
 
 				
 		}
 		results.add(conditionSatisfied);
-
+		//add arraylist of tuples satisfying condition to result
 	}
 
 
@@ -768,6 +797,8 @@ public class Table implements java.io.Serializable{
 		Datatype obj2 = new Datatype(obj);
 		Vector<String> searchPages = new Vector<String>();
 		ArrayList<Vector<String>> searchPagesRange=new ArrayList<Vector<String>>();
+		//Must use searchPagesRange because the output of using greaterthan,smallerthan,etc
+		
 		switch(operator) 
 		{
 		case "=":searchPages=colIndex.searchIndex(obj2);break;
@@ -781,8 +812,9 @@ public class Table implements java.io.Serializable{
 		case ">":searchPagesRange=colIndex.searchGreaterThan(obj2,false);break;
 
 		case ">=":searchPagesRange=colIndex.searchGreaterThan(obj2,true);break;
-		// TODO enta kamn mesh 3aref tespell
-		default:System.out.println("Cannot find approprtaite operator");break;
+		// TODO enta kamn mesh 3aref tespell 
+		//Bas yaala 5alek fe sho8lak
+		default:System.out.println("Cannot find appropriaite operator");break;
 		}
 		if(!searchPagesRange.isEmpty()) {
 			for(int i=0;i<searchPagesRange.size();i++) {
@@ -791,10 +823,13 @@ public class Table implements java.io.Serializable{
 					searchPages.add(temp.get(j));
 			}
 		}
+		//Makes searchPagesRange a vactor of strings showing pages to where values have been found
+		//Alot of duplicates
 
 		LinkedHashSet<String> hashSet = new LinkedHashSet<String>(searchPages);  
 		searchPages.clear(); 
 		searchPages.addAll(hashSet); 
+		//Remove all duplicates from searchPages
 
 		for(String pageName:searchPages) {
 			Page page = (Page) DBApp.deserializeData(kamal.filepath + pageName);
@@ -807,9 +842,11 @@ public class Table implements java.io.Serializable{
 			}
 
 		}
+		//gets each page from searchPages then each tuple in that page
+		//Check if condition satisfied add to arraylist of tuples conditionIndex
+		
 			results.add(conditionIndex);
-
-
+		//Then add conditionIndex to result which is arraylist of arraylists of tuples.
 	}
 
 	private Tuple getTupleFromPageUsingClusteringKey(Object clusteringKeyValue, Page page)

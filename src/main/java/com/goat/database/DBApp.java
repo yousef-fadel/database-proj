@@ -172,7 +172,7 @@ public class DBApp {
 	public Iterator selectFromTable(SQLTerm[] arrSQLTerms, String[] strarrOperators) throws DBAppException, IOException, ClassNotFoundException 
 	{
 		checkSelect(arrSQLTerms, strarrOperators);
-		String table_Name=arrSQLTerms[0]._strTableName;//Ay habd bas 34an awasal code le class table
+		String table_Name=arrSQLTerms[0]._strTableName;
 		Table basyo = getTable(table_Name);
 
 		return (basyo.selectTable(arrSQLTerms,strarrOperators));
